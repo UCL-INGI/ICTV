@@ -1,0 +1,6 @@
+{
+  "ictv_root_url": "%s",
+  "cached_assets_path": "static/assets",
+  "cache_daemon_host": "localhost",
+  "cache_daemon_port": 8081
+}

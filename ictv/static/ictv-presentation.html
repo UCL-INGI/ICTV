@@ -1,0 +1,111 @@
+<html>
+<head>
+    <link rel="stylesheet" href="/static/css/reveal.css">
+    <link rel="stylesheet" href="/static/css/sky.css">
+    <style>
+        .reveal h1, .reveal h2, .reveal h3, .reveal h4, .reveal h5, .reveal h6 {
+            font-family: "Open Sans",sans-serif;
+        }
+    </style>
+</head>
+<body>
+<div class="reveal">
+    <div class="slides">
+        <section>
+            <h2>
+                General introduction to ICTV
+            </h2>
+            <div style="display:flex; flex-direction: row; justify-content: space-between">
+                <div>
+                    <small>Developed at INGI for UCL</small>
+                </div>
+                <div>
+                    <small>ICTV beta</small>
+                </div>
+            </div>
+        </section>
+        <section>
+            <h2>What is ICTV ?</h2>
+            <ul>
+                <li>
+                    ICTV is a <a href="https://en.wikipedia.org/wiki/Content_management_system" target="_blank"><i>Content Management System</i></a>
+                    for <a href="https://en.wikipedia.org/wiki/Digital_signage" target="_blank"><i>digital signage</i>.</a>
+                </li>
+                <li>In other words, ICTV allows you to create and modify content that will be displayed on screen networks.</li>
+                <li>ICTV is web-based. Everything from the management of the content to its reproduction on screens is done in a web-browser.</li>
+                <li>ICTV is easily extendable, with a simple and powerful plugin system.</li>
+            </ul>
+        </section>
+        <section>
+            <h2>Main concepts</h2>
+            <p>To understand how ICTV works, we have to explain its key concepts. We will look at three main components an user can interact with.</p>
+            <ul>
+                <li><a href="#/plugins">Plugins</a></li>
+                <li><a href="#/channels">Channels</a></li>
+                <li><a href="#/screens">Screens</a></li>
+            </ul>
+        </section>
+        <section id="plugins">
+            <h2>Plugins</h2>
+            <p>They are at the heart of ICTV. Plugins are programs that bring content to the system.</p>
+            <ul>
+                <li>Plugins can be automated programs, e.g. a program creating content based on an RSS feed.</li>
+                <li>But they can also interact with users and embed their own web-application inside ICTV.</li>
+                <li>All plugins can be configured with ease within the ICTV interface.</li>
+            </ul>
+        </section>
+        <section>
+            <h2>Plugins</h2>
+            <p>ICTV already comes with useful plugins.</p>
+            <ul>
+                <li><strong>editor</strong> is a fully featured web editor to create slideshows.</li>
+                <li><strong>embed</strong> allows any web page to be embedded into the system.</li>
+                <li><strong>rss</strong> is an RSS parser creating content based on an RSS feed.</li>
+                <li><strong>cal</strong> creates announcements based on Google Calendar events.</li>
+                <li><strong>img-grabber</strong> easily extracts images from web pages and reproduces them in a stylish way.</li>
+            </ul>
+        </section>
+        <section id="channels">
+            <h2>Channels</h2>
+            <p>
+                They are used to organize content in the system.
+                Much like TV channels, they allow various themed information to be brought in and distributed over the screen networks.
+            </p>
+            <ul>
+                <li>Each channel is an instance of a particular plugin.
+                    <ul>
+                        <li>A channel is a customization of a plugin.</li>
+                    </ul>
+                </li>
+                <li>Channels can be public or private to certain users.</li>
+            </ul>
+        </section>
+        <section id="screens">
+            <h2>Screens</h2>
+            <p>A screen is an output displaying content. It may be physical (e.g. a TV) or purely virtual (e.g. a web page).</p>
+            <p>Content is brought to screens via subscriptions. When subscribed to a channel, a screen will display all its content.</p>
+            <p>Subscribing is thus an easy way to assign themed content to particular screens.</p>
+        </section>
+        <section>
+            <p>More concrete and complex aspects of the system will be covered in the next slides</p>
+        </section>
+        <section>
+            <h2>User management</h2>
+            <p>All the responsibilities involved in managing channels, plugins and screens can be delegated to specific users at a fine level. In fact this very same responsibility can also be delegated too.</p>
+            <p>Accounts can be deactivated separately.</p>
+            <p>A recap of the permissions of the user is accessible within the application.</p>
+        </section>
+        <section>
+            <h3>You are now ready to start using ICTV!</h3>
+        </section>
+    </div>
+</div>
+<script src="js/reveal.js"></script>
+<script>
+    Reveal.initialize({
+        width: 1068,
+	    height: 601
+    });
+</script>
+</body>
+</html>

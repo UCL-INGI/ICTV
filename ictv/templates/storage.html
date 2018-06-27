@@ -1,0 +1,151 @@
+$def with (channels)
+
+$#    This file belongs to the ICTV project, written by Nicolas Detienne,
+$#    Francois Michel, Maxime Piraux, Pierre Reinbold and Ludovic Taffin
+$#    at Université catholique de Louvain.
+$#
+$#    Copyright (C) 2016-2018  Université catholique de Louvain (UCL, Belgium)
+$#
+$#    ICTV is free software: you can redistribute it and/or modify
+$#    it under the terms of the GNU Affero General Public License as published
+$#    by the Free Software Foundation, either version 3 of the License, or
+$#    (at your option) any later version.
+$#
+$#    ICTV is distributed in the hope that it will be useful,
+$#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+$#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+$#    GNU Affero General Public License for more details.
+$#
+$#    You should have received a copy of the GNU Affero General Public License
+$#    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
+
+$var active_element: Storage
+<style>
+    td div.progress {
+        margin-top: 2px !important;
+    }
+    th div.progress {
+        margin-top: 2px !important;
+        margin-bottom: 0;
+    }
+    tr {
+        cursor: pointer;
+    }
+</style>
+<section class="content-header">
+    <h1>
+        Storage
+        <small>List all channels consuming disk space</small>
+    </h1>
+</section>
+<section class="content">
+    <div class="row"><div class="col-md-12">
+    <div class="box">
+        <div class="box-body">
+            <table id="table" class="table table-hover table-bordered" cellspacing="0" width="100%">
+                <thead>
+                <tr>
+                    <th>Channel name</th>
+                    <th>Plugin</th>
+                    <th>Number of assets</th>
+                    <th>Total assets size</th>
+                    <th>
+                        <div data-trigger="focus" data-toggle="tooltip" data-placement="top"
+                            data-original-title="Percentage of the channel size on the total storage size">
+                            Size percentage
+                            <i class="fa fa-info-circle" style="margin-left: 10px;" aria-hidden="true"></i>
+                        </div>
+                    </th>
+                    <th>
+                        <div data-trigger="focus" data-toggle="tooltip" data-placement="top"
+                            data-original-title="Percentage of the channel size consisting of cached assets">
+                            Cache percentage
+                            <i class="fa fa-info-circle" style="margin-left: 10px;" aria-hidden="true"></i>
+                        </div>
+                    </th>
+                </tr>
+                </thead>
+                <tfoot>
+                <tr>
+                    <th>Channel name</th>
+                    <th>Plugin</th>
+                    <th>Number of assets</th>
+                    <th>Total assets size</th>
+                    <th>
+                        <div data-trigger="focus" data-toggle="tooltip" data-placement="bottom"
+                            data-original-title="Percentage of the channel size out of the total storage size">
+                            Size percentage
+                            <i class="fa fa-info-circle" style="margin-left: 10px;" aria-hidden="true"></i>
+                        </div>
+                    </th>
+                    <th>
+                        <div data-trigger="focus" data-toggle="tooltip" data-placement="bottom"
+                            data-original-title="Percentage of the channel size consisting of cached assets">
+                            Cache percentage
+                            <i class="fa fa-info-circle" style="margin-left: 10px;" aria-hidden="true"></i>
+                        </div>
+                    </th>
+                </tr>
+                <tr>
+                    $code:
+                        total_assets_count = 0
+                        total_assets_size = 0
+                        total_cache_size = 0
+                        for channel in channels:
+                            total_assets_count += channel['assets_count']
+                            total_assets_size += channel['assets_size']
+                            total_cache_size += int(channel['cache_percentage']*channel['assets_size'])
+                        total_asset_pc = ((total_assets_size - total_cache_size)*100/total_assets_size) if total_assets_size else 0
+                        total_cache_pc = (total_cache_size*100/total_assets_size) if total_assets_size else 0
+                    <th></th>
+                    <th>Grand total</th>
+                    <th>$total_assets_count</th>
+                    <th>$pretty_print_size(total_assets_size)</th>
+                    <th><div class="progress">
+                        <div class="progress-bar progress-bar-primary" role="progressbar" style="width: $(total_asset_pc)%; min-width: 3em">
+                            $("%.1f" % total_asset_pc)%
+                        </div>
+                    </div></th>
+                    <th><div class="progress">
+                        <div class="progress-bar progress-bar-info" role="progressbar" style="width: $(total_cache_pc)%; min-width: 3em">
+                            $("%.1f" % total_cache_pc)%
+                        </div>
+                    </div></th>
+                </tr>
+                </tfoot>
+                <tbody>
+                $for channel in channels:
+                    <tr data-href="/storage/$(channel['id'])">
+                        <td>$channel['name']</td>
+                        <td>$channel['plugin']</td>
+                        <td>$channel['assets_count']</td>
+                        <td>$pretty_print_size(channel['assets_size'])</td>
+                        <td>
+                            <div class="progress">
+                                <div class="progress-bar progress-bar-primary" role="progressbar" style="width: $(channel['percentage']*100)%; min-width: 3em">
+                                    $("%.1f" % (channel['percentage']*100))%
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="progress">
+                                <div class="progress-bar progress-bar-info" role="progressbar" style="width: $(channel['cache_percentage']*100)%; min-width: 2em">
+                                    $("%.f" % (channel['cache_percentage']*100))%
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    </div></div>
+</section>
+<script>
+    $$(document).ready(function () {
+        $$('#table').DataTable({stateSave: true});
+    });
+    $$('tr[data-href]').on("click", function() {
+        document.location = $$(this).data('href');
+    });
+</script>

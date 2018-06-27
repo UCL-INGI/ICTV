@@ -1,0 +1,277 @@
+$def with (channel, channel_type, current_user, bundles, can_force_update, last_update,vertical)
+
+$#    This file belongs to the ICTV project, written by Nicolas Detienne,
+$#    Francois Michel, Maxime Piraux, Pierre Reinbold and Ludovic Taffin
+$#    at Université catholique de Louvain.
+$#
+$#    Copyright (C) 2016-2018  Université catholique de Louvain (UCL, Belgium)
+$#
+$#    ICTV is free software: you can redistribute it and/or modify
+$#    it under the terms of the GNU Affero General Public License as published
+$#    by the Free Software Foundation, either version 3 of the License, or
+$#    (at your option) any later version.
+$#
+$#    ICTV is distributed in the hope that it will be useful,
+$#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+$#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+$#    GNU Affero General Public License for more details.
+$#
+$#    You should have received a copy of the GNU Affero General Public License
+$#    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
+
+$code:
+    feedbacks = get_next_feedbacks()
+    form = pop_previous_form()
+    info_key = 'channel' if channel_type == 'PluginChannel' else 'bundle'
+
+$if not channel.enabled:
+    $:make_alert(title=info_key.title() + " disabled", text=info[info_key]['enabled']['channel_not_enabled'], icon=True, icon_class='fa-exclamation-triangle')
+<style>
+    .embed-responsive-9by16 {
+            padding-bottom: 80vh;
+    }
+</style>
+<section class="content-header">
+    <h1>
+        $channel.name
+        <small>$info_key.title() details</small>
+    </h1>
+</section>
+<section class="content">
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="box">
+                <div class="box-body">
+                    <h4>Description</h4>
+                    $if channel.description is not None:
+                        <div class="panel panel-default">
+                            <div class="panel-body">
+                                $channel.description
+                            </div>
+                        </div>
+                    $else:
+                        <i>There is no description for this channel</i>
+
+                    $if channel_type == 'PluginChannel':
+                        <h4>Plugin</h4>
+                        <div class="panel panel-default">
+                            <div class="panel-body">
+                                $channel.plugin.name
+                            </div>
+                        </div>
+                    $elif channel_type == 'ChannelBundle':
+                        <h4>Bundled channels</h4>
+                        $if channel.bundled_channels:
+                            <table class="table table-hover table-bordered" cellspacing="0" width="100%">
+                                <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Type</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                $for c in channel.bundled_channels:
+                                <tr>
+                                    <td>$c.name</td>
+                                    <td>$c.get_type_name()</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        $else:
+                            <i>There is no channels bundled by this bundle.</i>
+
+
+                    <h4>Screen subscriptions</h4>
+                    $if channel.subscriptions:
+                        <table class="table table-hover table-bordered" cellspacing="0" width="100%">
+                            <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Added by</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            $for sub in channel.subscriptions:
+                                <tr>
+                                    <td>$sub.screen.name</td>
+                                    <td>$sub.created_by.fullname</td>
+                                </tr>
+
+                            </tbody>
+                        </table>
+                    $else:
+                        <i>There is no screen subscribed to this channel.</i>
+                    $if channel.subscription_right != 'public':
+                        <h4>Authorized subscribers</h4>
+                        $if channel.authorized_subscribers:
+                            <table class="table table-hover table-bordered" cellspacing="0" width="100%">
+                                <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>e-mail</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                $for sub in channel.authorized_subscribers:
+                                    <tr>
+                                        <td>$(sub.fullname if sub.fullname is not None else sub.username)</td>
+                                        <td>$(sub.email if sub.email is not None else "-")</td>
+                                    </tr>
+
+                                </tbody>
+                            </table>
+                        $else:
+                            <i>There is no authorized subscriber for this channel.</i>
+                    $if UserPermissions.administrator in current_user.highest_permission_level:
+                        <hr/>
+                        <button class="btn bg-maroon" data-toggle="modal" data-target="#manage-bundles-modal"><span class="glyphicon glyphicon-gift"></span>Add to bundles</button>
+                </div>
+            </div>
+        </div>
+        <div class="$('col-lg-6' if not vertical else 'col-lg-5')">
+            <div class="box">
+                <div class="box-header with-border">
+                    <h1 class="box-title" style="text-align: center;vertical-align: middle;">Preview</h1>
+                </div>
+                <div class="box-body">
+                    $if (channel_type == 'ChannelBundle' or channel.plugin.activated == 'yes') and (channel.subscription_right == 'public' or UserPermissions.administrator in current_user.highest_permission_level or (channel.subscription_right in ['restricted', 'private'] and current_user in channel.authorized_subscribers)):
+                        <div class="embed-responsive $('embed-responsive-16by9' if not vertical else 'embed-responsive-9by16')">
+                            <iframe id="iframePrevious" class="embed-responsive-item" src="$:channel.get_preview_link()"
+                                    frameBorder="0"></iframe>
+                        </div>
+                    $elif channel_type == 'PluginChannel' and channel.plugin.activated == 'no':
+                        <b><i>$info['channel']['misc']['not-activated-plugin']</i></b>
+                    $else:
+                        <b><i>$info[info_key]['misc']['not-authorized-channel']</i></b>
+                </div>
+                $if channel_type == 'PluginChannel' and channel.cache_activated:
+                    <div class="box-footer">
+                        <div style="margin-top: 8px; display: inline-block;">
+                        This channel is automatically updated every
+                        $if channel.cache_validity % 60 == 0:
+                            $(int(channel.cache_validity / 60)) hour$('s.' if channel.cache_validity / 60 > 1 else '.')
+                        $else:
+                            $channel.cache_validity minutes$('s.' if channel.cache_validity > 1 else '.')
+                        $if last_update:
+                            Its last update was $:timesince(last_update).
+                        </div>
+                    $if can_force_update:
+                        <a href="/channel/$channel.id/force_update" class="btn btn-primary pull-right"><i class="fa fa-refresh"></i>Force update</a>
+                    </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="modal fade" id="manage-bundles-modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="form-bundles" action="" method="post">
+                <input type="hidden" name="action" value="add-channel-to-bundles">
+                <input type="hidden" id="diff-bundles" name="diff" value="{}">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="modal-sub-title">Add this channel to bundles</h4>
+                </div>
+                <div class="modal-body">
+                    <table id="table-bundles" class="table table-hover table-bordered" cellspacing="0" width="100%">
+                        <thead>
+                        <tr>
+                            <th>Bundle</th>
+                            <th>Subscription right</th>
+                            <th>Part of the bundle</th>
+                        </tr>
+                        </thead>
+                        <tfoot>
+                        <tr>
+                            <th>Bundle</th>
+                            <th>Subscription right</th>
+                            <th>Part of the bundle</th>
+                        </tr>
+                        </tfoot>
+                        <tbody>
+                            $for bundle in bundles:
+                                <tr data-bundle-id="$bundle.id">
+                                    <td>
+                                        <a href="/channel/$channel.id">$bundle.name</a>
+                                        $if bundle.description:
+                                            <a type="button" class="btn btn-xs btn-default pull-right"
+                                               style="margin-top: 5px; "
+                                               tabindex="0" role="button" data-trigger="focus"
+                                               data-container="body" data-toggle="popover"
+
+                                               data-placement="right"
+                                               title="Channel description"
+                                               data-content="$bundle.description">
+                                                <i class="fa fa-info" style="margin-right: 0 !important;"></i>
+                                            </a>
+                                        $if not bundle.enabled:
+                                            <a type="button" class="btn btn-xs btn-warning pull-right"
+                                               style="margin-top: 5px; margin-right: 5px">
+                                                $:make_tooltip(info['bundle']['enabled']['channel_not_enabled'], icon=True, icon_class='fa-exclamation-triangle')
+                                            </a>
+                                    </td>
+                                    <td data-subscription-right="$bundle.subscription_right">
+                                        $if bundle.subscription_right == 'public':
+                                            <h6 class="label label-success"><i class="fa fa-sign-in"></i>Public</h6>
+                                        $elif bundle.subscription_right == 'restricted':
+                                            <h6 class="label label-warning"><i class="fa fa-sign-in"></i>Restricted</h6>
+                                        $else:
+                                            <h6 class="label label-danger"><i class="fa fa-sign-in"></i>Private</h6>
+                                    </td>
+                                    <td>
+                                        <input type="checkbox" class="bundle-checkbox" $('checked' if bundle in channel.bundles else '' )>
+                                    </td>
+                                </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn bg-maroon">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    const $$modal_bundles = $$('#manage-bundles-modal');
+    const bundled_channels = $:(json.dumps([b.id for b in channel.bundles]));
+    const diff = {};
+
+    $$.fn.dataTable.ext.order['dom-checkbox'] = function (settings, col) {
+        return this.api().column(col, {order: 'index'}).nodes().map(function (td, i) {
+            return $$('input', td).prop('checked') ? '1' : '0';
+        });
+    };
+
+    $$('#table-bundles').on('draw.dt', updateTableState);
+    $$('#table-bundles').DataTable({
+        "aoColumns": [
+            null,
+            null,
+            {"sSortDataType": "dom-checkbox"}
+        ],
+        saveState: true
+    });
+    function updateTableState() {
+        $$('[data-toggle="popover"]').popover();
+        var $$checkboxes = $$modal_bundles.find('.bundle-checkbox');
+        $$checkboxes.each(function (i, e) {
+            var cid = e.parentElement.parentElement.getAttribute('data-bundle-id');
+            e.checked = $$.inArray(parseInt(cid), bundled_channels) != -1;
+            if(cid in diff) {
+                e.checked = diff[cid];
+            }
+        });
+
+        $$checkboxes.off('change');
+        $$checkboxes.change(function () {
+            console.log(this, this.checked);
+            diff[this.parentElement.parentElement.getAttribute('data-bundle-id')] = this.checked;
+            $$('#diff-bundles').val(JSON.stringify(diff));
+        });
+    }
+</script>

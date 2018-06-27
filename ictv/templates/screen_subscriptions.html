@@ -1,0 +1,249 @@
+$def with (screen,user,users,screen_channels,plugin_channels,bundle_channels,subscriptions)
+
+$#    This file belongs to the ICTV project, written by Nicolas Detienne,
+$#    Francois Michel, Maxime Piraux, Pierre Reinbold and Ludovic Taffin
+$#    at Université catholique de Louvain.
+$#
+$#    Copyright (C) 2016-2018  Université catholique de Louvain (UCL, Belgium)
+$#
+$#    ICTV is free software: you can redistribute it and/or modify
+$#    it under the terms of the GNU Affero General Public License as published
+$#    by the Free Software Foundation, either version 3 of the License, or
+$#    (at your option) any later version.
+$#
+$#    ICTV is distributed in the hope that it will be useful,
+$#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+$#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+$#    GNU Affero General Public License for more details.
+$#
+$#    You should have received a copy of the GNU Affero General Public License
+$#    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
+
+$code:
+    feedbacks = get_feedbacks()
+    form = pop_previous_form()
+    last_by =   {sub.channel.id:
+                    {
+                        'user': sub.created_by.readable_name,
+                        'channel_name': sub.channel.name,
+                        'plugin_channel': hasattr(sub.channel, 'plugin')
+                    }
+                    for sub in subscriptions if sub.screen.id == screen.id
+                }
+    plugin_channels_names = {c.id: c.name for c in plugin_channels}
+    bundle_channels_names = {c.id: c.name for c in bundle_channels}
+    subscriptions = {}
+<section class="content-header" style="margin-bottom: 5px">
+    <h1>
+        Screen subscriptions
+        <small>List and update all subscriptions of $screen.name</small>
+        <button type="button" data-toggle="modal" data-target="#confirm-subs-modal" class="btn btn-success pull-right">
+            <i class="fa fa-check" aria-hidden="true"></i> Update screen subscriptions
+        </button>
+    </h1>
+</section>
+<section class="content">
+    $def create_alert(title, message, icon, type="success"):
+        <div class="alert alert-$type alert-dismissible">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+            <h4><i class="icon fa $icon"></i>$title</h4>
+            $message
+        </div>
+
+    $if feedbacks.has('subscription', 'ok'):
+        $:create_alert("Applied", "These changes have been successfully applied.", "fa-rss")
+
+    $if feedbacks.has('subscription', 'nothing_changed'):
+        $:create_alert("Nothing changed", "The changes you submitted did not affect the screen's subscriptions", "fa-rss", "info")
+
+    $if feedbacks.has('subscription', 'disabled_plugin'):
+        $:create_alert("Forbidden", "You cannot subscribe your screen to channels with disabled plugins", "fa-times", "error")
+
+    <div class="row">
+        $for tuple in [("Plugin Channel", plugin_channels), ("Bundle", bundle_channels)]:
+            $code:
+                type_name, channels = tuple
+            <div class="col-md-6">
+                <div class="box">
+                    <div class="box-body">
+                        <table class="table table-hover table-bordered subscriptions-table" cellspacing="0" width="100%">
+                            <thead>
+                            <tr>
+                                <th>$type_name</th>
+                                <th>Subscribed</th>
+                                <th>Subscribed by</th>
+                            </tr>
+                            </thead>
+                            <tfoot>
+                            <tr>
+                                <th>$type_name</th>
+                                <th>Subscribed</th>
+                                <th>Subscribed by</th>
+                            </tr>
+                            </tfoot>
+                            <tbody>
+                            $for channel in channels:
+                                <tr data-channel-id="$channel.id" $:('data-channel-activated="{}"'.format(channel.plugin.activated) if hasattr(channel, 'plugin') else 'data-channel-activated="yes"')
+                                $:('class="not-activated"' if hasattr(channel, 'plugin') and channel.plugin.activated != 'yes' else '')>
+                                <td>
+                                    <a href="/channel/$channel.id">$channel.name</a>
+                                    $if not channel.enabled:
+                                        <a type="button" class="btn btn-xs btn-warning pull-right" style="margin-top: 5px; margin-right: 5px">
+                                            $:make_tooltip(info['channel']['enabled']['channel_not_enabled'], icon=True, icon_class='fa-exclamation-triangle')
+                                        </a>
+                                </td>
+                                <td>
+                                    <input type="checkbox" class="channel-subscribe-checkbox" data-channel-id="$channel.id"
+                                           value="subs" $('disabled' if (not screen.is_subscribed_to(channel) and hasattr(channel, 'plugin') and channel.plugin.activated != 'yes') or not channel.can_subscribe(user) else '')
+                                           $("checked" if screen.is_subscribed_to(channel) else '')>
+                                    $if hasattr(channel, 'plugin') and channel.plugin.activated != 'yes':
+                                        <a type="button" class="btn btn-xs btn-warning pull-right" style="margin-top: 5px; ">
+                                            $:make_tooltip(info['screen']['misc']['not-activated-plugin'], icon=True, icon_class='fa-exclamation-triangle')
+                                        </a>
+                                </td>
+                                <td class="text-last-action">
+                                    $last_by.get(channel.id, {'user': '-'})['user']
+                                </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+    </div>
+</section>
+
+<div class="modal fade" id="confirm-subs-modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="" method="post">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">Update subscriptions</h4>
+                </div>
+                <div class="modal-body">
+                    <div id="summary-message" hidden>
+                        Do you confirm these change in subscriptions of screen <span id="screen-name"></span> ?
+                        <div id="subscriptions-summary"></div>
+                    </div>
+                    <div id="summary-message-empty">
+                        No changes have been done.
+                    </div>
+                    <input type="text" name="diff" id="form-diff" value="{}" hidden>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">Confirm</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<script src="/static/js/clipboard.min.js"></script>
+<script>
+    $$(document).ready(function () {
+        const dataTable = $$('.subscriptions-table').DataTable();
+
+        $if feedbacks.has_type('subscribe') and not feedbacks.has('subscribe', 'ok'):
+            fire_modal('#subscription-modal');
+
+        $$('.channel-subscribe-checkbox').change(function(e){
+            const checkbox = $$(this);
+            const channel_id = checkbox.attr("data-channel-id");
+            if(channel_id in lastBy) {  // in the original state, the screen is subscribed to this channel
+                if(checkbox.prop("checked") && channel_id in subscriptions_diff)   delete subscriptions_diff[channel_id];    // we return to the originan state
+                else    subscriptions_diff[channel_id] = false; // Indicate the unsubscription in the diff
+            } else {                    // in the original state, the screen is not subscribed to this channel
+                if(!checkbox.prop("checked") && channel_id in subscriptions_diff)   delete subscriptions_diff[channel_id];   // we return to the originan state
+                else    subscriptions_diff[channel_id] = true; // Indicate the subscription in the diff
+            }
+        });
+
+        dataTable.on( 'draw.dt', function () {
+            let checkboxes = $$('.channel-subscribe-checkbox');
+            checkboxes.off("change");
+            checkboxes.change(function(e){
+                const checkbox = $$(this);
+                const channel_id = checkbox.attr("data-channel-id");
+                if(channel_id in lastBy) {  // in the original state, the screen is subscribed to this channel
+                    if(checkbox.prop("checked") && channel_id in subscriptions_diff)   delete subscriptions_diff[channel_id];    // we return to the originan state
+                    else    subscriptions_diff[channel_id] = false; // Indicate the unsubscription in the diff
+                } else {                    // in the original state, the screen is not subscribed to this channel
+                    if(!checkbox.prop("checked") && channel_id in subscriptions_diff)   delete subscriptions_diff[channel_id];   // we return to the originan state
+                    else    subscriptions_diff[channel_id] = true; // Indicate the subscription in the diff
+                }
+            });
+        });
+
+        const modaledit = $$('#confirm-subs-modal');
+        modaledit.on('show.bs.modal', function(){
+            const to_sub = [];
+            const to_unsub = [];
+            for(const channel_id in subscriptions_diff){
+                // find if we need to sub or unsub to this channel
+                const list = subscriptions_diff[channel_id] ? to_sub : to_unsub;
+                // record the action in the correct list
+                list.push(parseInt(channel_id))
+            }
+            $$('#screen-name').html(screenName);
+            const subscriptionsSummary = $$('#subscriptions-summary');
+            const summaryMessage = $$('#summary-message');
+            const summaryMessageEmpty = $$('#summary-message-empty');
+            subscriptionsSummary.html("");
+            if(to_sub.length > 0) {
+                summaryMessage.show();
+                summaryMessageEmpty.hide();
+                subscriptionsSummary.append("<b>New subscriptions :</b>");
+                const ul_sub = document.createElement('ul');
+                for (let channel_id of to_sub) {
+                    let li = document.createElement('li');
+                    li.innerHTML = channel_id in bundleChannels ? bundleChannels[channel_id] + " (Bundle)" : pluginChannels[channel_id];
+                    ul_sub.appendChild(li);
+                }
+                subscriptionsSummary.append(ul_sub);
+            }
+            if(to_unsub.length > 0) {
+                summaryMessage.show();
+                summaryMessageEmpty.hide();
+                subscriptionsSummary.append("<b>Unsubscribe from :</b>");
+                const ul_unsub = document.createElement('ul');
+                for (let channel_id of to_unsub) {
+                    let li = document.createElement('li');
+                    li.innerHTML = channel_id in bundleChannels ? bundleChannels[channel_id] + " (Bundle)" : pluginChannels[channel_id];
+                    ul_unsub.appendChild(li);
+                }
+                subscriptionsSummary.append(ul_unsub);
+            }
+            if(to_sub.length === 0 && to_unsub.length === 0){
+                summaryMessage.hide();
+                summaryMessageEmpty.show();
+                subscriptionsSummary.append("No changes have been done.");
+            }
+            $$('#form-diff').val(JSON.stringify(subscriptions_diff));
+        });
+    });
+
+    const subscriptions_diff = {};
+
+    const lastBy = $:json.dumps(last_by);
+
+    const pluginChannels = $:json.dumps(plugin_channels_names);
+
+    const bundleChannels = $:json.dumps(bundle_channels_names);
+
+    const screenName = "$screen.name";
+
+    function fire_modal(modalSelector) {
+        const $$modal = $$(modalSelector);
+            $$modal.removeClass('fade');
+            $$modal.one('hidden.bs.modal', function () {
+                $$modal.find('.alert').detach();
+                $$modal.addClass('fade');
+            });
+            $$modal.modal('show')
+        }
+</script>

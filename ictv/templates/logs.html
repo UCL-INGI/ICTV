@@ -1,0 +1,90 @@
+$def with (loggers_stats, time_since)
+
+$#    This file belongs to the ICTV project, written by Nicolas Detienne,
+$#    Francois Michel, Maxime Piraux, Pierre Reinbold and Ludovic Taffin
+$#    at Université catholique de Louvain.
+$#
+$#    Copyright (C) 2016-2018  Université catholique de Louvain (UCL, Belgium)
+$#
+$#    ICTV is free software: you can redistribute it and/or modify
+$#    it under the terms of the GNU Affero General Public License as published
+$#    by the Free Software Foundation, either version 3 of the License, or
+$#    (at your option) any later version.
+$#
+$#    ICTV is distributed in the hope that it will be useful,
+$#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+$#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+$#    GNU Affero General Public License for more details.
+$#
+$#    You should have received a copy of the GNU Affero General Public License
+$#    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
+
+$var active_element: Logs
+<style>
+    td div.progress {
+        margin-top: 2px !important;
+    }
+    tr {
+        cursor: pointer;
+    }
+</style>
+<section class="content-header">
+    <h1>
+        Logs
+        <small>List all application logs</small>
+    </h1>
+</section>
+<section class="content">
+    <div class="row"><div class="col-md-12">
+    <div class="box">
+        <div class="box-body">
+            <table id="table" class="table table-hover table-bordered" cellspacing="0" width="100%" data-page-length='25'>
+                <thead>
+                <tr>
+                    <th>Logger name</th>
+                    <th>Last activity</th>
+                    <th>Last DEBUG</th>
+                    <th>Last INFO</th>
+                    <th>Last WARNING</th>
+                    <th>Last ERROR</th>
+                    <th>No of entries</th>
+                    <th>Size</th>
+                </tr>
+                </thead>
+                <tfoot>
+                <tr>
+                    <th>Logger name</th>
+                    <th>Last activity</th>
+                    <th>Last DEBUG</th>
+                    <th>Last INFO</th>
+                    <th>Last WARNING</th>
+                    <th>Last ERROR</th>
+                    <th>No of entries</th>
+                    <th>Size</th>
+                </tr>
+                </tfoot>
+                <tbody>
+                $for logger_name in loggers_stats.keys():
+                    $ logger_stats = loggers_stats[logger_name]
+                    <tr>
+                        <td><a href="/logs/$logger_name">$logger_name</a></td>
+                        $for name in ["last_activity", "DEBUG", "INFO", "WARNING", "ERROR"]
+                            <td title="$('Last log at %s' % (logger_stats[name].replace(microsecond=0)) if name in logger_stats else 'Never logged')">
+                                $time_since(logger_stats.get(name, None), when_none="Unknown")
+                            </td>
+                        $for key in ["n_entries", "size"]
+                            <td>
+                                $logger_stats[key]
+                            </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    </div></div>
+</section>
+<script>
+    $$(document).ready(function () {
+        $$('#table').DataTable({stateSave: true});
+    });
+</script>

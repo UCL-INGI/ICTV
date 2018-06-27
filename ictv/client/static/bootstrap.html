@@ -1,0 +1,271 @@
+<html>
+<head>
+    <title>ICTV - Client bootstrap</title>
+    <meta charset="UTF-8">
+    <style>
+        #status-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            margin-left: 10px;
+            margin-bottom: 10px;
+            font-family: Arial, Helvetica, sans-serif;
+            color: red;
+        }
+        #status-bar h1 {
+            margin-left: 10px;
+            margin-right: 10px;
+        }
+        .bg-dark {
+            background-color: rgba(0, 0, 0, 0.55);
+            border: 0 solid transparent;
+            border-radius: 8px;
+            background-clip: border-box;
+        }
+    </style>
+</head>
+<body style="margin: 0">
+    <div id="status-bar">
+        <h1 id="cache-daemon-status" class="bg-dark"></h1>
+        <h1 id="internet-status" class="bg-dark"></h1>
+    </div>
+    <script src="jquery.min.js"></script>
+    <script src="jquery.xmlrpc.min.js"></script>
+    <script>
+        var cache_daemon_base_url;
+        var already_caching = false;
+        var transitioning = false;
+        var last_cached_url;
+
+        $('body').append('<iframe id="waiting-screen" src="waiting_screen.html" frameborder="0" marginwidth="0" marginheight="0">');
+        resize_iframe('waiting-screen');
+        $(window).resize(resize);
+        window.addEventListener("message", receiveMessage, false);
+        window.onerror = function (message, source, noline, nocol, err) {
+            console.log(message, source, noline, nocol, err);
+            window.location = window.location;
+        };
+
+        init();
+
+        function prepare_cached_version() {
+            if(!already_caching) {
+                already_caching = true;
+                $.xmlrpc({
+                    url: cache_daemon_base_url,
+                    methodName: 'prepare_cached_version',
+                    success: function (response, status, jqXHR) {
+                        const request_id = response[0];
+                        setTimeout(function () {
+                            wait_for_completion(request_id)
+                        }, 1000);
+                        if(!$('#slideshow').length) {
+                            set_waiting_screen_status('The slideshow is being processed, it will begin shortly.');
+                        }
+                        $('#cache-daemon-status').text('');
+                    },
+                    error: function (jqXHR, status, error) {
+                        already_caching = false;
+                        reloop();
+                        $('#cache-daemon-status').text('Cache daemon could not be reached');
+                        console.log('prepare_cached_version failed', jqXHR, status, error);
+                    }
+                });
+                $('#cache-daemon-status').text('');
+                $('#internet-status').text('');
+            }
+        }
+
+        function wait_for_completion(request_id) {
+            $.xmlrpc({
+                url: cache_daemon_base_url,
+                methodName: 'get_status',
+                params: [request_id],
+                success: function (response) {
+                    const status = response[0];
+                    if(status == 'notready') {
+                        setTimeout(function(){wait_for_completion(request_id)}, 1000);
+                    } else if (status != null) {
+                        already_caching = false;
+                        if(!$('#slideshow').length) {
+                            transition_slideshow(status);
+                        } else {
+                            last_cached_url = status;
+                        }
+                        $('#internet-status').text('');
+                    } else {  // ICTV KO
+                        already_caching = false;
+                        reloop();
+                        $('#internet-status').text('ICTV server could not be reached');
+                        console.log('caching operation failed!')
+                    }
+                    $('#cache-daemon-status').text('');
+                },
+                error: function (jqXHR, status, error) {  // Cache daemon KO
+                    already_caching = false;
+                    reloop();
+                    $('#cache-daemon-status').text('Cache daemon could not be reached');
+                    console.log('get_status failed', jqXHR, status, error);
+                }
+            });
+        }
+
+        function transition_slideshow(url) {
+            if(!transitioning) {
+                transitioning = true;
+                const isChrome = /chrom(e|ium)/.test(navigator.userAgent.toLowerCase());
+                const reloadFunction = isChrome ? chromeSmoothReload : function(url) {firefoxSmoothReload(url,function(){transitioning=false;})};
+                var $slideshow = $('#slideshow');
+                if (!$slideshow.length) {
+                    if (isChrome)
+                        $('body').append('<iframe id="slideshow" src="' + url + '" frameborder="0" marginwidth="0" marginheight="0" hidden></iframe>');
+                    $('#waiting-screen').fadeTo(250, 0, function () {
+                        if (!isChrome)
+                            $('body').append('<iframe id="slideshow" src="' + url + '" frameborder="0" marginwidth="0" marginheight="0" hidden></iframe>');
+                        const $currentSlideshow = $('#slideshow');
+                        $currentSlideshow.attr('style', 'opacity: 0');
+                        $currentSlideshow.hide();
+                        $('#waiting-screen').remove();
+                        $currentSlideshow.fadeTo(250, 1, resize);
+                        transitioning = false;
+                    });
+                } else {
+                    reloadFunction(url)
+                }
+            }
+        }
+
+        function reloop() {
+            const $slideshow = $('#slideshow');
+            if($slideshow.length) {
+                $slideshow[0].contentWindow.onerror = window.onerror;
+                $slideshow[0].contentWindow.postMessage('reloop', '*');
+            } else {
+                $.get({
+                    url: 'last_cached_page',
+                    dataType: 'html',
+                    success: function() {
+                        transition_slideshow('last_cached_page')
+                    },
+                    error: function() {
+                        set_waiting_screen_status('No previously cached slideshow was found.');
+                        setTimeout(prepare_cached_version, 10*1000);
+                    }
+                })
+            }
+        }
+
+        function chromeSmoothReload(url) {
+            const $currentSlideshow = $('#slideshow');
+            var $nextSlideshow = $('#next-slideshow');
+            if ($nextSlideshow.length == 0) {
+                $currentSlideshow.after('<iframe id="next-slideshow" src="' + url + '" ' +
+                        'width="' + $currentSlideshow[0].width + '" height="' + $currentSlideshow[0].height + '" ' +
+                        'frameborder="0" marginwidth="0" marginheight="0" hidden></iframe>');
+                $nextSlideshow = $('#next-slideshow');
+                $nextSlideshow.attr('style', 'opacity: 0');
+            }
+        }
+
+        function firefoxSmoothReload(url, cb) {
+            const $currentSlideshow = $('#slideshow');
+            if ($('#next-slideshow').length == 0) {
+                $currentSlideshow.fadeTo(250, 0, function () {
+                    $currentSlideshow.after('<iframe id="next-slideshow" src="' + url + '" ' +
+                            'width="' + $currentSlideshow[0].width + '" height="' + $currentSlideshow[0].height + '" ' +
+                            'frameborder="0" marginwidth="0" marginheight="0"></iframe>');
+                    const $nextSlideshow = $('#next-slideshow');
+                    $nextSlideshow.hide();
+                    $currentSlideshow.remove();
+                    $nextSlideshow.attr('id', 'slideshow');
+                    $nextSlideshow.fadeTo(250, 1, cb);
+                });
+            }
+        }
+
+        function resize() {
+            resize_iframe('slideshow');
+        }
+
+        function resize_iframe(id) {
+            try {
+                var iframe = document.getElementById(id);
+                iframe.height = window.innerHeight;
+                iframe.width = $(window).width();
+            } catch (err) {
+                console.log('Resizing failed for iframe ' + id);
+            }
+        }
+
+        function set_waiting_screen_status(status) {
+            try {
+                $('#waiting-screen')[0].contentWindow.postMessage(status, '*')
+            } catch (err) {console.log('The waiting screen is not present anymore, but message "' + status + '" was sent.')}
+        }
+
+        function receiveMessage(event) {
+            try {
+                if (event.source == $('#slideshow')[0].contentWindow && event.data == 'endOfSlideshow') {
+                    if(!already_caching) {
+                        prepare_cached_version();
+                        if(last_cached_url) {
+                            transition_slideshow(last_cached_url);
+                            last_cached_url = null;
+                            return;
+                        }
+                    }
+                    if (!transitioning) {
+                        reloop();
+                    }
+                } else if (event.source == $('#next-slideshow')[0].contentWindow && event.data == 'loaded') {
+                    const $currentSlideshow = $('#slideshow');
+                    const $nextSlideshow = $('#next-slideshow');
+                    $currentSlideshow.fadeTo(250, 0, function () {
+                        $nextSlideshow.attr('style', '');
+                        $nextSlideshow.hide();
+                        $currentSlideshow.remove();
+                        $nextSlideshow.fadeTo(250, 1);
+                        $nextSlideshow.attr('id', 'slideshow');
+                        transitioning = false;
+                    });
+                }
+            } catch (err) {}
+        }
+
+        function init() {
+            $.getJSON({
+                url: 'config.json',
+                dataType: 'json',
+                mimeType: 'application/json',
+                success: function (response) {
+                    var missing_params = [];
+                    if(!response.hasOwnProperty('cache_daemon_host')) {
+                        missing_params.push('cache_daemon_host');
+                    }
+                    if(!response.hasOwnProperty('cache_daemon_port')) {
+                        missing_params.push('cache_daemon_port');
+                    }
+                    if(!response.hasOwnProperty('ictv_root_url')) {
+                        missing_params.push('ictv_root_url');
+                    }
+                    if(missing_params.length) {
+                        setTimeout(function() {
+                            set_waiting_screen_status('The configuration file is missing the <i>' + missing_params.join(', ') +  '</i> parameter(s).');
+                        }, 0);
+                    } else {
+                        cache_daemon_base_url = 'http://' + response.cache_daemon_host + ':' + response.cache_daemon_port;
+                        prepare_cached_version();
+                    }
+                },
+                error: function (jqXHR, status, error) {
+                    console.log('get_config failed', jqXHR, status, error);
+                    setTimeout(function () {
+                        set_waiting_screen_status('The configuration file could not be found. Please contact the system administrators.');
+                    }, 0);
+                    setTimeout(init, 10 * 1000);
+                }
+            });
+        }
+    </script>
+</body>
+</html>

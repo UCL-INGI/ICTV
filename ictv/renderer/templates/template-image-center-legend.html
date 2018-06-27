@@ -1,0 +1,36 @@
+$def with (slide)
+
+$#    This file belongs to the ICTV project, written by Nicolas Detienne,
+$#    Francois Michel, Maxime Piraux, Pierre Reinbold and Ludovic Taffin
+$#    at Université catholique de Louvain.
+$#
+$#    Copyright (C) 2016-2018  Université catholique de Louvain (UCL, Belgium)
+$#
+$#    ICTV is free software: you can redistribute it and/or modify
+$#    it under the terms of the GNU Affero General Public License as published
+$#    by the Free Software Foundation, either version 3 of the License, or
+$#    (at your option) any later version.
+$#
+$#    ICTV is distributed in the hope that it will be useful,
+$#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+$#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+$#    GNU Affero General Public License for more details.
+$#
+$#    You should have received a copy of the GNU Affero General Public License
+$#    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
+
+$var name: Image centered + 3 fields
+$var description: Image centered with title, subtitle and legend
+<div class="logo logo-ucl">
+    $:logo(content=slide, number=1, editor_type="image", editor_placeholder="Choose a logo", editor_default="/static/plugins/editor/placeholders/270x350.png", editor_label="Logo", editor_order="6")
+</div>
+<div class="logo logo-fac">
+    $:logo(content=slide, number=2, editor_type="image", editor_placeholder="Choose a logo", editor_default="/static/plugins/editor/placeholders/270x350.png", editor_label="Logo", editor_order="5")
+</div>
+<div class="content">
+    $:title(content=slide, number=1, max_chars=25, editor_type="text", editor_placeholder="Title", editor_label="Title", editor_default="Title", editor_order="1")
+    $:subtitle(content=slide, number=1, max_chars=70, editor_type="text", editor_placeholder="Subtitle", editor_label="Subtitle", editor_default="Subtitle", editor_order="2")
+
+    $:img(content=slide, number=1, editor_type="image", editor_placeholder="Choose an image", editor_label="Image", editor_default="/static/plugins/editor/placeholders/270x350.png", editor_order="4")
+    $:text(content=slide, number=1, style="text-align: center;", max_chars=90, editor_type="textarea", editor_placeholder="Text", editor_label="Text", editor_default="Text", editor_order="3")
+</div>

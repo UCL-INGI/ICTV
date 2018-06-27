@@ -1,0 +1,90 @@
+$def with (user, channels)
+
+$#    This file belongs to the ICTV project, written by Nicolas Detienne,
+$#    Francois Michel, Maxime Piraux, Pierre Reinbold and Ludovic Taffin
+$#    at Université catholique de Louvain.
+$#
+$#    Copyright (C) 2016-2018  Université catholique de Louvain (UCL, Belgium)
+$#
+$#    ICTV is free software: you can redistribute it and/or modify
+$#    it under the terms of the GNU Affero General Public License as published
+$#    by the Free Software Foundation, either version 3 of the License, or
+$#    (at your option) any later version.
+$#
+$#    ICTV is distributed in the hope that it will be useful,
+$#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+$#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+$#    GNU Affero General Public License for more details.
+$#
+$#    You should have received a copy of the GNU Affero General Public License
+$#    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
+
+<section class="content-header">
+    <h1>
+        Send an email
+        <small>Contact your users through ICTV</small>
+    </h1>
+</section>
+<section class="content">
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="box box-warning">
+                <form action="/emails" method="post">
+                    <div class="box-body">
+                        <div class="form-group">
+                            <label for="edit-subject">Subject</label>
+                            <input type="text" id="edit-subject" name="subject" class="form-control" value="" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-body">Content</label>
+                                <textarea id ="edit-body" name = "body" class="form-control" rows="4" cols="50" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>To</label>
+                            <div class="radio">
+                                <label for="choose-to-admin"><input type="radio" class="rad" id="choose-to-admin" name="to" value="admins">Admins</label>
+                            </div>
+                            <div class="radio">
+                                <label for="choose-to-supadmin"><input type="radio" class="rad" id="choose-to-supadmin" name="to" value="supadmins">Super admins</label>
+                            </div>
+                            <div class="radio">
+                                <label for="choose-to-screenadmins"><input type="radio" class="rad" id="choose-to-screenadmins" name="to" value="screenadmins">Screen admins</label>
+                            </div>
+                            <div class="radio">
+                               <label for="choose-to-contrib"><input type="radio" class="rad" id="choose-to-contrib" name="to" value="contrib">Contributors</label>
+                            </div>
+                            <div class="radio">
+                               <label for="choose-to-channel_editor_users"><input type="radio" class="rad" id="choose-to-channel_editor_users" name="to" value="channel_editor_users">Users of the plugin editor</label>
+                            </div>
+
+                        </div>
+                        <div class="form-group" id="hide_and_show_channels">
+                          <label for="select_channel">Select a channel</label>
+                          <select class="form-control" id="select_channel" name="select_channel">
+                            $for elem in channels:
+                              <option value="$elem.id">$elem.name</option>
+                          </select>
+                        </div>
+
+                    </div>
+                    <div class="box-footer">
+                        <a href="/" class="btn btn-default">Cancel</a>
+                        <button type="submit" class="btn btn-warning">Send Email</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+<script>
+    $$(document).ready(function() {
+        $$('#hide_and_show_channels').hide();
+    });
+    $$('.rad').click(function(){
+        if ($$('#choose-to-contrib').is(':checked')) {
+            $$('#hide_and_show_channels').show();
+        }else{
+            $$('#hide_and_show_channels').hide();
+        }
+    });
+</script>

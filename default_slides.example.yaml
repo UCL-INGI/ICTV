@@ -1,0 +1,15 @@
+# DO NOT modify this configuration file directly. If you want to change the configuration of ICTV create yours instead.
+# This file is part of the source code distribution and may be changed during upgrades without prior approval.
+channel_slide:
+  duration: 10000  # The duration of the default slide
+  template: template-text-center  # The template to be used
+  content:  # The content dictionary that will be given to the renderer
+    logo-2:
+      src: ~
+    title-1:
+      text: 'This channel has no content'
+    subtitle-1:
+      text: 'Please comeback later'
+    text-1:
+      text: 'If you think content should be available here, please contact the channel administrators.'
+screen_slide: ~  # Indicates no slides should be used for screens

@@ -1,0 +1,32 @@
+# DO NOT modify this configuration file directly. If you want to change the configuration of ICTV create yours instead and give it to app when ran.
+# This file is part of the source code distribution and may be changed during upgrades without prior approval.
+debug:  # Show a comprehensive page when an internal error occurs and set the log level to debug.
+  debug_on_error: yes  # Switch the log level to debug and show a debug page when an internal error occurs
+  autologin: no  # Skip the authentication method and autolog a default user
+  serve_static: yes  # Serve the static directory from the application
+  dummy_login: no  # Adds a VERY UNSAFE /login/<email> login page, DO NOT use in production. This feature may disappear without prior notice.
+  debug_env: yes  # Activates a debugging page that dumps the web.ctx environment variables
+authentication: # Accepted values are local and saml2
+  - local
+logs:
+  rotation_interval: 7  # Number of days between log rotation
+  backup_count: 2  # Number of logs kept after rotation
+database_uri: sqlite:ictv_database.sqlite  # See http://www.sqlobject.org/SQLObject.html#declaring-a-connection
+smtp:  # Configure the email server to be used
+  sender_name: 'ICTV <no-reply@ictv2.info.ucl.ac.be>'
+  host: 'smtp.sgsi.ucl.ac.be'
+  port: 587
+  username: 'changeme@somedomain.com'
+  password: 'secret'
+  starttls: True
+alert_template_limits:  # Configure the digest of email alerts when a channel does not comply with templates limits
+  activated: yes
+  digest_hour_interval: 24.0
+  subject: 'ICTV: Some of your channels do not comply with templates limits'
+default_theme: ucl  # The default theme to be used when no theme is specified.
+default_slides: default_slides.yaml  # A relative path to the config file, or an absolute path indicating a file containing default_slides definitions. Set to None to use default default-slides.
+client:
+  root_password: $6$Yp9qv15SBOX0g63N$gDhZa/NVJoRmw/PZYAl6gT/20pnXIDucU63sYRLk/OO4nwWHCoigwM.Vi5C5IHLAmycnyeJgAr7w5BSG7GbZX/  # NOT the cleartext password you want to use, but the result of `python -c 'import crypt; print(crypt.crypt("My Password"))'`
+  authorized_keys: |  # A text that will populate /root/.ssh/authorized_keys on clients installed through ICTV
+  ssh-dss AAAAB3NzaC1kc3MAAACBAMAJcx9K8I7MMGnQpL0CRci9gxISO5HvjNKtPGD6H8Rt6qaCnUuQDL1A727qKypUCkNfwYvzIdmsRkngsNjjlQabL0MNLw+sSWbIG0+Enx7PtSEkGqbtGDtddYuJ98/+neyuarsbqY1+7Ah/XBRuR0fsJDeoArTZvA7iBGr5vbKvAAAAFQCjC3MPz1CTD1OJJnmht9a2TX2p3QAAAIA3tNoGWD+QfETy9yoGMfsd+fb+DawkMaoU6NNswSGBofaYUUJm3Q3oCapYkj1stxSVb4xxDC7EO5OCx3u9wAg9qgwoXjlFMqHv3BIhixQXs1AvRH2ePdNDGEuJ3PglYPCQTiXJVuvaq27bAYo7BhjQBztTCfZr2TzWY2hr9S5uXwAAAIEApIqBF/k++bJpUd6aVEmy/9BXh9iPOezSoIjQ/OuXLpjcZH+0im61ksF3igCgkz/dGmZkSfF5myUIEWaKqWq9S5aXunanGNHDbs25BdrCk0Bl92DrPEg0BBlcLHRAAmVxdnrVi+afxZN6ATs2n8H56nG6EcupMKyHbq6GFpemhTQ=
+  ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDdtljAX41OR/a3cvB/cha2d9wZCaakXXMvQRsqX8zKNRQ9aS1FlpPjrOUjlnjLClrvZrtIKF4zZfsLAl9yWHNqo9bTY6xmcKleJszOEwrIb2sYQMv99geGVL/J59lp7A6J0HBKw6OdhkzRC1b+P/iHQUHugBgcTwjAl0plQTqUHEo5nP1mfs1u7BoRavxjRwFr8mrFzCzyJ53d1KjoLjekzGCw3qUUfuyXwKvRfFJSADPgzo46G8cCvqGr7Lb47dRnlIdq84SWRoEjEm8BatfLcr2nBsvvi2NCaoY+u1JA+POv3bEqsN19DVEnIY+sW2UOFv49priQX0snfeupYcutqqGDJIbSSRH0FdK/hISLZleaF4g5ksY/s0hgvlwlJmzKlaim5xWHGngyASyZ89qi/dXFxk4S17EboNNZHol59LgQM14gZmyOj0oleySGMuMbAw3jp7P72FyFUFl4Fnuv/FyPXTX45QkhG6wVBaSqhDbQ601PapMxvYauuxfcKDaXFEipKqaaJlvg5cluIoC9JE67/mdXVO9RahITzFUSfENf88hGDsPzAHVH70RSv3D2dKVyTv3HvG0dgQkIG6828fcOkYmmb1pFqe96MNUwGEXiAnRDs5VJF0dfPpM8MuV3lJH6oqjCeHP7X64V0/KX7cafeo1VvuCypTRtXl1RKw==

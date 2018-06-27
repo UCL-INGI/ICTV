@@ -1,0 +1,96 @@
+$def with (user)
+
+$#    This file belongs to the ICTV project, written by Nicolas Detienne,
+$#    Francois Michel, Maxime Piraux, Pierre Reinbold and Ludovic Taffin
+$#    at Université catholique de Louvain.
+$#
+$#    Copyright (C) 2016-2018  Université catholique de Louvain (UCL, Belgium)
+$#
+$#    ICTV is free software: you can redistribute it and/or modify
+$#    it under the terms of the GNU Affero General Public License as published
+$#    by the Free Software Foundation, either version 3 of the License, or
+$#    (at your option) any later version.
+$#
+$#    ICTV is distributed in the hope that it will be useful,
+$#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+$#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+$#    GNU Affero General Public License for more details.
+$#
+$#    You should have received a copy of the GNU Affero General Public License
+$#    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
+
+<section class="content-header">
+    <h1>
+        $user.fullname
+        <small>User details</small>
+    </h1>
+</section>
+<section class="content">
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="box">
+                <div class="box-body">
+                    <h3 style="margin-top: 10px;">Personal details</h3>
+                    <h4>Username</h4>
+                    <div class="panel panel-default">
+                        <div class="panel-body">
+                            $user.username
+                        </div>
+                    </div>
+                    <h4>Email address</h4>
+                    <div class="panel panel-default">
+                        <div class="panel-body">
+                            $user.email
+                        </div>
+                    </div>
+
+                    <h3>User permissions</h3>
+                    $if not user.super_admin:
+                        <h4>Channels</h4>
+                        $if user.roles:
+                            <ul>
+                                $for role in user.roles:
+                                    <li>
+                                        <b>$(UserPermissions.get_permission_name(role.permission_level))</b> of <b>$role.channel.name</b> ($role.channel.plugin.name)
+                                        $if role.channel.plugin.params_access_rights:
+                                            <ul>
+                                                $for p_a_r in role.channel.plugin.params_access_rights:
+                                                    $ read, write = p_a_r.get_access_rights_for(role.permission_level)
+                                                    $if read:
+                                                        <li>
+                                                            Can <i><b>view</b></i>$:(' and <i><b>modify</b></i>' if write else '') parameter <b>$p_a_r.name</b>
+                                                        </li>
+                                            </ul>
+                                    </li>
+                            </ul>
+                        $else:
+                            <i>$user.fullname is not part of any channels.</i>
+
+                        <h4>Screens</h4>
+                        $if user.screens:
+                            <ul>
+                                $for screen in user.screens:
+                                    <li>
+                                        <b>$(UserPermissions.get_permission_name(UserPermissions.screen_administrator))</b> of <b>$screen.name</b> ($screen.building.name)
+                                    </li>
+                            </ul>
+                        $else:
+                            <i>$user.fullname is not administrator of any screens.</i>
+
+                        <h4>Authorized subscriber</h4>
+                        $if user.authorized_channels:
+                            <ul>
+                                $for channel in user.authorized_channels:
+                                    <li>
+                                        $channel.name ($channel.plugin.name)
+                                    </li>
+                            </ul>
+                        $else:
+                            <i>$user.fullname is not authorized to subscribe to any restricted channels.</i>
+                    $else:
+                        <i><b>$user.fullname is a super administrator.</b></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

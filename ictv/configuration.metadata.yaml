@@ -1,0 +1,116 @@
+# This file does not impact the configuration of ICTV. Do not modify it with this intent.
+# This file is part of the source code distribution and may be changed during upgrades without prior approval.
+# It contains metadata about the parameters of ICTV configuration
+debug:
+  type: dict
+  items:
+    debug_on_error:
+      type: bool
+    autologin:
+      type: bool
+    serve_static:
+      type: bool
+    dummy_login:
+      type: bool
+    debug_env:
+      type: bool
+authentication:
+  type: list[str]
+logs:
+  type: dict
+  items:
+    rotation_interval:
+      type: int
+      min: 1
+    backup_count:
+      type: int
+      min: 0
+database_uri:
+  type: string
+saml2:
+  type: dict
+  items:
+    display_name:
+      type: str
+    strict:
+      type: bool
+    debug:
+      type: bool
+    sp: 
+      type: dict
+      items:
+        entityId:
+          type: str
+        x509cert: 
+          type: str
+        privateKey:
+          type: str
+        attrs:
+          type: dict
+          items:
+            username:
+              type: str
+            realname:
+              type: str
+            email:
+              type: str
+    idp: 
+      type: dict
+      items:
+        entityId:
+          type: str
+        singleSignOnService: 
+          type: dict
+          items:
+            url:
+              type: str
+            binding:
+              type: str
+        x509cert:
+          type: str
+    security:
+      type: dict
+      items:
+          metadataValidUntil:
+              type: str
+          metadataCacheDuration: 
+              type: str
+smtp:
+  type: dict
+  items:
+    sender_name:
+      type: str
+    host:
+      type: str
+    port:
+      type: int
+      min: 1
+    username:
+      type: str
+    password:
+      type: str
+    starttls:
+      type: bool
+alert_template_limits:
+  type: dict
+  items:
+    activated:
+      type: bool
+    digest_hour_interval:
+      type: float
+      min: 0.01
+    subject:
+      type: str
+default_theme:
+  type: str
+default_slides:
+  type: str
+client:
+  type: dict
+  items:
+    root_password:
+     type: str
+    authorized_keys:
+      type: str
+homepage_description:
+  type: str

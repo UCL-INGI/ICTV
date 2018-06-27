@@ -1,0 +1,54 @@
+# DO NOT modify this configuration file directly. If you want to change the configuration of ICTV create yours instead and give it to app when ran.
+# An complete example of a configuration file is available in configuration.example.yaml
+# This file is part of the source code distribution and may be changed during upgrades without prior approval.
+# This file contains the default values ICTV will rely on when no value for the following parameters can be found.
+debug:
+  debug_on_error: yes
+  autologin: no
+  serve_static: yes
+  dummy_login: no
+  debug_env: yes
+authentication:
+  - local
+logs:
+  rotation_interval: 7
+  backup_count: 2
+database_uri: sqlite:database.sqlite
+saml2:
+  display_name: ''
+  strict: true
+  debug: true
+  sp:
+      entityId: 'https://myapp/shibboleth'
+      x509cert: ' '
+      privateKey: ' '
+      attrs:
+          username: 'urn:oid:2.5.4.4'
+          realname: 'urn:oid:2.5.4.3'
+          email: 'urn:oid:1.3.6.1.4.1.5923.1.1.1.6'
+  idp:
+      entityId: 'https://idp.testshib.org/idp/shibboleth'
+      singleSignOnService:
+          url: 'https://idp.testshib.org/idp/profile/SAML2/Redirect/SSO'
+          binding: 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect'
+      x509cert: 'MIIDAzCCAeugAwIBAgIVAPX0G6LuoXnKS0Muei006mVSBXbvMA0GCSqGSIb3DQEB CwUAMBsxGTAXBgNVBAMMEGlkcC50ZXN0c2hpYi5vcmcwHhcNMTYwODIzMjEyMDU0 WhcNMzYwODIzMjEyMDU0WjAbMRkwFwYDVQQDDBBpZHAudGVzdHNoaWIub3JnMIIB IjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAg9C4J2DiRTEhJAWzPt1S3ryh m3M2P3hPpwJwvt2q948vdTUxhhvNMuc3M3S4WNh6JYBs53R+YmjqJAII4ShMGNEm lGnSVfHorex7IxikpuDPKV3SNf28mCAZbQrX+hWA+ann/uifVzqXktOjs6DdzdBn xoVhniXgC8WCJwKcx6JO/hHsH1rG/0DSDeZFpTTcZHj4S9MlLNUtt5JxRzV/MmmB 3ObaX0CMqsSWUOQeE4nylSlp5RWHCnx70cs9kwz5WrflnbnzCeHU2sdbNotBEeTH ot6a2cj/pXlRJIgPsrL/4VSicPZcGYMJMPoLTJ8mdy6mpR6nbCmP7dVbCIm/DQID AQABoz4wPDAdBgNVHQ4EFgQUUfaDa2mPi24x09yWp1OFXmZ2GPswGwYDVR0RBBQw EoIQaWRwLnRlc3RzaGliLm9yZzANBgkqhkiG9w0BAQsFAAOCAQEASKKgqTxhqBzR OZ1eVy++si+eTTUQZU4+8UywSKLia2RattaAPMAcXUjO+3cYOQXLVASdlJtt+8QP dRkfp8SiJemHPXC8BES83pogJPYEGJsKo19l4XFJHPnPy+Dsn3mlJyOfAa8RyWBS 80u5lrvAcr2TJXt9fXgkYs7BOCigxtZoR8flceGRlAZ4p5FPPxQR6NDYb645jtOT MVr3zgfjP6Wh2dt+2p04LG7ENJn8/gEwtXVuXCsPoSCDx9Y0QmyXTJNdV1aB0AhO RkWPlFYwp+zOyOIR+3m1+pqWFpn0eT/HrxpdKa74FA3R2kq4R7dXe4G0kUgXTdqX MLRKhDgdmA=='
+  security:
+      metadataValidUntil: ~
+      metadataCacheDuration: ~
+smtp:
+  sender_name: 'ICTV <ictv@localhost>'
+  host: 'localhost'
+  port: 587
+  username: ~
+  password: ~
+  starttls: False
+alert_template_limits:
+  activated: yes
+  digest_hour_interval: 24.0
+  subject: 'ICTV: Some of your channels do not comply with templates limits'
+default_theme: ictv
+default_slides: ~
+homepage_description: |
+  <p>
+    ICTV is a free and open-source application <a href="#" data-toggle="popover" data-trigger="focus" title="Authors" data-content="N. Detienne, F. Michel, M. Piraux, P. Reinbold, L. Taffin">developed</a> within the <a href="https://uclouvain.be/en/research-institutes/icteam/ingi">INGI</a> department and funded by the <a href="https://uclouvain.be/">Université catholique de Louvain</a>. You are welcome to contribute to the project by reporting bugs, suggesting new features or developing plugins on <a href="https://github.com/UCL-INGI/ICTV">GitHub</a>.
+  </p>

@@ -1,0 +1,122 @@
+
+.content {
+    text-align: justify;
+}
+
+.content.bg-dark {
+    color: #f3f3f3;
+    background-color: rgba(0, 0, 0, 0.45);
+    border: 1px solid transparent;
+    border-radius: 0.5em;
+    background-clip: border-box;
+}
+
+.content .title {
+    color: #4a96cd;
+}
+
+.content .subtitle {
+    color: #4183B3;
+}
+
+.content .title, .content .subtitle {
+    text-align: center;
+}
+
+.content p {
+    text-align: justify;
+}
+
+.content .center {
+    text-align: center;
+}
+
+.content ul {
+    display: inline-table;
+}
+
+.reveal img.sub-image {
+    max-height: 600px;
+    max-width: 1450px;
+    display: block;
+    margin: 0 auto;
+}
+
+.reveal section img {
+    border: none;
+    box-shadow: none;
+}
+
+.reveal section img.center {
+    display: block;
+    margin-left: auto;
+    margin-right: auto
+}
+
+.reveal section .logo {
+    vertical-align: bottom;
+    width: 160px;
+    height: 160px;
+}
+
+.reveal section .logo img {
+    float: inherit;
+    margin: 0;
+}
+
+.reveal section .logo-ucl {
+    float: left;
+}
+
+.reveal section .logo-fac {
+    float: right;
+}
+.reveal section .logo-r {
+    float: right;
+}
+.reveal section .logo-ucl img {
+    max-width: 160px;
+    max-height: 160px;
+}
+
+.reveal section .logo-fac img {
+    max-width: 120px;
+    max-height: 120px;
+}
+.reveal section .logo-r img {
+    max-width: 160px;
+    max-height: 160px;
+}
+
+.reveal[data-transition-speed="slowest"] .slides section {
+    -webkit-transition-duration: 1500ms;
+    -moz-transition-duration: 1500ms;
+    -ms-transition-duration: 1500ms;
+    transition-duration: 1500ms;
+}
+
+.reveal .slide-number {
+    font-size: 0.8em;
+}
+
+
+.capsule {
+    height: 100%;
+}
+
+
+.hover {
+    min-width: 25px !important;
+    min-height: 25px !important;
+}
+
+
+section .hover {
+    border-radius: 5px;
+    box-shadow: 0 0 15px rgb(11, 11, 189) !important;
+}
+
+section.has-dark-background .hover {
+    border-radius: 5px;
+    box-shadow: 0 0 15px rgb(244, 244, 66) !important;
+}

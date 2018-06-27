@@ -1,0 +1,20 @@
+217a218,233
+> ###### ADDED FOR ICTV ######
+> WSGIPythonPath /var/www/ictv-v2
+> WSGISocketPrefix /var/run/wsgi
+>
+> <VirtualHost *:80>
+>   LoadModule wsgi_module modules/mod_wsgi_python3.5.so
+>   AddDefaultCharset UTF-8
+>   WSGIScriptAlias / /var/www/ictv-v2/ictv.wsgi
+>   Alias /static /var/www/ictv-v2/ictv/static/
+>   AddType text/html .html
+>   <Directory /var/www/ictv-v2>
+>       Order deny,allow
+>       Allow from all
+>   </Directory>
+>   WSGIDaemonProcess ictv-v2 lang=en_US.UTF-8  processes=1 threads=15 display-name=%{GROUP} home=/var/www/ictv-v2
+>   WSGIProcessGroup ictv-v2
+> </VirtualHost>
+> ###### END ADDED FOR ICTV ######
+

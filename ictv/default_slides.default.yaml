@@ -1,0 +1,28 @@
+# DO NOT modify this configuration file directly. If you want to change the configuration of ICTV create yours instead.
+# An complete example of a configuration file is available in configuration.example.yaml
+# This file is part of the source code distribution and may be changed during upgrades without prior approval.
+# This file contains the default slides ICTV will rely on when no content can be found for a screen or a channel.
+channel_slide:
+  duration: 10000
+  template: template-text-center
+  content:
+    logo-2:
+      src: ~
+    title-1:
+      text: 'This channel has no content'
+    subtitle-1:
+      text: 'Please comeback later'
+    text-1:
+      text: 'If you think content should be available here, please contact the channel administrators.'
+screen_slide:
+  duration: 10000
+  template: template-text-center
+  content:
+    logo-2:
+      src: ~
+    title-1:
+      text: 'This screen has no content'
+    subtitle-1:
+      text: 'Please comeback later'
+    text-1:
+      text: 'If you think content should be available here, please contact the screen administrators.'

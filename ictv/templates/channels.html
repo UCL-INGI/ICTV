@@ -1,0 +1,1076 @@
+$def with (plugin_channels, bundles, current_user, users, activated_plugins, found_plugins)
+
+$#    This file belongs to the ICTV project, written by Nicolas Detienne,
+$#    Francois Michel, Maxime Piraux, Pierre Reinbold and Ludovic Taffin
+$#    at Université catholique de Louvain.
+$#
+$#    Copyright (C) 2016-2018  Université catholique de Louvain (UCL, Belgium)
+$#
+$#    ICTV is free software: you can redistribute it and/or modify
+$#    it under the terms of the GNU Affero General Public License as published
+$#    by the Free Software Foundation, either version 3 of the License, or
+$#    (at your option) any later version.
+$#
+$#    ICTV is distributed in the hope that it will be useful,
+$#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+$#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+$#    GNU Affero General Public License for more details.
+$#
+$#    You should have received a copy of the GNU Affero General Public License
+$#    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
+
+$var active_element: Channels
+$var has_tour: True
+$code:
+    feedbacks = get_next_feedbacks()
+    feedbacks_v2 = get_feedbacks()
+    form = pop_previous_form()
+<section class="content-header">
+    <h1>
+        Channels
+        <small>List all channels</small>
+    </h1>
+</section>
+<section class="content">
+    $def general_feedback(icon, action, object_name):
+        <div class="alert alert-success alert-dismissible">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+        <h4><i class="icon fa $icon"></i>$action.title()</h4>
+        The $object_name <strong><i>$form.name.strip()</i></strong> has been successfully $action.
+        </div>
+
+    $code:
+        types = [('create', 'fa-check'), ('edit', 'fa-pencil'), ('delete', 'fa-trash-o'), ('configure', 'fa-wrench')]
+        objects = ['channel', 'bundle']
+
+    $for object in objects:
+        $for type, icon in types:
+            $if feedbacks.has(type + '-' + object, 'ok'):
+                $:general_feedback(icon, type + ('d' if type.endswith('e') else 'ed'), object)
+
+    $if feedbacks.has('add-users-channel', 'ok'):
+        <div class="alert alert-success alert-dismissible">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+            <h4><i class="icon fa fa-pencil"></i>Updated</h4>
+            The channel users of <strong><i>$form.name.strip()</i></strong> have been successfully updated.
+        </div>
+
+    $if feedbacks.has('add-channel-to-bundles', 'ok') or feedbacks_v2.has('add-channel-to-bundles', 'ok'):
+        <div class="alert alert-success alert-dismissible">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+            <h4><i class="icon fa fa-pencil"></i>Updated</h4>
+            The bundles containing <strong><i>$form.name.strip()</i></strong> have been successfully updated.
+        </div>
+    <div class="row"><div class="col-md-12">
+    <div class="nav-tabs-custom">
+        <ul class="nav nav-tabs" role="tablist">
+            <li><a href="#plugin-channels" data-toggle="tab">Plugin Channels</a></li>
+            <li><a href="#bundles" data-toggle="tab">Bundles</a></li>
+        </ul>
+        <div class="tab-content" style="padding-top: 15px">
+            $def make_name_cell(channel, info_key='channel'):
+                <td>
+                    <a href="/channel/$channel.id">$channel.name</a>
+                    $if channel.description:
+                        <a type="button" class="btn btn-xs btn-default pull-right" style="margin-top: 5px; "
+                                tabindex="0" role="button" data-trigger="focus"
+                                data-container="body" data-toggle="popover"
+
+                                data-placement="right"
+                                title="Channel description"
+                                data-content="$channel.description">
+                            <i class="fa fa-info" style="margin-right: 0 !important;"></i>
+                        </a>
+                    $if not channel.enabled:
+                        <a type="button" class="btn btn-xs btn-warning pull-right" style="margin-top: 5px; margin-right: 5px">
+                            $:make_tooltip(info[info_key]['enabled']['channel_not_enabled'], icon=True, icon_class='fa-exclamation-triangle')
+                        </a>
+                </td>
+            $def make_subscription_right_cell(channel):
+                <td data-subscription-right="$channel.subscription_right">
+                    $if channel.subscription_right == 'public':
+                        <h6 class="label label-success"><i class="fa fa-sign-in"></i>Public</h6>
+
+                    $elif channel.subscription_right == 'restricted':
+                        <h6 class="label label-warning"><i class="fa fa-sign-in"></i>Restricted</h6>
+
+                    $else:
+                        <h6 class="label label-danger"><i class="fa fa-sign-in"></i>Private</h6>
+                </td>
+            $def make_channel_common_actions(channel, active):
+                $if UserPermissions.administrator in current_user.highest_permission_level:
+                    <button class="btn btn-xs bg-maroon" data-toggle="modal" data-target="#manage-bundles-modal" onclick="data_bundles = $json.dumps([b.id for b in channel.bundles])"><span class="glyphicon glyphicon-gift"></span>Add to bundles</button>
+                    $if hasattr(channel, 'bundled_channels'):
+                        <a class="btn btn-xs btn-info" href="/channels/$(channel.id)/manage_bundle"><i class="fa fa-rss"></i>Manage bundle</a>
+                $if active and ((channel.subscription_right == 'public') or UserPermissions.administrator in current_user.highest_permission_level or (channel.subscription_right in ['restricted', 'private'] and current_user in channel.authorized_subscribers)):
+                    <a class="btn btn-xs btn-success" href="$:channel.get_preview_link()"><i class="fa fa-eye"></i>Preview</a>
+                $if (channel.subscription_right in ['restricted', 'private'] and current_user not in channel.authorized_subscribers and current_user.owns_screen()):
+                    <a class="btn btn-xs btn-success" href="/channels/$(channel.id)/request/$(current_user.id)"><i class="fa fa-envelope-o"></i>Request subscription</a>
+
+            <div id="plugin-channels" class="tab-pane">
+                <table class="table table-hover table-bordered" cellspacing="0" width="100%" data-page-length='25'>
+                    <thead>
+                    <tr>
+                        <th $:make_tooltip(info['channel']['name'])>Name</th>
+                        <th $:make_tooltip(info['channel']['plugin'])>Plugin</th>
+                        <th>Orientation</th>
+                        <th $:make_tooltip(info['channel']['update_period'])>Update period</th>
+                        $if UserPermissions.administrator not in current_user.highest_permission_level:
+                            <th $:make_tooltip(info['channel']['role'])>Your role</th>
+                        <th $:make_tooltip(info['channel']['subscription_right'])>Subscription right</th>
+                        <th $:make_tooltip(info['channel']['actions'])>Actions</th>
+                    </tr>
+                    </thead>
+                    <tfoot>
+                    <tr>
+                        <th $:make_tooltip(info['channel']['name'], placement='bottom')>Name</th>
+                        <th $:make_tooltip(info['channel']['plugin'], placement='bottom')>Plugin</th>
+                        <th>Orientation</th>
+                        <th $:make_tooltip(info['channel']['update_period'], placement='bottom')>Update period</th>
+                        $if UserPermissions.administrator not in current_user.highest_permission_level:
+                            <th $:make_tooltip(info['channel']['role'], placement='bottom')>Your role</th>
+                        <th $:make_tooltip(info['channel']['subscription_right'], placement='bottom')>Subscription right</th>
+                        <th $:make_tooltip(info['channel']['actions'], placement='bottom')>Actions</th>
+                    </tr>
+                    </tfoot>
+                    <tbody>
+                    $for channel in plugin_channels:
+                        <tr data-channel-id="$channel.id" data-channel-description="$channel.description"
+                            data-channel-name="$channel.name" data-channel-enabled="$('yes' if channel.enabled else 'no')" $:('class="not-activated"' if channel.plugin.activated != 'yes' else '')>
+                            $:make_name_cell(channel)
+                            <td data-plugin-id="$channel.plugin.id">
+                                $channel.plugin.name
+                                $if channel.plugin.activated != 'yes':
+                                    <a type="button" class="btn btn-xs btn-warning pull-right" style="margin-top: 5px; ">
+                                        $:make_tooltip(info['plugin']['state']['not-activated'], icon=True, icon_class='fa-exclamation-triangle')
+                                    </a>
+                            </td>
+                            <td>$("Portrait" if channel.plugin.name=="editor" and channel.get_config_param('vertical') else "Landscape")</td>
+                            <td>
+                                $if channel.cache_activated:
+                                    Every
+                                    $if channel.cache_validity % 60 == 0:
+                                        $(int(channel.cache_validity / 60)) hour$('s' if channel.cache_validity / 60 > 1 else '')
+                                    $else:
+                                        $channel.cache_validity minute$('s' if channel.cache_validity > 1 else '')
+                                $else:
+                                    Continuous update
+                            </td>
+                            $if UserPermissions.administrator not in current_user.highest_permission_level:
+                                <td>
+                                $if channel.has_admin(current_user):
+                                    <h6 class="label label-warning" $:make_tooltip(info['channel']['users']['administrator'])><i class="fa fa-user"></i>Administrator</h6>
+                                $elif channel.has_contrib(current_user):
+                                    <h6 class="label label-info" $:make_tooltip(info['channel']['users']['contributor'])><i class="fa fa-user"></i>Contributor</h6>
+                                $else:
+                                    <h6 class="label label-default"><i class="fa fa-circle-o"></i>None</h6>
+                                </td>
+                            $:make_subscription_right_cell(channel)
+                            <td>
+                                $if UserPermissions.administrator in current_user.highest_permission_level or channel.has_admin(current_user):
+                                    <button class="btn btn-xs btn-warning" data-toggle="modal" data-target="#add-users-channel-modal"><i class="fa fa-users"></i>Users permissions</button>
+
+                                    $if UserPermissions.administrator in current_user.highest_permission_level:
+                                        <button class="btn btn-xs btn-primary" data-toggle="modal" data-target="#edit-channel-modal"><i class="fa fa-pencil-square-o"></i>Edit</button>
+                                    $if current_user.super_admin:
+                                        <button class="btn btn-xs btn-danger" data-toggle="modal" data-target="#delete-channel-modal"><span class="glyphicon glyphicon-trash"></span>Delete
+                                        </button>
+                                $if channel.plugin.activated != 'notfound' and channel.has_visible_params_for(current_user):
+                                    <a class="btn btn-xs btn-default" href="/channels/$(channel.id)"><span class="glyphicon glyphicon-wrench"></span>Configure</a>
+                                $:make_channel_common_actions(channel, channel.plugin.activated == 'yes')
+                                $if channel.plugin.webapp and (UserPermissions.administrator in current_user.highest_permission_level or channel.has_contrib(current_user)):
+                                    <a class="btn btn-xs bg-purple" href="/channels/$(channel.id)/index"><span class="glyphicon glyphicon-log-in"></span>Application</a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                $if UserPermissions.administrator in current_user.highest_permission_level:
+                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#create-channel-modal">
+                        <i class="fa fa-plus"></i>Create a new channel
+                    </button>
+            </div>
+            <div id="bundles" class="tab-pane">
+                <table class="table table-hover table-bordered" cellspacing="0" width="100%" data-page-length='25'>
+                    <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th $:make_tooltip(info['bundle']['no_channels'])>No. of channels</th>
+                        <th $:make_tooltip(info['bundle']['subscription_right'])>Subscription right</th>
+                        <th $:make_tooltip(info['bundle']['actions'])>Actions</th>
+                    </tr>
+                    </thead>
+                    <tfoot>
+                    <tr>
+                        <th>Name</th>
+                        <th $:make_tooltip(info['bundle']['no_channels'], placement='bottom')>No. of channels</th>
+                        <th $:make_tooltip(info['bundle']['subscription_right'], placement='bottom')>Subscription right</th>
+                        <th $:make_tooltip(info['bundle']['actions'], placement='bottom')>Actions</th>
+                    </tr>
+                    </tfoot>
+                    <tbody>
+                        $for channel in bundles:
+                            $code:
+                                popover_content = ''
+                                for c in channel.bundled_channels:
+                                    popover_content += '<a href="channel/%d">%s</a><br>' % (c.id, c.name)
+                            <tr data-channel-id="$channel.id" data-channel-description="$channel.description"
+                                data-channel-name="$channel.name" data-channel-enabled="$('yes' if channel.enabled else 'no')">
+                                $:make_name_cell(channel, info_key='bundle')
+                                <td>
+                                    $channel.bundled_channels.count()
+                                    <a href="#" class="btn btn-xs btn-default pull-right" style="margin-top: 5px;"
+                                       data-content="$popover_content"
+                                       data-container="body" data-toggle="popover"
+                                       data-placement="right" data-original-title="Channels contained in this bundle"
+                                       data-html="true">
+                                        <i class="fa fa-info pull-right" style="margin: 0 !important"></i>
+                                    </a>
+                                </td>
+                                $:make_subscription_right_cell(channel)
+                                <td>
+                                    $if UserPermissions.administrator in current_user.highest_permission_level:
+                                        <button class="btn btn-xs btn-primary" data-toggle="modal" data-target="#edit-bundle-modal"><i class="fa fa-pencil-square-o"></i>Edit</button>
+                                    $if current_user.super_admin:
+                                        <button class="btn btn-xs btn-danger" data-toggle="modal" data-target="#delete-bundle-modal"><span class="glyphicon glyphicon-trash"></span>Delete</button>
+                                    $:make_channel_common_actions(channel, active=True)
+                                </td>
+                            </tr>
+                    </tbody>
+                </table>
+                $if UserPermissions.administrator in current_user.highest_permission_level:
+                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#create-bundle-modal">
+                        <i class="fa fa-plus"></i>Create a new bundle
+                    </button>
+            </div>
+        </div>
+    </div>
+    </div></div>
+</section>
+
+$if UserPermissions.channel_administrator in current_user.highest_permission_level:
+    <div class="modal fade" id="add-users-channel-modal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <form action="/channels" method="post">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                                aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title">Modify channel users permissions</h4>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" name="action" value="add-users-channel">
+                        <input type="hidden" id="add-users-id" name="id">
+                        <input type="hidden" name="users" id="users-diff">
+                        <table id="table-users" class="table table-hover table-bordered" cellspacing="0" width="100%">
+                            <thead>
+                            <tr>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th $:make_tooltip(info['channel']['users']['contributor'])>Contributor</th>
+                                <th $:make_tooltip(info['channel']['users']['administrator'])>Administrator</th>
+                                <th $:make_tooltip(info['channel']['users']['authorized_subscriber'])>Authorized subscriber</th>
+                            </tr>
+                            </thead>
+                            <tfoot>
+                            <tr>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th $:make_tooltip(info['channel']['users']['contributor'], placement='bottom')>Contributor</th>
+                                <th $:make_tooltip(info['channel']['users']['administrator'], placement='bottom')>Administrator</th>
+                                <th $:make_tooltip(info['channel']['users']['authorized_subscriber'], placement='bottom')>Authorized subscriber</th>
+                            </tr>
+                            </tfoot>
+                            <tbody>
+                                $for user in users:
+                                    <tr data-user-id="$user.id">
+                                        <td>$user.fullname</td>
+                                        <td>$user.email</td>
+                                        <td><label><input type="checkbox" data-permission-level="$UserPermissions.channel_contributor.value" class="admin-checkbox"><small>Channel contributor</small></label></td>
+                                        <td><label class="$('disabled' if not current_user.super_admin else '')"><input type="checkbox" data-permission-level="$UserPermissions.channel_administrator.value" class="admin-checkbox" $('disabled' if not current_user.super_admin else '')><small>Channel administrator</small></label></td>
+                                        <td><label><input type="checkbox" data-authorized-subscriber class="admin-checkbox"><small>Authorized subscriber</small></label></td>
+                                    </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-danger"><span class="glyphicon glyphicon-alert"></span>Confirm</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+    $if UserPermissions.administrator in current_user.highest_permission_level:
+        <div class="modal fade" id="create-channel-modal" tabindex="-1" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form action="/channels" method="post">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                                aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title">Create a channel</h4>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" name="action" value="create-channel">
+                        <div class="form-group">
+                            <label for="channel-name">Channel name</label>
+                            $:make_tooltip(info['channel']['name'], placement='left', icon=True)
+                            <input type="text" name="name" class="form-control" id="channel-name" placeholder="Name"
+                                   value="$(form.get('name') if form.get('action') == 'create-channel' else None)" required>
+                        </div>
+                        $if feedbacks.has('create-channel', 'invalid_name'):
+                            <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
+                                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                                This name is not valid. Please enter a name longer than 2 characters without any whitespaces.
+                            </div>
+
+                        $if feedbacks.has('create-channel', 'name_already_exists'):
+                            <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
+                                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                                A bundle or channel with the same name already exist, please choose another one.
+                            </div>
+                        <div class="form-group">
+                            <label for="channel-description">Channel description</label>
+                            $:make_tooltip(info['channel']['description'], placement='left', icon=True)
+                            <input type="text" name="description" class="form-control" id="channel-description" placeholder="Description"
+                                   value="$(form.get('description') if form.get('action') == 'create-channel' else None)">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="channel-plugin">Plugin</label>
+                            $:make_tooltip(info['channel']['plugin'], placement='left', icon=True)
+                            <select class="form-control" id="channel-plugin" name="plugin" required>
+                                $for p in activated_plugins:
+                                    <option value="$p.id" $('selected' if form.get('action') == 'create' and form.get('plugin') == '$p.id' else None)>$p.name</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group" >
+                            <label for="channel-subscription-right">Subscription right</label>
+                            $:make_tooltip(info['channel']['subscription_right'], placement='left', icon=True)
+                            <select class="form-control" id="channel-subscription-right" name="subscription_right" required>
+                                <option value="public" $('selected' if form.get('action') == 'create-channel' and form.get('subscription_right') == 'public' else None)>Public</option>
+                                <option value="restricted" $('selected' if form.get('action') == 'create-channel' and form.get('subscription_right') == 'restricted' else None)>Restricted</option>
+                                <option value="private" $('selected' if form.get('action') == 'create-channel' and form.get('subscription_right') == 'private' else None)>Private</option>
+                            </select>
+                        </div>
+                        <div class="form-group" >
+                            <div class="checkbox">
+                                $:make_tooltip(info['channel']['enabled']['description'], placement='left', icon=True)
+                                <label class="text-danger">
+                                    <input type="checkbox" name="enabled" $('' if form.get('action') == 'create-channel' and 'enabled' not in form else 'checked')>
+                                    <span class="glyphicon glyphicon-alert"></span> Enabled
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Create</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        </div>
+        <div class="modal fade" id="edit-channel-modal" tabindex="-1" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form action="/channels" method="post">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                                aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title">Edit this channel</h4>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" name="action" value="edit-channel">
+                        <input type="hidden" id="edit-channel-id" name="id" value="$(form.get('id') if form.get('action') == 'edit-channel' else None)">
+
+                        $if feedbacks.has('edit-channel', 'name_already_exists'):
+                            <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
+                                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                                A bundle or channel with the same name already exist, please choose another one.
+                            </div>
+
+                        $if feedbacks.has('edit-channel', 'invalid_name'):
+                            <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
+                                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                                This name is not valid. Please enter a name longer than 2 characters without any whitespaces.
+                            </div>
+
+                        <div class="form-group">
+                            <label for="edit-channel-name">Channel name</label>
+                            $:make_tooltip(info['channel']['name'], placement='left', icon=True)
+                            <input type="text" name="name" class="form-control" id="edit-channel-name" placeholder="Name"
+                                   value="$(form.get('name') if form.get('action') == 'edit-channel' else None)" required>
+                        </div>
+
+
+                        <div class="form-group">
+                            <label for="edit-channel-description">Channel description</label>
+                            $:make_tooltip(info['channel']['description'], placement='left', icon=True)
+                            <input type="text" name="description" class="form-control" id="edit-channel-description" placeholder="Description"
+                                   value="$(form.get('description') if form.get('action') == 'edit-channel' else None)" >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="edit-channel-plugin">Plugin</label>
+                            $:make_tooltip(info['channel']['plugin'], placement='left', icon=True)
+                            <select class="form-control" id="edit-channel-plugin" name="plugin" required>
+                                $for p in found_plugins:
+                                    <option value="$p.id" $('selected' if form.get('action') == 'edit-channel' and form.get('plugin') == str(p.id) else None)>$p.name</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group" >
+                            <label for="edit-channel-subscription-right">Subscription right</label>
+                            $:make_tooltip(info['channel']['subscription_right'], placement='left', icon=True)
+                            <select class="form-control" id="edit-channel-subscription-right" name="subscription_right" required>
+                                <option value="public" $('selected' if form.get('action') == 'edit-channel' and form.get('subscription_right') == 'public' else None)>Public</option>
+                                <option value="restricted" $('selected' if form.get('action') == 'edit-channel' and form.get('subscription_right') == 'restricted' else None)>Restricted</option>
+                                <option value="private" $('selected' if form.get('action') == 'edit-channel' and form.get('subscription_right') == 'private' else None)>Private</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group" >
+                            <div class="checkbox">
+                                $:make_tooltip(info['channel']['enabled']['description'], placement='left', icon=True)
+                                <label class="text-danger"><input type="checkbox" id="edit-channel-enabled" name="enabled" $('checked' if form.get('action') == 'edit-channel' and form.get('enabled') == 'on' else '')>
+                                    <span class="glyphicon glyphicon-alert"></span> Enabled
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Edit</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        </div>
+
+        <div class="modal fade" id="create-bundle-modal" tabindex="-1" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form action="/channels" method="post">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                                aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title">Create a bundle</h4>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" name="action" value="create-bundle">
+                        <div class="form-group">
+                            <label for="bundle-name">Bundle name</label>
+                            $:make_tooltip(info['bundle']['name'], placement='left', icon=True)
+                            <input type="text" name="name" class="form-control" id="bundle-name" placeholder="Name"
+                                   value="$(form.get('name') if form.get('action') == 'create-bundle' else None)" required>
+                        </div>
+
+                        $if feedbacks.has('create-bundle', 'invalid_name'):
+                            <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
+                                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                                This name is not valid. Please enter a name longer than 2 characters without any whitespaces.
+                            </div>
+
+                        $if feedbacks.has('create-bundle', 'name_already_exists'):
+                            <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
+                                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                                A bundle or channel with the same name already exist, please choose another one.
+                            </div>
+
+                        <div class="form-group">
+                            <label for="bundle-description">Channel description</label>
+                            $:make_tooltip(info['bundle']['description'], placement='left', icon=True)
+                            <input type="text" name="description" class="form-control" id="bundle-description" placeholder="Description"
+                                   value="$(form.get('description') if form.get('action') == 'create-bundle' else None)">
+                        </div>
+
+                        <div class="form-group" >
+                            <label for="bundle-subscription-right">Subscription right</label>
+                            $:make_tooltip(info['bundle']['subscription_right'], placement='left', icon=True)
+                            <select class="form-control" id="bundle-subscription-right" name="subscription_right" required>
+                                <option value="public" $('selected' if form.get('action') == 'create-bundle' and form.get('subscription_right') == 'public' else None)>Public</option>
+                                <option value="restricted" $('selected' if form.get('action') == 'create-bundle' and form.get('subscription_right') == 'restricted' else None)>Restricted</option>
+                                <option value="private" $('selected' if form.get('action') == 'create-bundle' and form.get('subscription_right') == 'private' else None)>Private</option>
+                            </select>
+                        </div>
+                        <div class="form-group" >
+                            <div class="checkbox">
+                                $:make_tooltip(info['bundle']['enabled']['description'], placement='left', icon=True)
+                                <label class="text-danger">
+                                    <input type="checkbox" name="enabled" id="create-bundle-enabled" $('' if form.get('action') == 'create-bundle' and 'enabled' not in form else 'checked')>
+                                    <span class="glyphicon glyphicon-alert"></span> Enabled
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Create</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        </div>
+        <div class="modal fade" id="edit-bundle-modal" tabindex="-1" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form action="/channels" method="post">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                                aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title">Edit this bundle</h4>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" name="action" value="edit-bundle">
+                        <input type="hidden" id="edit-bundle-id" name="id" value="$(form.get('id') if form.get('action') == 'edit-channel' else None)">
+
+                        $if feedbacks.has('edit-bundle', 'name_already_exists'):
+                            <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
+                                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                                A bundle or channel with the same name already exist, please choose another one.
+                            </div>
+
+                        $if feedbacks.has('edit-bundle', 'invalid_name'):
+                            <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
+                                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                                This name is not valid. Please enter a name longer than 2 characters without any whitespaces.
+                            </div>
+
+                        <div class="form-group">
+                            <label for="edit-bundle-name">Bundle name</label>
+                            $:make_tooltip(info['bundle']['name'], placement='left', icon=True)
+                            <input type="text" name="name" class="form-control" id="edit-bundle-name" placeholder="Name"
+                                   value="$(form.get('name') if form.get('action') == 'edit-bundle' else None)" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="edit-bundle-description">Bundle description</label>
+                            $:make_tooltip(info['bundle']['description'], placement='left', icon=True)
+                            <input type="text" name="description" class="form-control" id="edit-bundle-description" placeholder="Description"
+                                   value="$(form.get('description') if form.get('action') == 'edit-bundle' else None)" >
+                        </div>
+
+
+
+                        <div class="form-group" >
+                            <label for="edit-bundle-subscription-right">Subscription right</label>
+                            $:make_tooltip(info['bundle']['subscription_right'], placement='left', icon=True)
+                            <select class="form-control" id="edit-bundle-subscription-right" name="subscription_right" required>
+                                <option value="public" $('selected' if form.get('action') == 'edit-bundle' and form.get('subscription_right') == 'public' else None)>Public</option>
+                                <option value="restricted" $('selected' if form.get('action') == 'edit-bundle' and form.get('subscription_right') == 'restricted' else None)>Restricted</option>
+                                <option value="private" $('selected' if form.get('action') == 'edit-bundle' and form.get('subscription_right') == 'private' else None)>Private</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group" >
+                            <div class="checkbox">
+                                $:make_tooltip(info['bundle']['enabled']['description'], placement='left', icon=True)
+                                <label class="text-danger"><input type="checkbox" id="edit-bundle-enabled" name="enabled" $('checked' if form.get('action') == 'edit-bundle' and form.get('enabled') == 'on' else '')>
+                                    <span class="glyphicon glyphicon-alert"></span> Enabled
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Edit</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        </div>
+
+        <div class="modal fade" id="manage-bundles-modal" tabindex="-1" role="dialog">
+            <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="form-bundles" action="" method="post">
+                    <input type="hidden" name="action" value="add-channel-to-bundles">
+                    <input type="hidden" id="diff-bundles" name="diff">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                                aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title" id="modal-sub-title">Add <b id="add-channel-name"></b> to bundles</h4>
+                    </div>
+                    <div class="modal-body">
+                        $if feedbacks_v2.has('add-channel-to-bundles', 'bundle_cycle'):
+                            $ bundle_name = feedbacks_v2.feedback_value()
+                            <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
+                                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                                Adding this channel to bundle <b>$bundle_name</b> would create a cycle as this channel already contains <b>$bundle_name</b> either directly or through another bundle.
+                            </div>
+
+                        <table id="table-bundles" class="table table-hover table-bordered" cellspacing="0" width="100%">
+                            <thead>
+                            <tr>
+                                <th>Bundle</th>
+                                <th>Subscription right</th>
+                                <th>Part of the bundle</th>
+                            </tr>
+                            </thead>
+                            <tfoot>
+                            <tr>
+                                <th>Bundle</th>
+                                <th>Subscription right</th>
+                                <th>Part of the bundle</th>
+                            </tr>
+                            </tfoot>
+                            <tbody>
+                                $for bundle in bundles:
+                                    <tr data-bundle-id="$bundle.id">
+                                        <td>
+                                            <a href="/channel/$channel.id">$bundle.name</a>
+                                            $if bundle.description:
+                                                <a type="button" class="btn btn-xs btn-default pull-right"
+                                                   style="margin-top: 5px; "
+                                                   tabindex="0" role="button" data-trigger="focus"
+                                                   data-container="body" data-toggle="popover"
+
+                                                   data-placement="right"
+                                                   title="Channel description"
+                                                   data-content="$bundle.description">
+                                                    <i class="fa fa-info" style="margin-right: 0 !important;"></i>
+                                                </a>
+                                            $if not bundle.enabled:
+                                                <a type="button" class="btn btn-xs btn-warning pull-right"
+                                                   style="margin-top: 5px; margin-right: 5px">
+                                                    $:make_tooltip(info['bundle']['enabled']['channel_not_enabled'], icon=True, icon_class='fa-exclamation-triangle')
+                                                </a>
+                                        </td>
+                                        <td data-subscription-right="$bundle.subscription_right">
+                                            $if bundle.subscription_right == 'public':
+                                                <h6 class="label label-success"><i class="fa fa-sign-in"></i>Public</h6>
+                                            $elif bundle.subscription_right == 'restricted':
+                                                <h6 class="label label-warning"><i class="fa fa-sign-in"></i>Restricted</h6>
+                                            $else:
+                                                <h6 class="label label-danger"><i class="fa fa-sign-in"></i>Private</h6>
+                                        </td>
+                                        <td>
+                                            <input type="checkbox" class="bundle-checkbox" $('checked' if bundle in channel.bundles else '' )>
+                                        </td>
+                                    </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn bg-maroon">Save</button>
+                    </div>
+                </form>
+            </div>
+            </div>
+        </div>
+    $if current_user.super_admin:
+        <div class="modal fade" id="delete-channel-modal" tabindex="-1" role="dialog">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form action="/channels" method="post">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                                    aria-hidden="true">&times;</span></button>
+                            <h4 class="modal-title">Delete this channel</h4>
+                        </div>
+                        <div class="modal-body">
+                            $if feedbacks.has('delete-channel', 'channel_has_subscriptions'):
+                                <div class="alert alert-warning" style="margin-top: 15px" role="alert">
+                                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                                    This channel has screens subscribed to it. Deleting it will delete the subscriptions of the following screens:
+                                    <ul>
+                                        $for id, name, building in feedbacks.feedback_value()['subscriptions']
+                                            <li>
+                                                <a href="/screens/$id">$name</a> in $building
+                                            </li>
+                                    </ul>
+                                    Please confirm this action by submitting this form again.
+                                </div>
+                                <input type="hidden" name="confirm-delete" value="confirm-delete">
+                            $code:
+                                fb_value = feedbacks.feedback_value('delete-channel', 'channel_has_subscriptions')
+                                channel = fb_value['channel'] if fb_value is not None else None
+                                plugin_id = fb_value['plugin_id'] if fb_value is not None else None
+                            <input type="hidden" name="action" value="delete-channel">
+                            <input type="hidden" id="delete-channel-id" name="id" value="$(channel['id'] if channel else None)">
+                            <div class="form-group">
+                                <label for="delete-channel-name">Channel name</label>
+                                <input type="text" class="form-control" id="delete-channel-name" value="$(channel['name'] if channel else None)" disabled>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="delete-channel-description">Channel description</label>
+                                <input type="text" name="description" class="form-control" id="delete-channel-description"
+                                       value="$(channel['description'] if channel else None)"
+                                       disabled>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="delete-channel-plugin">Plugin</label>
+                                <select class="form-control" id="delete-channel-plugin" name="plugin" disabled>
+                                $for p in found_plugins:
+                                    <option value="$p.id" $('selected' if p.id == plugin_id else '')>$p.name</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group" >
+                                <label for="delete-channel-subscription-right">Plugin</label>
+                                <select class="form-control" id="delete-channel-subscription-right" disabled>
+                                    <option value="public" $('selected' if channel and channel['subscription_right'] == 'public' else '')>Public</option>
+                                    <option value="restricted" $('selected' if channel and channel['subscription_right'] == 'restricted' else '')>Restricted</option>
+                                    <option value="private" $('selected' if channel and channel['subscription_right'] == 'private' else '')>Private</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group" >
+                                <div class="checkbox" disabled>
+                                    <label class="text-danger"><input type="checkbox" id="delete-channel-enabled" name="enabled" $('checked' if form.get('enabled') == 'on' else '')>
+                                        <span class="glyphicon glyphicon-alert"></span> Enabled
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-danger"><span class="glyphicon glyphicon-alert"></span>Delete</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="delete-bundle-modal" tabindex="-1" role="dialog">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form action="/channels" method="post">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                                    aria-hidden="true">&times;</span></button>
+                            <h4 class="modal-title">Delete this bundle</h4>
+                        </div>
+                        <div class="modal-body">
+                            $if feedbacks.has('delete-bundle', 'channel_has_subscriptions'):
+                                <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
+                                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                                    This bundle has screens subscribed to it. Please unsubscribe these screens before deleting this bundle :
+                                    <ul>
+                                        $for id, name, building in feedbacks.feedback_value()['subscriptions']
+                                            <li>
+                                                <a href="/screens/$id">$name</a> in $building
+                                            </li>
+                                    </ul>
+                                </div>
+                            $code:
+                                fb_value = feedbacks.feedback_value('delete', 'channel_has_subscriptions')
+                                channel = fb_value['channel'] if fb_value is not None else None
+                                plugin_id = fb_value['plugin_id'] if fb_value is not None else None
+                            <input type="hidden" name="action" value="delete-bundle">
+                            <input type="hidden" id="delete-bundle-id" name="id" value="$(channel['id'] if channel else None)">
+                            <div class="form-group">
+                                <label for="delete-channel-name">Channel name</label>
+                                <input type="text" class="form-control" id="delete-bundle-name" value="$(channel['name'] if channel else None)" disabled>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="delete-channel-description">Channel description</label>
+                                <input type="text" name="description" class="form-control" id="delete-bundle-description"
+                                       value="$(channel['description'] if channel else None)"
+                                       disabled>
+                            </div>
+
+                            <div class="form-group" >
+                                <label for="delete-bundle-subscription-right">Plugin</label>
+                                <select class="form-control" id="delete-bundle-subscription-right" disabled>
+                                    <option value="public" $('selected' if channel and channel['subscription_right'] == 'public' else '')>Public</option>
+                                    <option value="restricted" $('selected' if channel and channel['subscription_right'] == 'restricted' else '')>Restricted</option>
+                                    <option value="private" $('selected' if channel and channel['subscription_right'] == 'private' else '')>Private</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group" >
+                                <div class="checkbox" disabled>
+                                    <label class="text-danger"><input type="checkbox" id="delete-bundle-enabled" name="enabled" $('checked' if form.get('enabled') == 'on' else '')>
+                                        <span class="glyphicon glyphicon-alert"></span> Enabled
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-danger"><span class="glyphicon glyphicon-alert"></span>Delete</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+<script>
+    $$(document).ready(function () {
+        var $$bundles_modal = $$("#manage-bundles-modal");
+        $$bundles_modal.on('show.bs.modal', function(e) {
+            bundles_diff = {};
+            console.log(e);
+            $$channel = $$(e.relatedTarget.parentElement).parent();
+            $$('#add-channel-name').text($$channel.data('channel-name'));
+            $$(this).find('form').attr('action', 'channel/' + $$channel.data('channel-id'));
+            updateBundlesTableState();
+        });
+
+        $if feedbacks_v2.has_type('add-channel-to-bundles') and not feedbacks_v2.has('add-channel-to-bundles', 'ok'):
+            $# Has to be fired before datatables pagination comes into play
+            $$('tr[data-bundle-id="$form.channel_id"], tr[data-channel-id="$form.channel_id"]').find('[data-target="#manage-bundles-modal"]').click();
+
+
+        $$('a[data-toggle="tab"]').on('shown.bs.tab', function () {
+            $$.fn.dataTable.tables({visible: true, api: true}).columns.adjust();
+        });
+        $$('table').on('draw.dt', function() {
+            $$('[data-toggle="popover"]').popover();
+        });
+        $$('.tab-pane table').DataTable({stateSave: true});
+
+        $if feedbacks.has_type('create-channel', 'edit-channel', 'delete-channel', 'configure-channel', 'add-users-channel'):
+            window.location.hash = '#plugin-channels';
+        $elif feedbacks.has_type('create-bundle', 'edit-bundle', 'delete-bundle', 'configure-bundle', 'add-users-bundle') or form.get('was_bundle'):
+            window.location.hash = '#bundles';
+        $else:
+            if(!window.location.hash) {
+                window.location.hash = '#plugin-channels';
+            }
+        $$('[data-toggle="tab"][href="'+window.location.hash+'"]').tab('show');
+        $$('[data-toggle="tab"][href]').click(function() {
+            window.location.hash = this.getAttribute('href');
+        });
+        $$.fn.dataTable.tables({visible: true, api: true}).columns.adjust();
+
+        $if UserPermissions.channel_administrator in current_user.highest_permission_level:
+            $if feedbacks.has_type('create-channel') and not feedbacks.has('create-channel', 'ok'):
+                fire_modal('#create-channel-modal');
+            $if feedbacks.has_type('edit-channel') and not feedbacks.has('edit-channel', 'ok'):
+                fire_modal('#edit-channel-modal');
+            $if feedbacks.has_type('delete-channel') and not feedbacks.has('delete-channel', 'ok'):
+                fire_modal('#delete-channel-modal');
+            
+            $if feedbacks.has_type('create-bundle') and not feedbacks.has('create-bundle', 'ok'):
+                fire_modal('#create-bundle-modal');
+            $if feedbacks.has_type('edit-bundle') and not feedbacks.has('edit-bundle', 'ok'):
+                fire_modal('#edit-bundle-modal');
+            $if feedbacks.has_type('delete-bundle') and not feedbacks.has('delete-bundle', 'ok'):
+                fire_modal('#delete-bundle-modal');
+
+            load_modal('#edit-channel-modal', 'edit-channel-');
+            load_modal('#delete-channel-modal', 'delete-channel-');
+            load_modal('#edit-bundle-modal', 'edit-bundle-');
+            load_modal('#delete-bundle-modal', 'delete-bundle-');
+
+            $if feedbacks.has('create', 'ok'):
+                $$('#create-channel-modal').find('form')[0].reset();
+
+            function fire_modal(modalSelector) {
+                var $$modal = $$(modalSelector);
+                $$modal.removeClass('fade');
+                $$modal.one('hidden.bs.modal', function () {
+                    $$modal.find('.alert').detach();
+                    $$modal.addClass('fade');
+                    $$modal.find('form')[0].reset();
+                });
+                $$modal.modal('show')
+            }
+
+            function load_modal(modalSelector, prefix) {
+                var $$modal = $$(modalSelector);
+                $$modal.on('show.bs.modal', function(e) {
+                    $$tr = $$(e.relatedTarget).parent().parent();
+                    $$modal.find('#'+prefix+'subscription-right').val($$tr.find('[data-subscription-right]').attr('data-subscription-right'));
+                    $$modal.find('#'+prefix+'plugin').val($$tr.find('[data-plugin-id]').attr('data-plugin-id'));
+                    $$modal.find('#'+prefix+'name').val($$tr.attr('data-channel-name'));
+                    $$modal.find('#'+prefix+'id').val($$tr.attr('data-channel-id'));
+                    $$modal.find('#'+prefix+'description').val($$tr.attr('data-channel-description'));
+                    const state = $$tr.attr('data-channel-enabled') == 'yes';
+                    if(state) {
+                        $$modal.find('#'+prefix+'enabled').prop('checked', true)
+                    } else {
+                        $$modal.find('#'+prefix+'enabled').removeAttr('checked');
+                    }
+                });
+            }
+
+            $if len(plugin_channels) > 0:
+                var channels_users = $:plugin_channels[0].get_channels_users_as_json(plugin_channels);
+                var channels_authorized_subscribers = $:plugin_channels[0].get_channels_authorized_subscribers_as_json(plugin_channels)
+
+                var administrator = $UserPermissions.channel_administrator.value;
+                var contributor = $UserPermissions.channel_contributor.value;
+                var no_permission = $UserPermissions.no_permission.value;
+
+                var right_public = 'public';  $# TODO: Enum this
+                var right_restricted = 'restricted';
+                var right_private = 'private';
+
+                var users_diff = {};
+                var $$channel = null;
+                var $$modal = $$("#add-users-channel-modal");
+
+                $$('#table-users').on('draw.dt', updateUsersTableState);
+                $$('#table-users').DataTable({
+                    "aoColumns": [
+                        null,
+                        null,
+                        { "sSortDataType": "dom-checkbox" },
+                        { "sSortDataType": "dom-checkbox" },
+                        { "sSortDataType": "dom-checkbox" }
+                    ],
+                    saveState: true
+                });
+
+                function updateUsersTableState() {  $#  TODO: Not all state should be restored on a table update
+                    if ($$channel == null)
+                        return;
+
+                    $$modal.find('input[data-permission-level="'+administrator+'"]').change(function(e) {
+                        $$prev = $$(e.currentTarget).parent().parent().prev().find('input[type="checkbox"]');
+                        $$prev.prop('checked', e.currentTarget.checked)
+                    });
+                $if UserPermissions.channel_administrator in current_user.highest_permission_level:
+                    $$modal.find('input[data-permission-level="'+contributor+'"]').change(function(e) {
+                        $$prev = $$(e.currentTarget).parent().parent().next().find('input[type="checkbox"]');
+                        if(!e.currentTarget.checked && $$prev.prop('checked')) {
+                            $$prev.prop('checked', e.currentTarget.checked)
+                        }
+                    });
+                    $$modal.find('input[data-permission-level]').prop("checked", false);
+                    $$modal.find('input[data-authorized-subscriber]').prop("checked", false);
+                    $$modal.find('input[data-permission-level="'+contributor+'"]').removeAttr('disabled').parent().removeClass('disabled');
+                    var subscription_right = $$channel.find('[data-subscription-right]').attr('data-subscription-right');
+                    if(subscription_right==right_public) {
+                        $$modal.find('[data-authorized-subscriber]').attr('disabled', '').parent().addClass('disabled');
+                    } else {
+                        $$modal.find('[data-authorized-subscriber]').removeAttr('disabled').parent().removeClass('disabled');
+                    }
+                    var channel_id = $$channel.attr('data-channel-id');
+                    $$modal.find('#add-users-id').val(channel_id);
+                    for (var user_id in channels_users[channel_id]) {
+                        var permission_level = channels_users[channel_id][user_id];
+                        $$modal.find('tr[data-user-id="'+user_id+'"] td input[data-permission-level="'+permission_level+'"]').prop('checked', true);
+                        if(permission_level==administrator) {
+                            $$modal.find('tr[data-user-id="'+user_id+'"] td input[data-permission-level="'+contributor+'"]').prop('checked', true);
+                            $if not current_user.super_admin:
+                                $$modal.find('tr[data-user-id="'+user_id+'"] td input[data-permission-level="'+contributor+'"]').attr('disabled', '').parent().addClass('disabled');
+                        }
+                    }
+                    for (var i in channels_authorized_subscribers[channel_id]) {
+                        $$modal.find('tr[data-user-id="'+channels_authorized_subscribers[channel_id][i]+'"] td input[data-authorized-subscriber]').prop('checked', true)
+                    }
+                    const $$users = $$modal.find('tr[data-user-id]');
+                    $$users.off('change');
+                    $$users.change(function() {
+                        const $$userTr = $$(this);
+                        var user_id = $$userTr.attr('data-user-id');
+                        var current_permission = channels_users[channel_id][user_id] || 0;
+                        var highest_permission = getHighestPermission($$userTr);
+                        var authorized_subscriber = $$userTr.find('[data-authorized-subscriber]').prop('checked');
+                        var authorized_changed = authorized_subscriber != (channels_authorized_subscribers[channel_id].indexOf(parseInt(user_id)) != -1);
+                        if (current_permission != highest_permission || authorized_changed) {
+                            users_diff[user_id] = {}
+                        }
+                        if (current_permission != highest_permission) {
+                            users_diff[user_id].permission = highest_permission
+                        }
+                        if (authorized_changed) {
+                            users_diff[user_id].authorized_subscriber = authorized_subscriber
+                        }
+                    });
+                    const $$form = $$modal.find('form');
+                    $$form.off('submit');
+                    $$form.submit(function () {
+                        $$('#users-diff').val(JSON.stringify(users_diff));
+                    });
+                }
+
+                $$modal.on('show.bs.modal', function(e) {
+                    users_diff = {};
+                    $$channel = $$(e.relatedTarget.parentElement).parent();
+                    updateUsersTableState();
+                });
+
+                var bundles_diff = {};
+
+                function updateBundlesTableState() {
+                    if ($$channel == null)
+                        return;
+
+                    const channel_id = $$channel.data('channel-id');
+
+                    $$bundles_modal.find('.bundle-checkbox').each(function(a, b) {
+                        const $$bundle = $$(b).parent().parent();
+                        const bundle_id = $$bundle.data('bundle-id');
+                        $$bundle.toggleClass('not-activated', channel_id == bundle_id);
+                        $$(b).prop('disabled', channel_id == bundle_id);
+                        b.checked = $$.inArray(parseInt(bundle_id), data_bundles) != -1;
+                        if(bundle_id in bundles_diff) {
+                            b.checked = bundles_diff[bundle_id];
+                        }
+                    }).off('change').change(function(e) {
+                        const $$bundle = $$(this).parent().parent();
+                        const bundle_id = $$bundle.data('bundle-id');
+                        bundles_diff[bundle_id] = this.checked;
+                        $$('#diff-bundles').val(JSON.stringify(bundles_diff));
+                    });
+                }
+
+                $$('#table-bundles').on('draw.dt', updateBundlesTableState);
+                $$('#table-bundles').DataTable({
+                    "aoColumns": [
+                        null,
+                        null,
+                        { "sSortDataType": "dom-checkbox" }
+                    ],
+                    saveState: true
+                });
+
+                function getHighestPermission($$userTr) {
+                    if($$userTr.find('input[data-permission-level="'+administrator+'"]').prop('checked'))
+                        return administrator;
+                    if($$userTr.find('input[data-permission-level="'+contributor+'"]').prop('checked'))
+                        return contributor;
+                    return no_permission
+                }
+
+            $$.fn.dataTable.ext.order['dom-checkbox'] = function  ( settings, col ) {
+                return this.api().column( col, {order:'index'} ).nodes().map( function ( td, i ) {
+                    return $$('input', td).prop('checked') ? '1' : '0';
+                } );
+            }
+    });
+</script>
+<script>
+    $$(document).ready(function () {
+        $$('[data-toggle="popover"]').popover();
+
+        intro_id = 'channels';
+        intro = introJs();
+        var steps = [
+                {
+                    intro: "The channels page lists all the channels visible to you. Depending on your role relating to each channel, you will be able to take specific actions."
+                },
+                {
+                    element: document.querySelector('table tbody tr'),
+                    intro: "Each channel is listed as a row in this table."
+                },
+                {
+                    element: document.querySelector('table thead tr'),
+                    intro: "To learn more about the meaning of each columns, you can hover them with your mouse. Columns can also be sorted by clicking on them."
+                },
+                {
+                    element: document.querySelector('#table_wrapper'),
+                    intro: "The tables used in ICTV interface contains useful features such as pagination, search and adaptive length."
+                }
+            ];
+        if (document.querySelector('table tbody tr td[data-plugin-id="1"]')) {
+            steps.push({
+                element: document.querySelector('table tbody tr td[data-plugin-id="1"]').parentNode,
+                intro: "<p>From a channel you can click on its name to get to the details page, where all details are available next to a preview of the channel.</p><p>The actions buttons allows you to manage, access and preview the channel. Remember that you do not have the same access to all channels.</p>"
+            });
+        }
+        intro.setOptions({steps: steps});
+    });
+</script>

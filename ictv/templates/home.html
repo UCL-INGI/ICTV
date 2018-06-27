@@ -1,0 +1,114 @@
+$def with (homepage_description, user_disabled)
+
+$#    This file belongs to the ICTV project, written by Nicolas Detienne,
+$#    Francois Michel, Maxime Piraux, Pierre Reinbold and Ludovic Taffin
+$#    at Université catholique de Louvain.
+$#
+$#    Copyright (C) 2016-2018  Université catholique de Louvain (UCL, Belgium)
+$#
+$#    ICTV is free software: you can redistribute it and/or modify
+$#    it under the terms of the GNU Affero General Public License as published
+$#    by the Free Software Foundation, either version 3 of the License, or
+$#    (at your option) any later version.
+$#
+$#    ICTV is distributed in the hope that it will be useful,
+$#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+$#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+$#    GNU Affero General Public License for more details.
+$#
+$#    You should have received a copy of the GNU Affero General Public License
+$#    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
+
+$ user = session['user']
+$var has_tour: True
+<style>
+    .introjs-helperLayer {
+        z-index: inherit !important;
+    }
+</style>
+<section class="content-header">
+    <h1>
+        Welcome $(user['fullname'] if user['fullname'] is not None else user.get('username'))
+        <small>ICTV v$version()</small>
+    </h1>
+</section>
+<section class="content">
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="box box-warning">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Welcome to ICTV</h3>
+                </div>
+                <div class="box-body">
+                    $:homepage_description
+                </div>
+            </div>
+        </div>
+    </div>
+    $if user_disabled:
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="box box-warning">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">Your account is not yet activated.</h3>
+                    </div>
+                    <div class="box-body">
+                        <p>Please contact the system administrators to gain access to the application.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="box">
+                <div class="box-header with-border">
+                    <div class="box-title">If you want to find out more about ICTV, have a look at the presentation below.</div>
+                </div>
+                <div class="box-body">
+                    <div class="embed-responsive embed-responsive-16by9">
+                        <iframe id="ictv-presentation" class="embed-response-item" frameborder="0" src="/static/ictv-presentation.html"></iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<script>
+    $$(document).ready(function () {
+        intro_id = 'home';
+        intro = introJs();
+        intro.setOptions({
+            steps: [
+                {
+                    intro: "Welcome to ICTV. It looks like your new to the application. You might want to go on a tour to discover quickly its features."
+                },
+                {
+                    element: document.querySelector('.help-menu'),
+                    intro: "At any time, you can start again this tour by clicking this button."
+                },
+                {
+                    element: document.querySelector('#ictv-presentation'),
+                    intro: "If you would like to have a general introduction to the system, this short presentation will explain the basics about ICTV."
+                },
+                {
+                    element: document.querySelector('.sidebar-menu'),
+                    intro: "<p>The user interface is split into several pages. Each of them is dedicated to one aspect of the system. Depending on the level of access configured by the system administrators for your account, this sidebar will give you access to different pages.</p><p>Click on the next page you want to discover to continue the tour.</p>",
+                    position: 'auto'
+                }
+            ]
+        });
+        $$('#ictv-presentation').load(function() {
+            this.contentWindow.Reveal.addEventListener('endOfSlideshow', function() {
+                setTimeout(function() {
+                    intro.nextStep();
+                }, 1000);
+            });
+        });
+    });
+</script>
+<script>
+$$(document).ready(function(){
+    $$('[data-toggle="popover"]').popover();
+});
+</script>

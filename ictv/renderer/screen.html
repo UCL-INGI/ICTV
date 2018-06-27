@@ -1,0 +1,65 @@
+$def with (content, themes, controls, force_page_reloading, show_number)
+
+$#    This file belongs to the ICTV project, written by Nicolas Detienne,
+$#    Francois Michel, Maxime Piraux, Pierre Reinbold and Ludovic Taffin
+$#    at Université catholique de Louvain.
+$#
+$#    Copyright (C) 2016-2018  Université catholique de Louvain (UCL, Belgium)
+$#
+$#    ICTV is free software: you can redistribute it and/or modify
+$#    it under the terms of the GNU Affero General Public License as published
+$#    by the Free Software Foundation, either version 3 of the License, or
+$#    (at your option) any later version.
+$#
+$#    ICTV is distributed in the hope that it will be useful,
+$#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+$#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+$#    GNU Affero General Public License for more details.
+$#
+$#    You should have received a copy of the GNU Affero General Public License
+$#    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
+
+<html>
+<head>
+    <link rel="stylesheet" href="/static/css/reveal.css">
+    <link rel="stylesheet" href="/static/css/reveal-base-theme.css">
+    <link rel="stylesheet" href="/static/css/ictv-reveal.css">
+    $for theme in themes:
+        <link rel="stylesheet" href="/static/themes/$theme/theme.css">
+</head>
+<body>
+<div class="reveal">
+    <div class="slides">
+        $:content
+    </div>
+</div>
+<script src="/static/js/reveal.js"></script>
+<script src="/static/js/jquery.min.js"></script>
+<script src="/static/js/jquery.waitforimages.min.js"></script>
+<script src="/static/js/ictv-reveal.js"></script>
+<script>
+    var c = "c/t";
+    init($:('true' if controls else 'false'), $('c' if show_number else 'false'));
+    $if force_page_reloading:
+        Reveal.addEventListener('endOfSlideshow', function() {location.reload(true)});
+    $else:
+        Reveal.addEventListener('endOfSlideshow', function() {
+            try {
+                window.parent.postMessage('endOfSlideshow', '*');
+            } catch (err) {console.log(err);}
+        });
+        console.log(receiveMessage);
+        window.addEventListener("message", receiveMessage, false);
+        function receiveMessage(event) {
+            if(event.source == window.parent && event.data == 'reloop') {
+                Reveal.slide(0, 0, 0);
+            }
+        }
+        $$(window).load(function(){
+            try {
+                window.parent.postMessage('loaded', '*');
+            } catch (err) {console.log(err);}
+        })
+</script>
+</body>
+</html>

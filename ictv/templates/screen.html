@@ -1,0 +1,106 @@
+$def with (screen)
+
+$#    This file belongs to the ICTV project, written by Nicolas Detienne,
+$#    Francois Michel, Maxime Piraux, Pierre Reinbold and Ludovic Taffin
+$#    at Université catholique de Louvain.
+$#
+$#    Copyright (C) 2016-2018  Université catholique de Louvain (UCL, Belgium)
+$#
+$#    ICTV is free software: you can redistribute it and/or modify
+$#    it under the terms of the GNU Affero General Public License as published
+$#    by the Free Software Foundation, either version 3 of the License, or
+$#    (at your option) any later version.
+$#
+$#    ICTV is distributed in the hope that it will be useful,
+$#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+$#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+$#    GNU Affero General Public License for more details.
+$#
+$#    You should have received a copy of the GNU Affero General Public License
+$#    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
+
+<section class="content-header">
+    <h1>
+        $screen.name
+        <small>Screen details</small>
+    </h1>
+</section>
+<section class="content">
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="box">
+                <div class="box-body">
+                    <h3>Location</h3>
+                    <div class="panel panel-default">
+                        <div class="panel-body">
+                            <b>$screen.building.name</b>
+                            $if screen.location:
+                                <i>$screen.location</i>
+                        </div>
+                    </div>
+                    <h3>Screen owners</h3>
+                    $if screen.owners:
+                        <table class="table table-hover table-bordered" cellspacing="0" width="100%">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            $for u in screen.owners:
+                                <tr>
+                                    <td>$u.fullname</td>
+                                    <td>$u.email</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    $else:
+                        <i>There is no owner for this screen</i>
+                    <h3>Channels subscriptions</h3>
+                    $if list(screen.subscriptions):
+                        <table class="table table-hover table-bordered" cellspacing="0" width="100%">
+                            <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Type</th>
+                                <th>Added by</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            $for sub in screen.subscriptions:
+                                <tr $:('class="not-activated"' if hasattr(sub.channel, 'plugin') and sub.channel.plugin.activated != 'yes' else '')>
+                                    <td>
+                                        $sub.channel.name
+                                        $if hasattr(sub.channel, 'plugin') and sub.channel.plugin.activated != 'yes':
+                                            <a type="button" class="btn btn-xs btn-warning pull-right"
+                                               $:make_tooltip(info['channel']['misc']['not-activated-plugin'])>
+                                                Plugin not activated
+                                            </a>
+                                    </td>
+                                    <td>$sub.channel.get_type_name()</td>
+                                    <td>$sub.created_by.fullname</td>
+                                </tr>
+
+                            </tbody>
+                        </table>
+                    $else:
+                        <i>This screen is not subscribed to any channel</i>
+                </div>
+            </div>
+        </div>
+        <div class="$('col-lg-6' if screen.orientation=='Landscape' else 'col-lg-5')">
+            <div class="box">
+                <div class="box-header with-border">
+                    <h1 class="box-title" style="text-align: center;vertical-align: middle;">Preview</h1>
+                </div>
+                <div class="box-body">
+                    <div class="embed-responsive $('embed-responsive-16by9' if screen.orientation=='Landscape' else 'embed-responsive-9by16')">
+                        <iframe id="iframePrevious" class="embed-responsive-item" src="$:screen.get_client_link()"
+                                frameBorder="0"></iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

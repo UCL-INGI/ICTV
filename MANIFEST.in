@@ -1,0 +1,12 @@
+include LICENSE
+include README.rst
+recursive-include ictv/client *
+recursive-include ictv/static *
+recursive-include ictv/templates *
+recursive-include ictv/renderer *
+recursive-include ictv/plugins *
+include ictv/*.yaml
+include ictv.wsgi
+include configuration.example.yaml
+include default_slides.example.yaml
+recursive-include doc *

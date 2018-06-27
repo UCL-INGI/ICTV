@@ -1,0 +1,271 @@
+$def with (bundle,user,subscribed_channels,plugin_channels,bundle_channels)
+
+$#    This file belongs to the ICTV project, written by Nicolas Detienne,
+$#    Francois Michel, Maxime Piraux, Pierre Reinbold and Ludovic Taffin
+$#    at Université catholique de Louvain.
+$#
+$#    Copyright (C) 2016-2018  Université catholique de Louvain (UCL, Belgium)
+$#
+$#    ICTV is free software: you can redistribute it and/or modify
+$#    it under the terms of the GNU Affero General Public License as published
+$#    by the Free Software Foundation, either version 3 of the License, or
+$#    (at your option) any later version.
+$#
+$#    ICTV is distributed in the hope that it will be useful,
+$#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+$#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+$#    GNU Affero General Public License for more details.
+$#
+$#    You should have received a copy of the GNU Affero General Public License
+$#    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
+
+$code:
+    feedbacks = get_feedbacks()
+    form = pop_previous_form()
+    subscribed =   {channel.id:
+                    {
+                        'channel_name': channel.name,
+                        'plugin_channel': hasattr(channel, 'plugin')
+                    }
+                    for channel in subscribed_channels
+                }
+    plugin_channels_names = {c.id: c.name for c in plugin_channels}
+    bundle_channels_names = {c.id: c.name for c in bundle_channels}
+<section class="content-header" style="margin-bottom: 5px">
+    <h1>
+        Manage bundle
+        <small>List and update all channels of $bundle.name</small>
+        <button type="button" data-toggle="modal" data-target="#confirm-subs-modal" class="btn btn-success pull-right">
+            <i class="fa fa-check" aria-hidden="true"></i> Update channels offered by the bundle
+        </button>
+    </h1>
+</section>
+<section class="content">
+    $def create_alert(title, message, icon, type="success"):
+        <div class="alert alert-$type alert-dismissible">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+            <h4><i class="icon fa $icon"></i>$title</h4>
+            $message
+        </div>
+
+    $if feedbacks.has('manage_channels', 'ok'):
+        $:create_alert("Applied", "These changes have been successfully applied.", "fa-rss")
+
+    $if feedbacks.has('manage_channels', 'nothing_changed'):
+        $:create_alert("Nothing changed", "The changes you submitted did not affect the channels offered by the bundle", "fa-rss", "info")
+
+    $if feedbacks.has('manage_channels', 'added_to_itself'):
+        $:create_alert("Forbidden", "You cannot add a bundle to itself", "fa-times", "error")
+
+    $if feedbacks.has('manage_channels', 'disabled_plugin'):
+        $:create_alert("Forbidden", "You cannot add a channel with a disabled plugin to your bundle", "fa-times", "error")
+
+    $if feedbacks.has('manage_channels', 'bundle_cycle'):
+        $:create_alert("Forbidden", "Adding channel %s to your bundle created a cycle of bundle: this bundle contains itself because it is present through the bundle %s" % (form.channel_name, form.channel_name), "fa-times", "error")
+
+    <div class="row">
+        $for tuple in [("Plugin Channel", plugin_channels), ("Bundle", bundle_channels)]:
+            $code:
+                type_name, channels = tuple
+            <div class="col-md-6">
+                <div class="box">
+                    <div class="box-body">
+                        <table class="table table-hover table-bordered subscriptions-table" cellspacing="0" width="100%">
+                            <thead>
+                            <tr>
+                                <th>$type_name</th>
+                                <th>In bundle</th>
+                            </tr>
+                            </thead>
+                            <tfoot>
+                            <tr>
+                                <th>$type_name</th>
+                                <th>In bundle</th>
+                            </tr>
+                            </tfoot>
+                            <tbody>
+                            $for channel in channels:
+                                <tr data-channel-id="$channel.id" $:('data-channel-activated="{}"'.format(channel.plugin.activated) if hasattr(channel, 'plugin') else 'data-channel-activated="yes"')
+                                $:('class="not-activated"' if hasattr(channel, 'plugin') and channel.plugin.activated != 'yes' else '')>
+                                <td>
+                                    $if type_name == "Bundle":
+                                        <div class="accordion">
+                                            $channel.name <i class="fa fa-bars" aria-hidden="true"></i>
+                                                $if not channel.enabled:
+                                                <a type="button" class="btn btn-xs btn-warning pull-right" style="margin-top: 5px; margin-right: 5px">
+                                                    $:make_tooltip(info['channel']['enabled']['channel_not_enabled'], icon=True, icon_class='fa-exclamation-triangle')
+                                                </a>
+                                            <div>
+                                                $for elem in subscribed_channels:
+                                                <p>$elem.name</p>
+                                            </div>
+                                        </div>
+                                    $else:
+                                        $channel.name
+                                        $if not channel.enabled:
+                                            <a type="button" class="btn btn-xs btn-warning pull-right" style="margin-top: 5px; margin-right: 5px">
+                                                $:make_tooltip(info['channel']['enabled']['channel_not_enabled'], icon=True, icon_class='fa-exclamation-triangle')
+                                            </a>
+                                </td>
+                                <td>
+                                    <input type="checkbox" class="channel-add-to-bundle-checkbox" data-channel-id="$channel.id"
+                                           value="subs" $('disabled' if channel.id == bundle.id or (channel.id not in subscribed and hasattr(channel, 'plugin') and channel.plugin.activated != 'yes') else '')
+                                           $("checked" if channel.id in subscribed else '')>
+                                    $if hasattr(channel, 'plugin') and channel.plugin.activated != 'yes':
+                                        <a type="button" class="btn btn-xs btn-warning pull-right" style="margin-top: 5px; ">
+                                            $:make_tooltip(info['bundle']['misc']['not-activated-plugin'], icon=True, icon_class='fa-exclamation-triangle')
+                                        </a>
+                                    $elif channel.id == bundle.id:
+                                        <a type="button" class="btn btn-xs btn-default pull-right" style="margin-top: 5px; ">
+                                            $:make_tooltip(info['bundle']['subscribe_to_itself'], icon=True, icon_class='fa-info')
+                                        </a>
+                                </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+    </div>
+</section>
+
+<div class="modal fade" id="confirm-subs-modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="" method="post">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">Update</h4>
+                </div>
+                <div class="modal-body">
+                    <div id="summary-message" hidden>
+                        Do you confirm these change in channels of $bundle.name ?
+                        <div id="subscriptions-summary"></div>
+                    </div>
+                    <div id="summary-message-empty">
+                        No changes have been done.
+                    </div>
+                    <input type="text" name="diff" id="form-diff" value="{}" hidden>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">Confirm</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<script src="/static/js/clipboard.min.js"></script>
+<script>
+    $$(document).ready(function () {
+
+        const dataTable = $$('.subscriptions-table').DataTable({stateSave: true});
+
+        $if feedbacks.has_type('subscribe') and not feedbacks.has('subscribe', 'ok'):
+            fire_modal('#subscription-modal');
+
+        $$('.channel-add-to-bundle-checkbox').change(function(e){
+            const checkbox = $$(this);
+            const channel_id = checkbox.attr("data-channel-id");
+            if(channel_id in subscribed) {  // in the original state, the screen is subscribed to this channel
+                if(checkbox.prop("checked") && channel_id in subscriptions_diff)   delete subscriptions_diff[channel_id];    // we return to the originan state
+                else    subscriptions_diff[channel_id] = false; // Indicate the unsubscription in the diff
+            } else {                    // in the original state, the screen is not subscribed to this channel
+                if(!checkbox.prop("checked") && channel_id in subscriptions_diff)   delete subscriptions_diff[channel_id];   // we return to the originan state
+                else    subscriptions_diff[channel_id] = true; // Indicate the subscription in the diff
+            }
+        });
+
+        dataTable.on( 'draw.dt', function () {
+            let checkboxes = $$('.channel-add-to-bundle-checkbox');
+            checkboxes.off("change");
+            checkboxes.change(function(e){
+                const checkbox = $$(this);
+                const channel_id = checkbox.attr("data-channel-id");
+                if(channel_id in subscribed) {  // in the original state, the screen is subscribed to this channel
+                    if(checkbox.prop("checked") && channel_id in subscriptions_diff)   delete subscriptions_diff[channel_id];    // we return to the originan state
+                    else    subscriptions_diff[channel_id] = false; // Indicate the unsubscription in the diff
+                } else {                    // in the original state, the screen is not subscribed to this channel
+                    if(!checkbox.prop("checked") && channel_id in subscriptions_diff)   delete subscriptions_diff[channel_id];   // we return to the originan state
+                    else    subscriptions_diff[channel_id] = true; // Indicate the subscription in the diff
+                }
+            });
+        } );
+
+        const modaledit = $$('#confirm-subs-modal');
+        modaledit.on('show.bs.modal', function(){
+            const to_sub = [];
+            const to_unsub = [];
+            for(const channel_id in subscriptions_diff){
+                // find if we need to sub or unsub to this channel
+                const list = subscriptions_diff[channel_id] ? to_sub : to_unsub;
+                // record the action in the correct list
+                list.push(parseInt(channel_id))
+            }
+            const subscriptionsSummary = $$('#subscriptions-summary');
+            const summaryMessage = $$('#summary-message');
+            const summaryMessageEmpty = $$('#summary-message-empty');
+            subscriptionsSummary.html("");
+            if(to_sub.length > 0) {
+                summaryMessage.show();
+                summaryMessageEmpty.hide();
+                subscriptionsSummary.append("<b>Added channels :</b>");
+                const ul_sub = document.createElement('ul');
+                for (let channel_id of to_sub) {
+                    let li = document.createElement('li');
+                    li.innerHTML = channel_id in bundleChannels ? bundleChannels[channel_id] + " (Bundle)" : pluginChannels[channel_id];
+                    ul_sub.appendChild(li);
+                }
+                subscriptionsSummary.append(ul_sub);
+            }
+            if(to_unsub.length > 0) {
+                summaryMessage.show();
+                summaryMessageEmpty.hide();
+                subscriptionsSummary.append("<b>Removed channels :</b>");
+                const ul_unsub = document.createElement('ul');
+                for (let channel_id of to_unsub) {
+                    let li = document.createElement('li');
+                    li.innerHTML = channel_id in bundleChannels ? bundleChannels[channel_id] + " (Bundle)" : pluginChannels[channel_id];
+                    ul_unsub.appendChild(li);
+                }
+                subscriptionsSummary.append(ul_unsub);
+            }
+            if(to_sub.length === 0 && to_unsub.length === 0){
+                summaryMessage.hide();
+                summaryMessageEmpty.show();
+                subscriptionsSummary.append("No changes have been done.");
+            }
+            $$('#form-diff').val(JSON.stringify(subscriptions_diff));
+        });
+    });
+
+    const subscriptions_diff = {};
+
+    const subscribed = $:json.dumps(subscribed);
+
+    const pluginChannels = $:json.dumps(plugin_channels_names);
+
+    const bundleChannels = $:json.dumps(bundle_channels_names);
+
+    function fire_modal(modalSelector) {
+        const $$modal = $$(modalSelector);
+            $$modal.removeClass('fade');
+            $$modal.one('hidden.bs.modal', function () {
+                $$modal.find('.alert').detach();
+                $$modal.addClass('fade');
+            });
+            $$modal.modal('show')
+        }
+</script>
+<script>
+     $$( function() {
+        $$( ".accordion" ).accordion({
+          collapsible: true,
+          active:false
+        });
+      } );
+</script>

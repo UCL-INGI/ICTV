@@ -1,0 +1,45 @@
+# This file contains tooltip texts for the user interface.
+channel:
+  name: "The name indicates shortly what the purpose of this channel and its content is about."
+  description: "The description contains more information on the channel and its content."
+  plugin: "The channel's plugin can be seen as the channel type. Each plugin has been designed for a particular purpose."
+  update_period: "When an update period is set, the channel is guaranteed to refresh its content at least once every update period."
+  role: "Your role defines the actions you can do for a channel."
+  subscription_right: "A public channel allows everyone to consult it and subscribe to. Once set to restricted, only the users accepted by its administrators will be able to subscribe to it."
+  actions: "The actions you can do depend on your role on a channel."
+  enabled:
+    description: "If a channel is not enabled, it won't provide content for any screen subscribed to it."
+    channel_not_enabled: "This channel is not enabled, it won't provide content for any screen subscribed to it."
+  users:
+    contributor: "A contributor has limited access to a channel but can interact with it."
+    administrator: "An administrator has a larger control on a channel and can designate contributors or authorized subscribers."
+    authorized_subscriber: "An authorized subscriber can view the channel and subscribe their screens to it if they have any, but they cannot alter the content of a channel."
+  misc:
+    not-activated-plugin: "This channel depends on a plugin that has not been activated by the system administrators. It will not broadcast content until its plugin is reactivated."
+    not-authorized-channel : "This channel cannot be previewed because you are not part of the authorized users."
+    keep_noncomplying_capsules: "When a capsule contains non-complying slides in terms of the length of its content for each template field, it will be filtered out and the capsule that contains it aswell."
+bundle:
+  name: "The name indicates shortly what the purpose of this bundle and its content is about."
+  description: "The description contains more information on the bundle and its content."
+  no_channels: "A bundle groups together channels and other bundles into a single content provider."
+  subscription_right: "A public bundle allows everyone to consult it and subscribe to. Once set to restricted, only the users accepted by its administrators will be able to subscribe to it."
+  actions: "The actions you can do depend on your role on a bundle."
+  enabled:
+    description: "If a bundle is not enabled, it won't provide content for any screen subscribed to it."
+    channel_not_enabled: "This bundle is not enabled, it won't provide content for any screen subscribed to it."
+  misc:
+    not-authorized-channel : "This bundle cannot be previewed because you are not part of the authorized users."
+    not-activated-plugin: "This channel depends on a plugin that has not been activated by the system administrators. You can remove it from your bundle but not add it. Make your changes with caution."
+  subscribe_to_itself: "This is the bundle you're managing, you cannot add your bundle to itself"
+screen:
+  name: "The name indicates shortly where a screen is and what its audience is."
+  building: "The building indicates where a screen and possibly more screens are."
+  location: "The location is a free text field to precise the screen location in the building."
+  status: "The screen status indicate if it is working. Please contact the system administrators if your screen is down."
+  actions: "You can interact with your screen with the actions buttons."
+  misc:
+    not-activated-plugin: "This channel depends on a plugin that has not been activated by the system administrators. You can unsubscribe from it but not subscribe to it. Make your changes with caution."
+  shuffle_capsules: "The capsules of the different subscriptions will be shuffled together"
+plugin:
+  state:
+    not-activated: "This plugin has not been activated by the system administrators. Every channels that depends on this plugin will not be broadcasting content until it is reactivated."

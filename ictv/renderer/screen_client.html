@@ -1,0 +1,106 @@
+$def with (url, show_postit=False)
+
+$#    This file belongs to the ICTV project, written by Nicolas Detienne,
+$#    Francois Michel, Maxime Piraux, Pierre Reinbold and Ludovic Taffin
+$#    at Université catholique de Louvain.
+$#
+$#    Copyright (C) 2016-2018  Université catholique de Louvain (UCL, Belgium)
+$#
+$#    ICTV is free software: you can redistribute it and/or modify
+$#    it under the terms of the GNU Affero General Public License as published
+$#    by the Free Software Foundation, either version 3 of the License, or
+$#    (at your option) any later version.
+$#
+$#    ICTV is distributed in the hope that it will be useful,
+$#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+$#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+$#    GNU Affero General Public License for more details.
+$#
+$#    You should have received a copy of the GNU Affero General Public License
+$#    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
+
+<html>
+<head>
+</head>
+<body style="margin: 0px">
+$if show_postit:
+    <img src="/static/images/postit_ictv.svg" style="position: absolute; z-index: 999; left: 86vw; top: 77vh; opacity: 0.9; width: 12vw">
+<iframe id="slideshow" src="$url" frameborder="0" marginwidth="0" marginheight="0"></iframe>
+<script src="/static/js/jquery.min.js"></script>
+<script>
+    function resize() {
+        var iframe = document.getElementById("slideshow");
+        iframe.height = window.innerHeight;
+        iframe.width = $$(window).width();
+    }
+
+    function chromeSmoothReload() {
+        var $$currentSlideshow = $$('#slideshow');
+        var $$nextSlideshow = $$('#next-slideshow');
+        if($$nextSlideshow.length == 0) {
+            try {
+                $$currentSlideshow.after('<iframe id="next-slideshow" src="' + $$('#slideshow').attr('src') + '" ' +
+                        'width="' + $$currentSlideshow[0].width + '" height="' + $$currentSlideshow[0].height + '" ' +
+                        'frameborder="0" marginwidth="0" marginheight="0" hidden></iframe>');
+            } catch(err) {
+                console.log(err);
+            }
+            $$nextSlideshow = $$('#next-slideshow');
+            $$nextSlideshow.load(function(e) {
+                try {
+                    if (e.target.contentDocument == undefined || e.target.contentDocument.querySelector('.slides') == null) {
+                        console.log(e.target.contentDocument);
+                        throw -1;
+                    }
+                } catch (exception) {
+                    console.log(exception);
+                    console.log('Failed to fetch new content, relooping current slideshow');
+                    $$currentSlideshow[0].contentWindow.Reveal.slide(0);
+                    $$nextSlideshow.remove();
+                }
+            });
+            $$nextSlideshow.attr('style', 'opacity: 0');
+            $$($$nextSlideshow[0].contentWindow).load(function () {
+                var nextReveal = $$nextSlideshow[0].contentWindow.Reveal;
+                if(nextReveal) {
+                    $$currentSlideshow.fadeTo(250, 0, function () {
+                        $$nextSlideshow.attr('style', '');
+                        $$nextSlideshow.hide();
+                        $$currentSlideshow.remove();
+                        $$nextSlideshow.fadeTo(250, 1);
+                        nextReveal.addEventListener('endOfSlideshow', chromeSmoothReload);
+                        $$nextSlideshow.attr('id', 'slideshow');
+                    });
+                }
+            });
+        }
+    }
+    function firefoxSmoothReload() {
+        var $$currentSlideshow = $$('#slideshow');
+        if($$('#next-slideshow').length == 0) {
+            $$currentSlideshow.fadeTo(250, 0, function () {
+                $$currentSlideshow.after('<iframe id="next-slideshow" src="' + $$('#slideshow').attr('src') + '" ' +
+                    'width="' + $$currentSlideshow[0].width + '" height="' + $$currentSlideshow[0].height + '" ' +
+                    'frameborder="0" marginwidth="0" marginheight="0"></iframe>');
+                var $$nextSlideshow = $$('#next-slideshow');
+                $$nextSlideshow.hide();
+                $$currentSlideshow.remove();
+                $$nextSlideshow.fadeTo(250, 1, function() {
+                    $$nextSlideshow.load(function() {
+                        var nextReveal = $$nextSlideshow[0].contentWindow.Reveal;
+                        nextReveal.addEventListener('endOfSlideshow', firefoxSmoothReload);
+                        $$nextSlideshow.attr('id', 'slideshow');
+                    });
+                });
+            });
+        }
+    }
+    $$(window).resize(resize);
+    $$(window).load(function () {
+        resize();
+        var reloadFunction = /chrom(e|ium)/.test(navigator.userAgent.toLowerCase()) ? chromeSmoothReload : firefoxSmoothReload;
+        document.getElementById("slideshow").contentWindow.Reveal.addEventListener('endOfSlideshow', reloadFunction);
+    });
+</script>
+</body>
+</html>

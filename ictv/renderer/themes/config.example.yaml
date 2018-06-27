@@ -1,0 +1,15 @@
+# This file is an complete example of a theme config.yaml file.
+css: yes  # This theme has a theme.css file in its assets directory that should be included when using it.
+name: UCL
+description: | # Optional description of this theme
+  This theme is a default base that all UCL related themes should refer to as a parent.
+  It contains no specific CSS rules but sets the first logo as the UCL logo.
+base_color:  # Base color of the theme to generate a color palette
+  h: 0.569444444
+  s: 0.639
+  v: 0.804
+parent: ~  # Optional field denoting the name of the parent theme that should be included prior to this theme.
+           # This is not the pretty name defined in its config.yaml file but the raw name, i.e. the directory name of the theme.
+slide_defaults:  # A dictionary of default values for the slide elements. The /static/themes/theme_name directory will
+  logo-1:        # refer to the assets directory of the theme.
+    src: '/static/themes/ucl/ucl-logo.svg'
