@@ -58,6 +58,7 @@ by using pip and the master branch of the ICTV git repository.
 ::
 
     pip3 install --upgrade git+https://github.com/UCL-INGI/ICTV.git
+    pip3 install --upgrade git+https://github.com/UCL-INGI/ICTV-plugins.git
 
 pip will automatically install the additional Python dependencies.
 
