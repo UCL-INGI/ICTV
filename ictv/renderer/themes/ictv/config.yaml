@@ -1,0 +1,8 @@
+css: no
+name: ICTV
+description: 'This theme is a default theme that does not offer a particular styling. It may contain ICTV branding in the future.'
+parent: ~
+base_color:
+  h: 0.597222222
+  s: 1.0
+  v: 0.306

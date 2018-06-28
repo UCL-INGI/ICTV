@@ -19,15 +19,14 @@
 #    You should have received a copy of the GNU Affero General Public License
 #    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
 
-from setuptools import setup, find_packages
+from setuptools import setup
 
-import ictv
 import ictv.common
 
 retval = setup(
     name='ictv',
     version=ictv.common.__version__,
-    packages=find_packages(),
+    packages=['ictv', 'ictv.common', 'ictv.libs', 'ictv.models', 'ictv.pages', 'ictv.plugin_manager', 'ictv.renderer', 'ictv.storage', 'ictv.tests'],
     package_dir={'ictv': 'ictv'},
     url='https://github.com/UCL-INGI/ICTV',
     license='GNU AGPL v3',
