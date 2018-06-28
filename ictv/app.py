@@ -35,7 +35,9 @@ from sqlobject.dberrors import DatabaseError
 from web.py3helpers import string_types
 
 import ictv
-from ictv import get_root_path, database
+import ictv.common
+from ictv import database
+from ictv.common import get_root_path
 from ictv.models.log_stat import LogStat
 from ictv.models.role import UserPermissions
 from ictv.models.template import Template
@@ -402,7 +404,7 @@ def get_app(config_path, sessions_path=""):
     app = web.application(app_urls, globals())
     app.config = config_file
 
-    app.version = ictv.__version__
+    app.version = ictv.common.__version__
 
     with open(os.path.join(get_root_path(), 'info' + os.extsep + 'yaml')) as f:
         # Loads ICTV user info texts

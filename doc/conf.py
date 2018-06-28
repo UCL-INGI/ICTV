@@ -17,6 +17,9 @@
 # sys.path.insert(0, os.path.abspath('.'))
 import os
 import sys
+
+import ictv.common
+
 sys.path.insert(0, os.path.abspath('../'))
 
 
@@ -28,10 +31,10 @@ author = 'Nicolas Detienne, Francois Michel, Maxime Piraux, Pierre Reinbold and 
 
 import ictv
 # The short X.Y version
-version = '.'.join(list(ictv.__version__.split('.'))[0:2])
+version = '.'.join(list(ictv.common.__version__.split('.'))[0:2])
 print(version)
 # The full version, including alpha/beta/rc tags
-release = ictv.__version__
+release = ictv.common.__version__
 
 
 # -- General configuration ---------------------------------------------------

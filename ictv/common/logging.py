@@ -24,7 +24,7 @@ import logging.handlers
 import os
 from datetime import datetime
 
-from ictv import get_root_path
+from ictv.common import get_root_path
 
 from ictv.models.log_stat import LogStat
 

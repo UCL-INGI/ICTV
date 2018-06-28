@@ -25,7 +25,7 @@ import magic
 
 from sqlobject import SQLObjectNotFound
 
-from ictv import get_root_path
+from ictv.common import get_root_path
 from ictv.models.asset import Asset
 
 logger = logging.getLogger('storage_manager')

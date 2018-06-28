@@ -24,7 +24,7 @@ from zipfile import ZipFile
 
 import web
 
-from ictv import get_root_path
+from ictv.common import get_root_path
 from ictv.pages.utils import ICTVPage
 
 

@@ -22,6 +22,8 @@
 import importlib
 import logging
 import os
+import sys
+import pkgutil
 from datetime import timedelta, datetime
 from urllib.parse import urlparse
 
@@ -32,7 +34,7 @@ import yaml
 from ictv.models.asset import Asset
 from ictv.common.logging import StatHandler
 from ictv.common.utils import make_qrcode, is_test
-from ictv import get_root_path
+from ictv.common import get_root_path
 from ictv.models.channel import PluginChannel
 from ictv.models.plugin import Plugin
 from ictv.models.role import Role
@@ -135,13 +137,10 @@ class PluginManager(object):
     @staticmethod
     def list_plugins():
         """
-            Lists plugins present in the plugin directory.
+            Lists the plugins available in the Python path.
             Does not reflect the loaded plugins nor the plugins present in database.
         """
-        dirs = next(os.walk(os.path.join(get_root_path(), 'plugins/')))[1]
-        if "__pycache__" in dirs:
-            dirs.remove("__pycache__")
-        return set(dirs)
+        return list(m for i, m, ispkg in pkgutil.walk_packages(f.path for f in pkgutil.iter_importers('ictv.plugins.')))
 
     def get_plugin(self, plugin_name, reload=False):
         """
@@ -200,15 +199,17 @@ class PluginManager(object):
             logger.error('Encountered an exception when importing plugin %s' % plugin.name, exc_info=True)
             return False
 
+        if hasattr(plugin_module, 'install'):
+            getattr(plugin_module, 'install')()
         if hasattr(plugin_module, 'update'):
             getattr(plugin_module, 'update')(plugin)
         if plugin.static:
-            static_dir = os.path.join(get_root_path(), "plugins", plugin.name, "static")
-            if not os.path.exists(static_dir):
-                os.makedirs(static_dir)
+            static_dir = os.path.join(plugin.package_path, "static")
+            os.makedirs(static_dir, exist_ok=True)
             if os.path.isdir(static_dir):
                 link_name = os.path.join(get_root_path(), 'static/plugins', plugin.name)
                 if not os.path.exists(link_name):
+                    os.makedirs(os.path.dirname(link_name), exist_ok=True)
                     os.symlink(static_dir, link_name, target_is_directory=True)
             else:
                 plugin.activated = 'no'
@@ -402,7 +403,7 @@ def get_logger(plugin_name, channel=None):
     else:
         formatter = logging.Formatter(
             '%(levelname)s : %(asctime)s [PluginChannel %(channel_name)s (%(channel_id)s)] - %(message)s')
-    dirname = os.path.join(get_root_path(), 'plugins', plugin_name)
+    dirname = Plugin.selectBy(name=plugin_name).getOne().package_path
     if os.path.isdir(os.path.join(dirname)):
         if not logger.hasHandlers():
             logger_file_path = os.path.join(dirname, logger_name + os.path.extsep + 'log')

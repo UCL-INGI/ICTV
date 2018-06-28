@@ -22,7 +22,7 @@
 
 import os
 
-from ictv import get_root_path
+from ictv.common import get_root_path
 from ictv.app import get_app
 from ictv.database import update_database, create_database
 

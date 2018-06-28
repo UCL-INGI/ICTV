@@ -29,8 +29,7 @@ from html import unescape
 import web
 import yaml
 
-from ictv import get_root_path
-from ictv.common import utils
+from ictv.common import utils, get_root_path
 from ictv.common.utils import deep_update
 from ictv.libs.html import HTML
 from ictv.plugin_manager.plugin_capsule import PluginCapsule
@@ -262,9 +261,9 @@ class ThemesMeta(type):
 
         for theme, config in self._themes.items():
             link_name = os.path.join(themes_static_dir, theme)
-            if not os.path.exists(link_name):
-                os.symlink(os.path.join(get_root_path(), 'renderer', 'themes', theme, 'assets'), link_name,
-                           target_is_directory=True)
+            assets_path = os.path.join(get_root_path(), 'renderer', 'themes', theme, 'assets')
+            if os.path.exists(assets_path) and not os.path.exists(link_name):
+                os.symlink(assets_path, link_name, target_is_directory=True)
 
         def set_theme_level(theme, level=0):
             if self._themes[theme].get('level', -1) < level:

@@ -41,4 +41,3 @@ if __name__ == '__main__':
 
     setup_database()
     create_database()
-    load_plugins()

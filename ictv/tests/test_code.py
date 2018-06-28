@@ -29,7 +29,7 @@ from nose.tools import *
 from sqlobject import SQLObjectNotFound
 from sqlobject.dberrors import DuplicateEntryError
 
-from ictv import get_root_path
+from ictv.common import get_root_path
 from ictv.models.asset import Asset
 from ictv.models.building import Building
 from ictv.models.channel import PluginChannel, ChannelBundle

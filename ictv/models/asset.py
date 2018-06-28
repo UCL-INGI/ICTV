@@ -23,7 +23,7 @@ import os
 from datetime import datetime
 from sqlobject import ForeignKey, StringCol, BigIntCol, DateTimeCol, BoolCol
 
-from ictv import get_root_path
+from ictv.common import get_root_path
 from ictv.models.ictv_object import ICTVObject
 from sqlobject.events import RowDestroyedSignal, listen
 

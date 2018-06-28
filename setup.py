@@ -22,10 +22,11 @@
 from setuptools import setup, find_packages
 
 import ictv
+import ictv.common
 
 retval = setup(
     name='ictv',
-    version=ictv.__version__,
+    version=ictv.common.__version__,
     packages=find_packages(),
     package_dir={'ictv': 'ictv'},
     url='https://github.com/UCL-INGI/ICTV',

@@ -18,7 +18,7 @@
 #
 #    You should have received a copy of the GNU Affero General Public License
 #    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
-
+import importlib
 import os
 
 import itertools
@@ -26,7 +26,7 @@ import yaml
 import yamlordereddictloader
 from sqlobject import StringCol, BoolCol, EnumCol, SQLMultipleJoin, JSONCol, IntCol
 
-from ictv import get_root_path
+from ictv.common import get_root_path
 from ictv.models.channel import PluginChannel, ChannelBundle
 from ictv.models.ictv_object import ICTVObject
 from ictv.models.plugin_param_access_rights import PluginParamAccessRights
@@ -60,6 +60,15 @@ class Plugin(ICTVObject):
             screens |= set(Subscription.select().filter(Subscription.q.channel == b).throughTo.screen.distinct())
         return len(screens)
 
+    def _get_package_path(self):
+        """ Returns the path to the package of this plugin. """
+        try:
+            m = importlib.import_module('ictv.plugins.' + self.name)
+            return m.__path__[0]
+        except ImportError:
+            return None
+
+
     @classmethod
     def update_plugins(cls, dirs):
         """
@@ -76,7 +85,7 @@ class Plugin(ICTVObject):
                 # Plugin exists in database but was not found in the plugins directory
                 p.activated = 'notfound'
             else:
-                path = os.path.join(get_root_path(), 'plugins', p.name, 'config.yaml')
+                path = os.path.join(p.package_path, 'config.yaml')
                 if os.path.isfile(path):
                     # Plugin is considered to be found
                     if p.activated == 'notfound':

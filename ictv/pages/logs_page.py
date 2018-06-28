@@ -25,7 +25,7 @@ from ictv.app import sidebar
 from ictv.common.logging import loggers_stats, get_logger_file_path
 from ictv.pages.utils import ICTVAuthPage, PermissionGate
 from ictv.common.utils import timesince, pretty_print_size
-from ictv import get_root_path
+from ictv.common import get_root_path
 
 
 class LogsPage(ICTVAuthPage):

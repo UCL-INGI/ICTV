@@ -28,7 +28,7 @@ import web
 from yaml import dump
 from paste.fixture import TestApp
 
-from ictv import get_root_path
+from ictv.common import get_root_path
 from ictv.models.building import Building
 from ictv.models.channel import PluginChannel
 from ictv.models.plugin import Plugin

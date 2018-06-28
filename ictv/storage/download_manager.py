@@ -29,7 +29,7 @@ import aiohttp
 import magic
 from sqlobject import sqlhub
 
-from ictv import get_root_path
+from ictv.common import get_root_path
 from ictv.database import SQLObjectThreadConnection
 
 
