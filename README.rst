@@ -18,4 +18,4 @@ The documentation can be found in the ``doc`` directory. It can be found online 
 compiled using Sphinx_, e.g. ``make html`` will generate a html version of the documentation.
 
 .. _Sphinx: http://www.sphinx-doc.org/en/master/usage/installation.html
-.. _ReadTheDocs: TODO
+.. _ReadTheDocs: https://ictv.readthedocs.io
