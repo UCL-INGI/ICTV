@@ -18,8 +18,6 @@
 import os
 import sys
 
-import ictv.common
-
 sys.path.insert(0, os.path.abspath('../'))
 
 
@@ -29,10 +27,9 @@ project = 'ICTV'
 copyright = '2016-2018, Université catholique de Louvain'
 author = 'Nicolas Detienne, Francois Michel, Maxime Piraux, Pierre Reinbold and Ludovic Taffin'
 
-import ictv
+import ictv.common
 # The short X.Y version
 version = '.'.join(list(ictv.common.__version__.split('.'))[0:2])
-print(version)
 # The full version, including alpha/beta/rc tags
 release = ictv.common.__version__
 

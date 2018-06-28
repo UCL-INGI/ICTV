@@ -78,23 +78,81 @@ The ``img-grabber`` plugin is a very simple plugin that we will use as an exampl
 create a simple plugin. This plugin is given an url and a CSS selector and will extract the first image matching the
 selector and output it on a single slide.
 
-.. literalinclude:: ../ictv/plugins/img-grabber/img-grabber.py
-    :pyobject: ImgGrabberSlide
+.. highlight:: python
+
+::
+
+    class ImgGrabberSlide(PluginSlide):
+    def __init__(self, img_src, text, duration, qrcode):
+        self._duration = duration
+        self._content = {'background-1': {'src': img_src, 'size': 'contain'}, 'text-1': {'text': text}}
+        if qrcode:
+            self._content['image-1'] = {'qrcode': qrcode}
+        self._has_qr_code = qrcode is not None
+
+    def get_duration(self):
+        return self._duration
+
+    def get_content(self):
+        return self._content
+
+    def get_template(self) -> str:
+        return 'template-background-text-qr'
+
+    def __repr__(self):
+        return str(self.__dict__)
 
 The plugin module contains first a definition of a class representing a slide. The slide receives an URL to an
 image, a duration and a optional qrcode text value as input. The template that will be used to display the slide is
 fixed.
 
-.. literalinclude:: ../ictv/plugins/img-grabber/img-grabber.py
-    :pyobject: ImgGrabberCapsule
+::
+
+    class ImgGrabberCapsule(PluginCapsule):
+        def __init__(self, img_src, text, duration, qrcode=None):
+            self._slides = [ImgGrabberSlide(img_src, text, duration, qrcode)]
+
+        def get_slides(self):
+            return self._slides
+
+        def get_theme(self):
+            return None
+
+        def __repr__(self):
+            return str(self.__dict__)
 
 Then a capsule that will contain a single slide is defined. No theme is set because the slide mainly consists of a
 full-size image.
 
-.. literalinclude:: ../ictv/plugins/img-grabber/img-grabber.py
+.. code-block:: python
     :linenos:
-    :pyobject: get_content
     :emphasize-lines: 2,5-8,12-15,19,25
+
+    def get_content(channel_id):
+        channel = PluginChannel.get(channel_id)
+        logger_extra = {'channel_name': channel.name, 'channel_id': channel.id}
+        logger = get_logger('img-grabber', channel)
+        url = channel.get_config_param('url')
+        image_selector = channel.get_config_param('image_selector')
+        attr = channel.get_config_param('src_attr')
+        qrcode = channel.get_config_param('qrcode')
+        if not url or not image_selector or not attr:
+            logger.warning('Some of the required parameters are empty', extra=logger_extra)
+            return []
+        try:
+            doc = PyQuery(url=url)
+        except Exception as e:
+            raise MisconfiguredParameters('url', url, 'The following error was encountered: %s.' % str(e))
+        img = doc(image_selector).eq(0).attr(attr)
+        if not img:
+            message = 'Could not find img with CSS selector %s and attribute %s' % (image_selector, attr)
+            raise MisconfiguredParameters('image_selector', image_selector, message).add_faulty_parameter('src_attr', attr, message)
+        if img[:4] != 'http' and img[:4] != 'ftp:':
+            img = '{uri.scheme}://{uri.netloc}/'.format(uri=urlparse(url)) + img
+        duration = channel.get_config_param('duration') * 1000
+        text = doc(channel.get_config_param('text_selector')).eq(0).text()
+        alternative_text = channel.get_config_param('alternative_text')
+        return [ImgGrabberCapsule(img, text if text else alternative_text, duration, qrcode=url if qrcode else None)]
 
 The ``get_content`` method receives a single argument, which is the id of the channel for which it should produce
 content. The channel instance object can be retrieved as shown on line 2. The values for the channel parameters

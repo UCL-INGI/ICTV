@@ -9,15 +9,6 @@ ICTV documentation
    authentication
    install_ictv_client
 
-Using ICTV plugins
-==================
-
-.. toctree::
-   :maxdepth: 2
-
-   rss_plugin
-   editor_plugin
-
 Developer documentation
 =======================
 
