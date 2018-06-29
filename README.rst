@@ -1,6 +1,10 @@
 ICTV
 ====
 
+.. image:: //readthedocs.org/projects/ictv/badge/?version=latest
+    :target: https://ictv.readthedocs.io/en/latest/?badge=latest
+    :alt: Documentation Status
+
 ICTV is a simple content management system for digital signage on multiple screens.
 
 It is a web application written in Python. Everything from the management of the content to its reproduction on

@@ -36,7 +36,7 @@ retval = setup(
     install_requires=['sqlobject', 'typing', 'icalendar', 'pyyaml', 'urllib3', 'web.py>=0.40.dev0',
                       'yamlordereddictloader', 'pyquery', 'BeautifulSoup4', 'python-magic', 'aiohttp', 'wand',
                       'feedparser', 'qrcode', 'selenium', 'python3-saml', 'pymediainfo'],
-    test_requires=['pytest', 'pytest-xdist', 'pytest-cov', 'paste', 'nose'],
+    tests_require=['pytest', 'pytest-xdist', 'pytest-cov', 'paste', 'nose'],
     dependency_links=['https://github.com/formencode/formencode.git#egg=FormEncode'],
     scripts=['ictv-setup-database', 'ictv-webapp'],
     include_package_data=True,
