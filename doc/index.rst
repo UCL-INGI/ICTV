@@ -16,6 +16,7 @@ Developer documentation
    :maxdepth: 2
 
    advanced_concepts
+   dev_environment
    create_plugin
 
 Indices and tables
