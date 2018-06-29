@@ -216,7 +216,10 @@ class Templates(object, metaclass=TemplatesMeta):
 
 
 class ThemesMeta(type):
-    """ An utility class that constructs dynamically the Themes class. """
+    """
+        An utility class that constructs dynamically the Themes class.
+        It also creates the symlink from the static directory to the themes assets, if any.
+    """
     def __init__(self, *args, **kwargs):
         self._themes = {}
         themes = set()
