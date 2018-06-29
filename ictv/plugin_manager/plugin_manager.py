@@ -371,7 +371,7 @@ class PluginManager(object):
             Returns the dependencies that are not met for the given plugin.
             If all are met or the plugin could not be found or has no dependencies, it returns an empty list.
         """
-        path = os.path.join(get_root_path(), 'plugins', plugin_name, 'config.yaml')
+        path = os.path.join(Plugin.selectBy(name=plugin_name).getOne().package_path, 'config.yaml')
         failed_import = []
         if os.path.isfile(path):
             with open(path, 'r') as f:
