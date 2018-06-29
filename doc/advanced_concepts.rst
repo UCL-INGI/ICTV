@@ -25,7 +25,7 @@ The field type allows to define what type of content is the element. The support
 * ``subtitle`` -- A subtitle.
 * ``text`` -- A general text field. It will generally contain the text paragraphs of a slide.
 * ``logo`` -- A small image often found in the corners of the slide, usually indicating the source of the slide.
-* ``img`` -- A general purpose image
+* ``image`` -- A general purpose image
 * ``background`` -- An image that is set as a background of the slide
 
 A number is added to distinguish elements when the slide contains multiple elements of the same type.
@@ -35,8 +35,8 @@ types as described in the following list:
 
 * ``title``, ``subtitle``, ``text``:
     * ``text`` -- The text to display, also accepts HTML.
-* ``logo``, ``img``, ``background``:
-    * ``src`` -- A value that will populate the HTML ``img`` element src attribute. It can be a absolute, a relative
+* ``logo``, ``image``, ``background``:
+    * ``src`` -- A value that will populate the HTML ``image`` element src attribute. It can be a absolute, a relative
       path w.r.t. the application root or a data URL.
     * ``qrcode`` -- A text value that will be converted to a QR code and automatically inserted in the ``src`` field.
 * ``background``:
@@ -96,7 +96,7 @@ layed out in the slide.
             $:subtitle(content=slide, number=1, max_chars=30)
             <div style="display: flex;">
                 <div style="flex: 1">
-                    $:img(content=slide, number=1)
+                    $:image(content=slide, number=1)
                 </div>
                 <div style="flex: 2; vertical-align:middle">
                     $:text(content=slide, number=1, max_chars=160)
