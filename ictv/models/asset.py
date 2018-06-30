@@ -54,7 +54,9 @@ class Asset(ICTVObject):
 
     def write_to_asset_file(self, content):
         """ Writes the content to the asset file. """
-        with open(os.path.join(get_root_path(), self.path), 'wb') as f:
+        asset_path = os.path.join(get_root_path(), self.path)
+        os.makedirs(os.path.dirname(asset_path), exist_ok=True)
+        with open(asset_path, 'wb') as f:
             f.write(content)
 
 
