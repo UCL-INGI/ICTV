@@ -110,7 +110,7 @@ class RequestPage(ICTVAuthPage):
         user_id = int(user_id)
         user = User.get(user_id)
 
-        st = "You just receive a request of subscription for channel " + chan.name + ". Could you please subscribe " + user.fullname + " (" + user.email + ") to this channel."
+        st = "You just receive a request of subscription for channel " + chan.name + ". Could you please subscribe " + str(user.fullname) + " (" + user.email + ") to this channel."
         for admin in chan.get_admins():
             web.sendmail(web.config.smtp_sendername, admin.email, 'Request for subscription to a channel', st, headers={'Content-Type': 'text/html;charset=utf-8'})
         return web.seeother('/channels')

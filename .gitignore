@@ -7,6 +7,9 @@
 .cache
 .coverage
 .coverage.*
+.eggs
+.pytest_cache
+ictv.egg-info
 htmlcov
 sessions
 configuration.yaml

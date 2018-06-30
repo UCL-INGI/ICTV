@@ -20,4 +20,4 @@
 #    You should have received a copy of the GNU Affero General Public License
 #    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
 
-WEBPY_ENV=test pytest --boxed --cov-config .coveragerc --cov=ictv --cov-report html --cov-report term:skip-covered --durations=5
+WEBPY_ENV=test PYTHONPATH=. pytest

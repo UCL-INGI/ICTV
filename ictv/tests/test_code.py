@@ -43,13 +43,7 @@ from ictv.common.enum import EnumMask
 from ictv.common.feedbacks import get_feedbacks, add_feedback, get_next_feedbacks, ImmediateFeedback
 from ictv.common.json_datetime import DateTimeDecoder, DateTimeEncoder
 from ictv.plugin_manager import plugin_manager
-from ictv.plugins.birthday import birthday
-from ictv.plugins.cal import cal
-from ictv.plugins.cal.cal_capsule import CalendarPlugin
-from ictv.plugins.embed import embed
-from ictv.plugins.rss_legacy import rss_legacy as rss
-from ictv.plugins.rss_legacy.rss_capsule import Rss_capsule
-from ictv.tests import ICTVTestCase
+from ictv.tests import ICTVTestCase, FakePluginTestCase
 
 
 class SetUpTearDownAccess(ICTVTestCase):
@@ -211,10 +205,10 @@ class ChannelPreviewTest(ICTVTestCase):
         assert_equal(r.status, 200)
 
 
-class PluginConfigPageTest(ICTVTestCase):
+class PluginConfigPageTest(FakePluginTestCase):
     def runTest(self):
         """ Tests the plugin config page. """
-        r = self.testApp.get('/plugins/1/config', status=200)
+        r = self.testApp.get('/plugins/%d/config' % Plugin.selectBy(name='fake_plugin').getOne().id, status=200)
         assert_not_equal(r.body, None)
 
 
@@ -243,8 +237,7 @@ class CacheTest(ICTVTestCase):
         u = User(username='testasset', fullname='testasset test', email='testasset.test@uclouvain.be',
                  super_admin=True,
                  disabled=False)
-        PluginChannel(name='testasset2', plugin=Plugin.selectBy(name="editor").getOne(),
-                      subscription_right='restricted')
+        PluginChannel(name='testasset2', plugin=Plugin(name='cache_plugin', activated='no'), subscription_right='restricted')
         c = PluginChannel.selectBy(name="testasset2").getOne()
         a = Asset(plugin_channel=c, user=u)
         self.testApp.get('/cache/' + str(a.id), status=303)
@@ -328,7 +321,7 @@ class RoleTest(ICTVTestCase):
         try:
             u = User(username='test', fullname='test test', email='test.test@uclouvain.be', super_admin=True,
                      disabled=False)
-            PluginChannel(name='test', plugin=Plugin.selectBy(name="editor").getOne(), subscription_right='restricted')
+            PluginChannel(name='test', plugin=Plugin(name='role_plugin', activated='no'), subscription_right='restricted')
             c = PluginChannel.selectBy(name="test").getOne()
             r = Role(user=u, channel=c, permission_level=UserPermissions.channel_contributor)
             assert_true(r != None)
@@ -344,36 +337,12 @@ class RoleTest(ICTVTestCase):
             assert_true(False)
 
 
-class PluginTest(ICTVTestCase):
-    def runTest(self):
-        """ Tests the Plugin object. """
-        try:
-            Plugin(name='testP', activated='yes')
-        except DuplicateEntryError:
-            assert_true(False)
-        p = Plugin.selectBy(name='testP').getOne()
-        try:
-            p.set(name='testNew')
-        except DuplicateEntryError:
-            assert_true(False)
-        assert_equal(p.name, 'testNew')
-        p1 = Plugin.selectBy(name="cal").getOne()
-        p1.set(activated="no")
-        assert_equal(p1.activated, "no")
-        # TODO there is a problem when I disable a plugin that is used. (disable without interface)
-        p.set(cache_validity_default=-10)
-        assert_true(p.cache_validity_default < 0)
-        # TODO cache negative... works here.
-        t = Plugin.delete(p.id)
-        assert_equal(t, None)
-
-
 class ChannelTest(ICTVTestCase):
     def runTest(self):
         """ Tests the Channel object. """
         try:
-            PluginChannel(name='test', plugin=Plugin.selectBy(name="editor").getOne(), subscription_right='restricted')
-            PluginChannel(name='test2', plugin=Plugin.selectBy(name="editor").getOne(), subscription_right='restricted')
+            PluginChannel(name='test', plugin=Plugin(name='channel_plugin', activated='no'), subscription_right='restricted')
+            PluginChannel(name='test2', plugin=Plugin.selectBy(name='channel_plugin').getOne(), subscription_right='restricted')
             c = PluginChannel.selectBy(name="test").getOne()
             assert_not_equal(None, c)
             c.set(name="testNew")
@@ -462,173 +431,6 @@ class ScreenTest(ICTVTestCase):
         except DuplicateEntryError:
             assert_true(False)
         return
-
-
-class PluginManagerTest(ICTVTestCase):
-    def runTest(self):
-        """ Tests the PluginManager. """
-        pm = self.ictv_app.plugin_manager
-        PluginChannel(name='testPlugin', plugin=Plugin.selectBy(name="cal").getOne(), subscription_right='public')
-        c = PluginChannel.selectBy(name="testPlugin").getOne()
-        chanContent = pm.get_plugin_content(c)
-        assert_true(None != chanContent)
-        pluginCount = len(pm.list_plugins())
-        assert_true(pluginCount > 0)
-        plugName = "cal"
-        pl = pm.get_plugin(plugName)
-        assert_true(None != pl)
-        try:
-            assert_true(None == pm.get_plugin_webapp(plugName))
-        except ImportError:
-            assert_true(True)
-        plugName = 'editor'
-        assert_true(None != pm.get_plugin_webapp(plugName))
-
-        pm.get_plugin_content(PluginChannel.get(1))
-        ret = pm.get_last_update(1)
-        assert_true(ret != None)
-        assert_true(pm.get_last_update(0) == None)
-        PluginChannel(name='testBirthday', plugin=Plugin.selectBy(name="birthday").getOne(),
-                      subscription_right='public')
-        c = PluginChannel.selectBy(name="testBirthday").getOne()
-        cache_file = os.path.join(get_root_path(), 'plugins/birthday/cache/birthday_%d.json' % c.id)
-        pm.invalidate_cache('birthday', c.id)
-
-        if os.path.exists(cache_file):
-            birthday.invalidate_cache(c.id)
-            assert_false(os.path.exists(cache_file))
-        pm.invalidate_cache('birthday', c.id)
-        assert_false(os.path.exists(cache_file))
-        list = pm.get_plugin_missing_dependencies('birthday')
-        assert_true(len(list) == 0)
-        PluginChannel.delete(c.id)
-        c = PluginChannel.selectBy(name="testPlugin").getOne()
-        PluginChannel.delete(c.id)
-        assert_true(pm.get_plugins_modules() != None)
-        log = plugin_manager.get_logger('editor', PluginChannel.get(1))
-        assert_true(log != None)
-        log = plugin_manager.get_logger('editor', None)
-        assert_true(log != None)
-        return
-
-
-class BirthdayPluginTest(ICTVTestCase):
-    def runTest(self):
-        """ Tests the birthday plugin. """
-        c = PluginChannel(name='testBirthday2', plugin=Plugin.selectBy(name="birthday").getOne(),
-                          subscription_right='public')
-        ret = birthday.get_content(c.id)
-        for elem in ret:
-            assert_false(elem.is_empty())
-            assert_true(elem.get_slides() != None)
-            for slide in elem.get_slides():
-                assert_equal(slide.get_template(), 'template-background-text-center')
-                assert_true(None != slide.get_content())
-                assert_true(None != slide.get_duration())
-                slide.duration = -10
-                assert_true(slide.get_duration() > 0)
-        assert_true(len(ret) > 0)
-        cache_file = os.path.join(get_root_path(), 'plugins/birthday/cache/birthday_%d.json' % c.id)
-        if os.path.exists(cache_file):
-            birthday.invalidate_cache(c.id)
-            assert_false(os.path.exists(cache_file))
-        t = birthday.str_day_with_suffix(1)
-        assert_true(t != None)
-        dm = birthday.str_date_without_year(1, 1)
-        assert_true(dm != None)
-        people = [{"day": 1, "month": 1, "name": "test", "first_name": "test"},
-                  {"day": 30, "month": 1, "name": "test2", "first_name": "test2"}]
-        ul = birthday.create_ul(people, "month")
-        assert_true(ul != None)
-        today_list = []
-        months_dict = {}
-        future_list = []
-        past_list = []
-        channel = c
-        now = date.today()
-        birthday.get_informations(today_list, months_dict, past_list, future_list, channel, now)
-        assert_true(len(today_list) >= 0)
-        assert_true(len(future_list) >= 0)
-        assert_true(len(past_list) >= 0)
-        past_list, futur_list = birthday.get_past_future(True, True, 10, 10, now, months_dict)
-        assert_true(len(past_list) >= 0)
-        assert_true(len(future_list) >= 0)
-        # TODO - strange here
-        past_list, futur_list = birthday.get_past_future(True, True, -10, -10, now, months_dict)
-        assert_true(len(past_list) >= 0)
-        assert_true(len(future_list) >= 0)
-        PluginChannel.delete(c.id)
-
-
-class CalPluginTest(ICTVTestCase):
-    def runTest(self):
-        """ Tests the cal plugin. """
-        return
-        chan = PluginChannel(name='testCal', plugin=Plugin.selectBy(name="cal").getOne(), subscription_right='public')
-        c = cal.get_content(chan.id)
-        assert_true(c != None)
-        fields = cal.give_fields(chan.id)
-        assert_true(fields != None)
-        conf = cal.get_configuration()
-        assert_true(conf != None)
-        test = CalendarPlugin(
-            url="https://calendar.google.com/calendar/ical/n2v8mp6tql02ss05ve1slju258%40group.calendar.google.com/public/basic.ics",
-            after=10, before=10, duration=5000, type='seminar ICTEAM')
-        assert_true(test != None)
-        assert_true(test.get_slides() != None)
-        assert_true(len(test.get_slides()) >= 0)
-        assert_true(test.get_theme() == None)
-        PluginChannel.delete(chan.id)
-
-
-class EmbedPluginTest(ICTVTestCase):
-    def runTest(self):
-        """ Tests the embed plugin. """
-        c = PluginChannel(name='testEmbed', plugin=Plugin.selectBy(name="embed").getOne(), subscription_right='public')
-        l = embed.get_content(c.id)
-        assert_true(l != None)
-        hash = embed.get_file_hash(c.id, "http://0.0.0.0:8080")
-        assert_true(hash != None)
-        PluginChannel.delete(c.id)
-
-
-class RSSPluginTest(ICTVTestCase):
-    def runTest(self):
-        """ Tests the RSS plugin. """
-        return
-        c = PluginChannel(name='testrss', plugin=Plugin.selectBy(name="rss").getOne(), subscription_right='public')
-        l = rss.get_content(c.id)
-        assert_true(l != None)
-        assert_true(rss.get_configuration() != None)
-        assert_true(rss.give_fields() != None)
-        assert_true(rss.is_json_present() != False)
-        cap = Rss_capsule()
-        dir_path = os.path.dirname(os.path.realpath(__file__))
-
-        cap.treat_and_format_data("https://www.uclouvain.be/ingi.rss", "title;<h1 .*>(?P<this>.+)<\/h1>", 'base', 5000,
-                                  100, date.today(), c.id, dir_path + '/config.yaml', qrcode=False, white_background=False)
-        ls = cap.get_slides()
-        assert_true(len(ls) >= 0)
-        assert_true(cap.get_theme() != None)
-        for l in ls:
-            assert_true(l.get_content() != None)
-            assert_true(l.get_duration() > 0)
-            assert_true(l.get_template() != None)
-
-        cap2 = Rss_capsule()
-        cap2.treat_and_format_data("https://xkcd.com/rss.xml",
-                                   "background;<div id=\"comic\">\n<img src=\"\/\/(?P<this>(.*))\" title=.*",
-                                   'template-image-bg', 5000,
-                                   10, date.today(), c.id, get_root_path() + '/plugins/rss/static/store.json',
-                                   qrcode=False, white_background=False)
-        ls = cap2.get_slides()
-        assert_true(len(ls) >= 0)
-        assert_true(cap2.get_theme() != None)
-        for l in ls:
-            assert_true(l.get_content() != None)
-            assert_true(l.get_duration() > 0)
-            assert_true(l.get_template() != None)
-        PluginChannel.delete(c.id)
 
 
 class CommonTests(ICTVTestCase):

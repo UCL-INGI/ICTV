@@ -45,7 +45,7 @@ paste.lint.check_content_type = lambda *_: None
 class ICTVTestCase(unittest.TestCase):
 
     config = {
-        'default_theme': 'ucl',
+        'default_theme': 'ictv',
         'authentication': ['local'],
         'debug': {
             'autologin': True,
