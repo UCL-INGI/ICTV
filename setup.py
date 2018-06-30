@@ -18,6 +18,7 @@
 #
 #    You should have received a copy of the GNU Affero General Public License
 #    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
+import os
 
 from setuptools import setup
 
@@ -39,6 +40,6 @@ retval = setup(
     setup_requires=['pytest-runner', 'pytest-env'],
     tests_require=['pytest', 'pytest-xdist', 'pytest-cov', 'paste', 'nose'],
     dependency_links=['https://github.com/formencode/formencode.git#egg=FormEncode'],
-    scripts=['ictv-setup-database', 'ictv-webapp', 'ictv-tests'],
+    scripts=['ictv-setup-database', 'ictv-webapp', 'ictv-tests'] if os.environ.get('SETUP_ENV') != 'travis' else [],
     include_package_data=True,
 )
