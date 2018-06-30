@@ -3,7 +3,10 @@ ICTV
 
 .. image:: https://readthedocs.org/projects/ictv/badge/?version=latest
     :target: https://ictv.readthedocs.io/en/latest/?badge=latest
-    :alt: Documentation Status
+    :alt: Documentation status
+.. image:: https://travis-ci.org/UCL-INGI/ICTV.svg?branch=master
+    :target: https://travis-ci.org/UCL-INGI/ICTV
+    :alt: Build status
 
 ICTV is a simple content management system for digital signage on multiple screens.
 
