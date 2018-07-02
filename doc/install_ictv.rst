@@ -35,6 +35,16 @@ Using SAML for authentication requires the following additional dependencies:
     yum install -y libxml2 xmlsec1 libxml2-devel xmlsec1-devel xmlsec1-openssl-devel libtool-ltdl-devel
 
 
+Installing the dependencies on macOS
+------------------------------------
+
+All dependencies can be installed using brew.
+
+::
+
+    brew install imagemagick Libxml2 MediaInfo FFmpeg xmlsec1 libmagic
+
+
 Installing ffmpeg on CentOS 7
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -78,6 +88,7 @@ will be used. If no default value is available for the parameter, an
 error message and exception will be raised at the start of the application.
 
 See :ref:`authenticating` for more details on configuring authentication.
+See :ref:`setting_up` for a minimal configuration file.
 
 Creating a new database
 ~~~~~~~~~~~~~~~~~~~~~~~
