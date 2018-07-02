@@ -16,7 +16,7 @@ the ``PYTHONPATH`` will make the plugins they contain available for the ICTV ser
 
 More directories can be added by delimiting them using ``:``.
 
-A minimal configuration file for a development environment is:
+A minimal ``configuration.yaml`` file for a development environment is:
 
 .. code-block:: yaml
 

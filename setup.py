@@ -19,10 +19,13 @@
 #    You should have received a copy of the GNU Affero General Public License
 #    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
 import os
+import platform
 
 from setuptools import setup
 
 import ictv.common
+
+is_running_on_macos = platform.system() == 'Darwin'
 
 retval = setup(
     name='ictv',
@@ -37,7 +40,7 @@ retval = setup(
     install_requires=['sqlobject', 'typing', 'icalendar', 'pyyaml', 'urllib3', 'web.py>=0.40.dev0',
                       'yamlordereddictloader', 'pyquery', 'BeautifulSoup4', 'python-magic', 'aiohttp', 'wand',
                       'feedparser', 'qrcode', 'selenium', 'python3-saml', 'pymediainfo'],
-    setup_requires=['pytest-runner', 'pytest-env'],
+    setup_requires=['pytest-runner', 'pytest-env'] if not is_running_on_macos else [],
     tests_require=['pytest', 'pytest-xdist', 'pytest-cov', 'paste', 'nose'],
     dependency_links=['https://github.com/formencode/formencode.git#egg=FormEncode'],
     scripts=['ictv-setup-database', 'ictv-webapp', 'ictv-tests'] if os.environ.get('SETUP_ENV') != 'travis' else [],
