@@ -16,6 +16,17 @@ the ``PYTHONPATH`` will make the plugins they contain available for the ICTV ser
 
 More directories can be added by delimiting them using ``:``.
 
+A minimal configuration file for a development environment is:
+
+.. code-block:: yaml
+
+    debug:
+      autologin: yes
+    database_uri: sqlite:///tmp/ictv_database.sqlite  # You may want to move the database to a persistent directory
+    client:
+      root_password: ''
+      authorized_keys: ''
+
 Linking templates and themes
 ----------------------------
 
