@@ -61,20 +61,20 @@ is to link and unlink the files when needed. One can use the following script to
             link = os.path.join(renderer_path, 'themes', theme)
             if not remove and not os.path.exists(link):
                 os.symlink(os.path.join(themes_dir, theme), link, target_is_directory=True)
-                print('Installed theme ' + theme)
+                print('Installed theme %s {%s -> %s}' % (theme, os.path.join(themes_dir, theme), link))
             elif remove and os.path.exists(link):
                 os.unlink(link)
-                print('Removed theme ' + theme)
+                print('Removed theme ' + link)
 
     if os.path.exists(templates_dir):
         for template in os.listdir(templates_dir):
             link = os.path.join(renderer_path, 'templates', template)
             if not remove and not os.path.exists(link):
                 os.symlink(os.path.join(templates_dir, template), link)
-                print('Installed template ' + template)
+                print('Installed template %s {%s -> %s}' % (theme, os.path.join(themes_dir, theme), link))
             elif remove and os.path.exists(link):
                 os.unlink(link)
-                print('Removed template ' + template)
+                print('Removed template ' + link)
 
 .. code-block:: bash
 
