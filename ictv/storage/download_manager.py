@@ -53,8 +53,7 @@ class DownloadManager(object):
                 mime_type, file_size = task.result()
                 self._post_process_queue.put((mime_type, file_size, asset))
 
-            task = asyncio.run_coroutine_threadsafe(
-                DownloadManager._cache_asset(asset.filename + asset.extension, asset.path), self._loop)
+            task = asyncio.run_coroutine_threadsafe(DownloadManager._cache_asset(asset.filename + (asset.extension or ''), asset.path), self._loop)
             asset.in_flight = True
             task.add_done_callback(enqueue_post_process_asset)
             self._pending_tasks[asset.id] = task
