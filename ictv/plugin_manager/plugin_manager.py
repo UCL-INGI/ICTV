@@ -140,7 +140,8 @@ class PluginManager(object):
             Lists the plugins available in the Python path.
             Does not reflect the loaded plugins nor the plugins present in database.
         """
-        return list(m for i, m, ispkg in pkgutil.walk_packages(f.path for f in pkgutil.iter_importers('ictv.plugins.')))
+        plugins_package = 'ictv.plugins.'
+        return list(m.replace(plugins_package, '') for i, m, ispkg in pkgutil.walk_packages((f.path for f in pkgutil.iter_importers(plugins_package)), plugins_package) if ispkg)
 
     def get_plugin(self, plugin_name, reload=False):
         """
