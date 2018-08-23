@@ -11,6 +11,13 @@ Methods of authentication can be combined in the ICTV configuration file. Add th
 like to use to the list of values for the ``authentication`` key. The first method in the list will be the default
 method used. ICTV accounts will be matched based on the email address of the user.
 
+Authenticating for the first time
+---------------------------------
+
+After having installed ICTV, a default user named *ICTV Admin* will be created. To log in using this account, the 
+`debug.autologin` key should be set to true. At this point you can either enable local authentication and change its
+password, or create another administrator account with coherent values for another authentication method. Note that this can be done on a local instance before deploying to production, and then transfer the database between the two.
+
 Local authentication
 --------------------
 
