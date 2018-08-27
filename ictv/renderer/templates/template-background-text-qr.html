@@ -36,5 +36,6 @@ $code:
 </style>
 $:img(content=slide, style="float: right; max-width: 200px;", number=1, editor_type="image", editor_placeholder="Choose an image", editor_label="Image", editor_default="/static/plugins/editor/placeholders/270x350.png", editor_order="1")
 <div class="content $template_id">
-    $:text(content=slide, number=1, max_chars=940, style="color: white", editor_type="textarea", editor_placeholder="Text", editor_label="Text", editor_default="Text", editor_order="2")
+    $if slide and 'text-1' in slide:
+        $:text(content=slide, number=1, max_chars=940, style="color: white", editor_type="textarea", editor_placeholder="Text", editor_label="Text", editor_default="Text", editor_order="2")
 </div>
