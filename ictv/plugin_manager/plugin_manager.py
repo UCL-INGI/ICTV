@@ -334,22 +334,25 @@ class PluginManager(object):
         return filtered_capsules, filtered_out_content
 
     def send_email_alert(self, channel, filtered_out_content):
-        message = 'the content of channel %s contained a total of %d slide(s) with non-complying field(s):\n' % (
-            channel.name, len(filtered_out_content))
-        for slide in filtered_out_content:
-            for f in slide:
-                message += 'The field %s from template %s allows up to %d characters but it was provided with "%s" for a total of %d characters.\n' % (
-                    f[0], f[1], f[3], f[4], f[2])
-            message += '\n'
-        message_hash = hash(message)
-        message = ('At %s, ' % datetime.now()) + message
-        if Role.selectBy(channel=channel, permission_level='channel_administrator').count() == 0:
-            for super_admin in User.selectBy(super_admin=True):
-                self.template_limits_email_digester.add_email(super_admin, message, message_hash)
+        if channel.plugin.name=="editor":
+            message = 'the content of channel %s contained a total of %d slide(s) with non-complying field(s):\n' % (
+                channel.name, len(filtered_out_content))
+            for slide in filtered_out_content:
+                for f in slide:
+                    message += 'The field %s from template %s allows up to %d characters but it was provided with "%s" for a total of %d characters.\n' % (
+                        f[0], f[1], f[3], f[4], f[2])
+                message += '\n'
+            message_hash = hash(message)
+            message = ('At %s, ' % datetime.now()) + message
+            if Role.selectBy(channel=channel, permission_level='channel_administrator').count() == 0:
+                for super_admin in User.selectBy(super_admin=True):
+                    self.template_limits_email_digester.add_email(super_admin, message, message_hash)
+            else:
+                for administrator in Role.selectBy(channel=channel,
+                                                permission_level='channel_administrator').throughTo.user:
+                    self.template_limits_email_digester.add_email(administrator, message, message_hash)
         else:
-            for administrator in Role.selectBy(channel=channel,
-                                               permission_level='channel_administrator').throughTo.user:
-                self.template_limits_email_digester.add_email(administrator, message, message_hash)
+            return
 
     def check_all_plugins_dependencies(self):
         """
