@@ -120,6 +120,7 @@ class PluginChannel(Channel):
     cache_activated = BoolCol(default=None)
     cache_validity = IntCol(default=None)
     keep_noncomplying_capsules = BoolCol(default=None)
+    drop_silently_non_complying_slides = BoolCol(default=None)
 
     def give_permission_to_user(self, user: User,
                                 permission_level: UserPermissions = UserPermissions.channel_contributor) -> None:
