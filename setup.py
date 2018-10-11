@@ -41,7 +41,7 @@ retval = setup(
                       'yamlordereddictloader', 'pyquery', 'BeautifulSoup4', 'python-magic', 'aiohttp', 'wand',
                       'feedparser', 'qrcode', 'selenium', 'python3-saml', 'pymediainfo'],
     setup_requires=['pytest-runner', 'pytest-env'] if not is_running_on_macos else [],
-    tests_require=['pytest', 'pytest-xdist', 'pytest-cov', 'paste', 'nose'],
+    tests_require=['pytest', 'pytest-xdist', 'pytest-cov', 'paste', 'nose', 'coverage<5'],
     dependency_links=['https://github.com/formencode/formencode.git#egg=FormEncode'],
     scripts=['ictv-setup-database', 'ictv-webapp', 'ictv-tests'] if os.environ.get('SETUP_ENV') != 'travis' else [],
     include_package_data=True,
