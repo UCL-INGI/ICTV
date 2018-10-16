@@ -18,7 +18,7 @@ channel:
     not-activated-plugin: "This channel depends on a plugin that has not been activated by the system administrators. It will not broadcast content until its plugin is reactivated."
     not-authorized-channel : "This channel cannot be previewed because you are not part of the authorized users."
     keep_noncomplying_capsules: "When a capsule contains non-complying slides in terms of the length of its content for each template field, it will be filtered out and the capsule that contains it aswell."
-    drop_silently_non_complying_slides: "Drop silently non-complying slides."
+    drop_silently_non_complying_slides: "Do not send emails about slides that do not match templates limits."
 bundle:
   name: "The name indicates shortly what the purpose of this bundle and its content is about."
   description: "The description contains more information on the bundle and its content."
