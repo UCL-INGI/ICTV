@@ -245,6 +245,13 @@ $def make_param(param_id, param_attrs, disabled):
                                               $('checked' if channel.keep_noncomplying_capsules else '')>Keep capsule with non-complying slides</label>
                                 <p><i>Check this box if you would like to keep all capsules even if some may have slides that are missing due to being filtered out.</i></p>
                             </div>
+                            <h4>Drop silently non-complying slides</h4>
+                            <div class="form-group">
+                                $:make_tooltip(info['channel']['misc']['drop_silently_non_complying_slides'], placement='left', icon=True)
+                                <label><input type="checkbox" name="drop_silently_non_complying_slides"
+                                              $('checked' if channel.drop_silently_non_complying_slides else '')>Drop silently non-complying slides</label>
+                                <p><i>Check this box if you would like to drop silently non-complying slides.</i></p>
+                            </div>
                     </div>
                     <div class="box-footer">
                         <a href="/channels" class="btn btn-default">Cancel</a>
