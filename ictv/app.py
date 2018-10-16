@@ -70,6 +70,7 @@ urls = (
     '/channels/(\d+)', 'ictv.pages.channel_page.ChannelPage',
     '/channels/(\d+)/request/(\d+)', 'ictv.pages.channel_page.RequestPage',
     '/channels/(\d+)/manage_bundle', 'ictv.pages.manage_bundle_page.ManageBundlePage',
+    '/channels/(\d+)/subscriptions', 'ictv.pages.channel_page.SubscribeScreensPage',
     '/channel/(\d+)','ictv.pages.channel_page.DetailPage',
     '/channel/(\d+)/force_update','ictv.pages.channel_page.ForceUpdateChannelPage',
     '/plugins', 'ictv.pages.plugins_page.PluginsPage',

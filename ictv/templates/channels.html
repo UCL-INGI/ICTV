@@ -169,7 +169,7 @@ $code:
                             <td>
                                 $if UserPermissions.administrator in current_user.highest_permission_level or channel.has_admin(current_user):
                                     <button class="btn btn-xs btn-warning" data-toggle="modal" data-target="#add-users-channel-modal"><i class="fa fa-users"></i>Users permissions</button>
-
+                                    <a class="btn btn-xs btn-default" href="/channels/$channel.id/subscriptions"><span class="glyphicon glyphicon-blackboard"></span>Subscriptions</a>
                                     $if UserPermissions.administrator in current_user.highest_permission_level:
                                         <button class="btn btn-xs btn-primary" data-toggle="modal" data-target="#edit-channel-modal"><i class="fa fa-pencil-square-o"></i>Edit</button>
                                     $if current_user.super_admin:
