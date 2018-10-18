@@ -61,6 +61,19 @@ class CacheManager(StorageManager):
         filename, extension = os.path.splitext(url)
         cache_asset_hash = hash(str(self.channel_id) + filename)
         asset = Asset.selectBy(plugin_channel=self.channel_id, filename=filename, is_cached=True).getOne(None)
+        if asset is not None:
+            # comparaison via http headers
+            import web,requests
+            original = str(url)
+            cache_file = ((str(web.ctx.homedomain)+ '/' + asset.path) if asset.path is not None else str(web.ctx.homedomain)+ '/cache/' + str(
+                asset.id))
+            url_original = requests.get(original)
+            url_cache_file = requests.get(cache_file)
+            if 'Date' in url_original.headers.keys() and 'Content-Length' in url_original.headers.keys() and 'Date' in url_cache_file.headers.keys() and 'Content-Length' in url_cache_file.headers.keys():
+                if (url_original.headers['Date'] != url_cache_file.headers['Date']) or (
+                        url_original.headers['Content-Length'] != url_cache_file.headers['Content-Length']):
+                    asset.destroySelf()
+                    asset = None
         if asset is None:
             if CacheManager._get_lock(cache_asset_hash, blocking=False):
                 try:
