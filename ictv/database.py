@@ -113,6 +113,9 @@ def update_database():
         column_sql = PluginChannel.sqlmeta.getColumns()['drop_silently_non_complying_slides'].sqliteCreateSQL()
         table = PluginChannel.sqlmeta.table
         assert conn.queryOne('ALTER TABLE %s ADD %s' % (table, column_sql)) is None
+        column_sql = Plugin.sqlmeta.getColumns()['drop_silently_non_complying_slides_default'].sqliteCreateSQL()
+        table = Plugin.sqlmeta.table
+        assert conn.queryOne('ALTER TABLE %s ADD %s' % (table, column_sql)) is None
         db_version = 1
     DBVersion.select().getOne().set(version=db_version)
 

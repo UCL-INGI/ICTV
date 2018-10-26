@@ -113,7 +113,7 @@ class PluginManager(object):
                         plugin_logger.warning(
                             'Id %s from template %s has a length of %d but only %d characters are permitted. It\'s text was "%s"',
                             *field, extra=logger_extra)
-                if self.template_limits_emailing_activated  and not channel.drop_silently_non_complying_slides:
+                 if self.template_limits_emailing_activated and ( not channel.drop_silently_non_complying_slides if channel.drop_silently_non_complying_slides is not None else not channel.plugin.drop_silently_non_complying_slides_default):
                     self.send_email_alert(channel, filtered_out_content)
 
             self.dereference_assets(content)
