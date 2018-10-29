@@ -196,6 +196,9 @@ class Templates(object, metaclass=TemplatesMeta):
                 {
                     'max_chars': int  # If applicable to this field type, otherwise empty for now.
                 },
+                ...
+                'name': str,
+                'description': str
             },
             ...
         }
