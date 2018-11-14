@@ -20,6 +20,7 @@
 #    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
 
 import web
+import datetime
 from onelogin.saml2.auth import OneLogin_Saml2_Auth
 from onelogin.saml2.utils import OneLogin_Saml2_Utils
 
@@ -147,13 +148,15 @@ class Shibboleth(ICTVPage):
                 email = attrs[settings['sp']['attrs']['email']][0]
 
                 u = User.selectBy(email=email).getOne(None)
+                
                 if not u:  # The user does not exist in our DB
                     u = User(username=username,
                              email=email,
                              fullname=realname,
                              super_admin=False,
-                             disabled=True)
-
+                             disabled=True,
+                             creation_date=datetime.datetime.now())
+                u.last_connection = datetime.datetime.now()
                 self.session['user'] = u.to_dictionary(['id', 'fullname', 'username', 'email'])
 
                 self_url = OneLogin_Saml2_Utils.get_self_url(req)

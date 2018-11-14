@@ -20,7 +20,7 @@
 #    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
 
 import re
-
+import datetime
 import web
 from sqlobject import SQLObjectNotFound
 from sqlobject.dberrors import DuplicateEntryError
@@ -80,7 +80,7 @@ class UsersPage(ICTVAuthPage):
                     raise ImmediateFeedback(form.action, 'invalid_username')
 
                 try:
-                    User(username=username, fullname=fullname, email=email, super_admin=super_admin, disabled=False)
+                    User(username=username, fullname=fullname, email=email, super_admin=super_admin, disabled=False, creation_date=datetime.datetime.now())
                 except DuplicateEntryError:
                     u = User.selectBy(email=form.email).getOne(None)
                     if u is not None:

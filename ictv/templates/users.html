@@ -2,22 +2,24 @@ $def with (users, current_user, show_reset_button)
 
 $#    This file belongs to the ICTV project, written by Nicolas Detienne,
 $#    Francois Michel, Maxime Piraux, Pierre Reinbold and Ludovic Taffin
-$#    at Université catholique de Louvain.
+$#    at Universite Catholique de Louvain.
 $#
-$#    Copyright (C) 2016-2018  Université catholique de Louvain (UCL, Belgium)
+$#    Copyright (C) 2017  Universite Catholique de Louvain (UCL, Belgium)
 $#
-$#    ICTV is free software: you can redistribute it and/or modify
+$#    This program is free software: you can redistribute it and/or modify
 $#    it under the terms of the GNU Affero General Public License as published
 $#    by the Free Software Foundation, either version 3 of the License, or
 $#    (at your option) any later version.
 $#
-$#    ICTV is distributed in the hope that it will be useful,
+$#    This program is distributed in the hope that it will be useful,
 $#    but WITHOUT ANY WARRANTY; without even the implied warranty of
 $#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 $#    GNU Affero General Public License for more details.
 $#
 $#    You should have received a copy of the GNU Affero General Public License
-$#    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
+$#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
 
 $var active_element: Users
 $code:
@@ -77,6 +79,8 @@ $code:
                             <th>Email</th>
                             <th>Permissions</th>
                             <th>Status</th>
+                            <th>Last connection</th>
+                            <th>Creation date</th>
                             <th>Actions</th>
                         </tr>
                         </thead>
@@ -87,6 +91,8 @@ $code:
                             <th>Email</th>
                             <th>Permissions</th>
                             <th>Status</th>
+                            <th>Last connection</th>
+                            <th>Creation date</th>
                             <th>Actions</th>
                         </tr>
                         </tfoot>
@@ -133,6 +139,12 @@ $code:
                                 <td data-disable="$user.disabled">
                                     $('Deactivated' if user.disabled else 'Activated')
                                 </td>
+                                <td data-last_connection="$user.last_connection">
+                                    <p>$("{:%d-%m-%Y}".format(user.last_connection) if user.last_connection else "")</p>
+                                </td>
+                                <td data-last_connection="$user.creation_date">
+                                    <p>$("{:%d-%m-%Y}".format(user.creation_date) if user.creation_date else "")</p>
+                                </td>
                                 <td>
                                     $if 'real_user' not in session or session['real_user']['email'] != user.email:
                                         <button class="btn btn-xs btn-primary" data-toggle="modal" data-target="#edit-user-modal"><i class="fa fa-pencil-square-o"></i>Edit</button>
@@ -144,11 +156,10 @@ $code:
                                             </button>
                                         $if user.highest_permission_level in current_user.highest_permission_level:
                                             <a href="/logas/$user.email" class="btn btn-xs btn-success"><i class="fa fa-user-secret"></i>Log as</a>
-
-                                    $if show_reset_button and UserPermissions.administrator in current_user.highest_permission_level:
-                                        <button class="btn btn-xs copy-secret pull-right" data-clipboard-text="$homedomain()/reset/$:user.reset_secret">
-                                            Copy password reset link
-                                        </button>
+                                        $if show_reset_button and UserPermissions.administrator in current_user.highest_permission_level:
+                                            <button class="btn btn-xs copy-secret pull-right" data-clipboard-text="$homedomain()/reset/$:user.reset_secret">
+                                                Copy password reset link
+                                            </button>
                                 </td>
                             </tr>
                         </tbody>
@@ -362,8 +373,8 @@ $if UserPermissions.administrator in current_user.highest_permission_level:
             $$prev_button = $$(e.trigger).addClass('btn-success').html('Copied!');
         });
 
-        $$('#table1').DataTable({stateSave: true});
-        $$('#table2').DataTable({stateSave: true});
+        $$('#table1').DataTable();
+        $$('#table2').DataTable();
 
         $if feedbacks.has_type('create') and not feedbacks.has('create', 'ok'):
             fire_modal('#create-user-modal');
@@ -406,7 +417,8 @@ $if UserPermissions.administrator in current_user.highest_permission_level:
                     $$modal.find('#' + prefix + 'super_admin').prop('disabled', is_current_user_admin || $session['user']['id'] == $$td.parent().attr('data-user-id'));
                     $$modal.find('#' + prefix + 'admin').prop('disabled', is_current_user_admin || super_admin || $session['user']['id'] == $$td.parent().attr('data-user-id'));
                 }
-
+                $$td = $$td.prev();
+                $$td = $$td.prev();
                 $$td = $$td.prev();
                 $$modal.find('#'+prefix+'email').val($$td.children().html());
                 $$td = $$td.prev();
@@ -419,6 +431,8 @@ $if UserPermissions.administrator in current_user.highest_permission_level:
         var $$modal = $$('#toggle-activation-user-modal');
         $$modal.on('show.bs.modal', function(e) {
             $$td = $$(e.relatedTarget.parentElement).prev();
+            $$td = $$td.prev();
+            $$td = $$td.prev();
             const disabled = $$td.attr('data-disable') == 'True';
             $$modal.find('.modal-title').html((disabled ? 'Activate' : 'Deactivate') + ' this user account')
             $$modal.find('button[type="submit"]').html('<span class="glyphicon glyphicon-alert"></span>' + (disabled ? 'Activate' : 'Deactivate'))

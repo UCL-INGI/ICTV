@@ -109,8 +109,14 @@ def update_database():
         DBVersion(version=database_version)
     db_version = DBVersion.select().getOne().version
     if db_version < 1:
-        # Do upgrade stuff
-        pass
+        print('Updating database to version %d' % 31)
+        column_sql = User.sqlmeta.getColumns()['creation_date'].sqliteCreateSQL()
+        table = User.sqlmeta.table
+        assert conn.queryOne('ALTER TABLE %s ADD %s' % (table, column_sql)) is None
+        column_sql = User.sqlmeta.getColumns()['last_connection'].sqliteCreateSQL()
+        table = User.sqlmeta.table
+        assert conn.queryOne('ALTER TABLE %s ADD %s' % (table, column_sql)) is None
+        db_version = 1
     DBVersion.select().getOne().set(version=db_version)
 
 
