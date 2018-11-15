@@ -42,7 +42,7 @@ class User(ICTVObject):
     password = StringCol(default=None)  # Used for local login
     reset_secret = StringCol(notNone=True)  # Used for local login to reset password
     has_toured = BoolCol(default=False)  # Has the user completed the app tour
-    creation_date = DateTimeCol(default=datetime.now())
+    creation_date = DateTimeCol(default=DateTimeCol.now)
     last_connection = DateTimeCol(default=None)
 
     def __init__(self, *args, **kwargs):
