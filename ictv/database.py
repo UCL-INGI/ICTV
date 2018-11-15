@@ -112,7 +112,7 @@ def update_database():
         print('Updating database to version %d' % 1)
         table = User.sqlmeta.table
         from datetime import datetime
-        column_sql = User.sqlmeta.getColumns()['creation_date'].sqliteCreateSQL()  + ' DEFAULT ' + datetime.now()
+        column_sql = User.sqlmeta.getColumns()['creation_date'].sqliteCreateSQL()
         assert conn.queryOne('ALTER TABLE %s ADD %s' % (table, column_sql)) is None
         column_sql = User.sqlmeta.getColumns()['last_connection'].sqliteCreateSQL()
         assert conn.queryOne('ALTER TABLE %s ADD %s' % (table, column_sql)) is None
