@@ -151,13 +151,20 @@ class TestInvalidUserAndEmail(UsersPageTestCase):
         fullname = "Test FullName"
         correct_email = "test_email@test.email"
         wrong_emails = ["wrongemail", "wrong?mail@mail.com", "vivelété@mail.com", "vivel'ete@mail.com", "@"]
-        users_before = {repr(user) for user in User.select()}
+
+        def set_last_connection_null(user):
+            """This method set the last_connection parameter of a user as null.
+               This is done to simplify comparaison."""
+            user.last_connection=None
+            return user
+
+        users_before = {repr(set_last_connection_null(user)) for user in User.select()}
         # test some wrong email addresses
         for email in wrong_emails:
             post_params = {"action": "create", "admin": "", "super_admin": "", "username": username,
                            "fullname": fullname, "email": email}
             assert self.testApp.post("/users", post_params, status=303).body is not None
-            users_after = {repr(user) for user in User.select()}
+            users_after = {repr(set_last_connection_null(user)) for user in User.select()}
             assert users_after == users_before
 
         # test with wrong usernames
@@ -165,5 +172,5 @@ class TestInvalidUserAndEmail(UsersPageTestCase):
             post_params = {"action": "create", "admin": "", "super_admin": "", "username": username,
                            "fullname": fullname, "email": correct_email}
             assert self.testApp.post("/users", post_params, status=303).body is not None
-            users_after = {repr(user) for user in User.select()}
+            users_after = {repr(set_last_connection_null(user)) for user in User.select()}
             assert users_after == users_before
