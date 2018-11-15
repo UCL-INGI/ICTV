@@ -154,10 +154,10 @@ $code:
                                             </button>
                                         $if user.highest_permission_level in current_user.highest_permission_level:
                                             <a href="/logas/$user.email" class="btn btn-xs btn-success"><i class="fa fa-user-secret"></i>Log as</a>
-                                        $if show_reset_button and UserPermissions.administrator in current_user.highest_permission_level:
-                                            <button class="btn btn-xs copy-secret pull-right" data-clipboard-text="$homedomain()/reset/$:user.reset_secret">
-                                                Copy password reset link
-                                            </button>
+                                    $if show_reset_button and UserPermissions.administrator in current_user.highest_permission_level:
+                                        <button class="btn btn-xs copy-secret pull-right" data-clipboard-text="$homedomain()/reset/$:user.reset_secret">
+                                            Copy password reset link
+                                        </button>
                                 </td>
                             </tr>
                         </tbody>

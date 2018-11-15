@@ -25,6 +25,7 @@ from sqlobject import StringCol, BoolCol, SQLMultipleJoin, SQLRelatedJoin, SQLRe
 from ictv.models.ictv_object import ICTVObject
 from ictv.models.role import UserPermissions, Role
 from ictv.models.subscription import Subscription
+from datetime import datetime
 
 
 class User(ICTVObject):
@@ -41,7 +42,7 @@ class User(ICTVObject):
     password = StringCol(default=None)  # Used for local login
     reset_secret = StringCol(notNone=True)  # Used for local login to reset password
     has_toured = BoolCol(default=False)  # Has the user completed the app tour
-    creation_date = DateTimeCol(default=None)
+    creation_date = DateTimeCol(default=datetime.now())
     last_connection = DateTimeCol(default=None)
 
     def __init__(self, *args, **kwargs):
@@ -86,8 +87,8 @@ class User(ICTVObject):
             return Subscription.select()
         return self.screens.throughTo.subscriptions
     
-    def reconnect_since_creation(self):
-        if self.creation_date is None or self.last_connection is None:
+    def connected_since_creation(self):
+        if self.last_connection is None:
             return False
         if self.last_connection > self.creation_date:
             return True

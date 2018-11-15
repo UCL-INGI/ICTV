@@ -21,7 +21,6 @@
 
 import hashlib
 from logging import getLogger
-import datetime
 import web
 from ictv.common import utils
 
@@ -46,7 +45,6 @@ class LoginPage(ICTVPage):
             user = User.selectBy(email=form.email, password=hash_password(form.password)).getOne(None)
             if not user:
                 raise ImmediateFeedback('login', 'invalid_credentials')
-            user.last_connection = datetime.datetime.now()
             self.session['user'] = user.to_dictionary(['id', 'fullname', 'username', 'email'])
         except ImmediateFeedback:
             store_form(form)
