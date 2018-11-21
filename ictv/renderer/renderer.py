@@ -166,7 +166,7 @@ class TemplatesMeta(type):
                 return g
 
             dummy_renderer = SlideRenderer({'title': f('title'), 'subtitle': f('subtitle'),
-                            'img': f('img'),
+                            'img': f('image'),
                             'logo': f('logo'), 'text': f('text'), 'background': f('background')}, None)
 
             template_rendered = getattr(dummy_renderer.slide_renderer, template)(slide=None)
