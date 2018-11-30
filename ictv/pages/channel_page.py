@@ -132,7 +132,11 @@ class SubscribeScreensPage(ICTVAuthPage):
                 raise ImmediateFeedback(form.action, 'invalid_channel/screen_id')
             try:
                 channel = Channel.get(channelid)
+                if not channel.can_subscribe(u):
+                    raise web.forbidden(message="You're not allow to do that")
                 screen = Screen.get(screenid)
+                if not u in screen.owners:
+                    raise web.forbidden(message="You're not allow to do that")
                 #sub true -> New subscription
                 #sub false -> Remove subscription
                 if sub:
