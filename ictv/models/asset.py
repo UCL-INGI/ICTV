@@ -37,6 +37,7 @@ class Asset(ICTVObject):
     extension = StringCol(default=None)
     file_size = BigIntCol(default=None)  # File size in kilobytes
     created = DateTimeCol(default=DateTimeCol.now)
+    last_update = DateTimeCol(default=DateTimeCol.now)
     last_reference = DateTimeCol(default=DateTimeCol.now)
     in_flight = BoolCol(default=False)  # Is this asset being cached at the moment
     is_cached = BoolCol(default=False)  # Is this asset a cached asset from CacheManager
@@ -67,5 +68,6 @@ def on_asset_deleted(instance, kwargs):
     except (OSError, TypeError) as e:
         # TODO: log message to app.log
         print(e)
+
 
 listen(on_asset_deleted, Asset, RowDestroyedSignal)

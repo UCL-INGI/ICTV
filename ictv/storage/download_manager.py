@@ -20,6 +20,7 @@
 #    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
 
 import asyncio
+from datetime import datetime
 from queue import Queue
 
 import os
@@ -27,6 +28,7 @@ import threading
 
 import aiohttp
 import magic
+import werkzeug.http
 from sqlobject import sqlhub
 
 from ictv.common import get_root_path
@@ -51,7 +53,9 @@ class DownloadManager(object):
         if asset.id not in self._pending_tasks:
             def enqueue_post_process_asset(task):
                 mime_type, file_size = task.result()
-                self._post_process_queue.put((mime_type, file_size, asset))
+                asset.created = datetime.now()
+                if mime_type is not None and file_size is not None:
+                    self._post_process_queue.put((mime_type, file_size, asset))
 
             task = asyncio.run_coroutine_threadsafe(DownloadManager._cache_asset(asset.filename + (asset.extension or ''), asset.path), self._loop)
             asset.in_flight = True
@@ -66,6 +70,11 @@ class DownloadManager(object):
         """ Returns the corresponding task to the given asset. """
         return self._pending_tasks[asset_id]
 
+    def clear_pending_task_for_asset(self, asset_id):
+        """ Resets the status of the task associated with the given asset. """
+        if self.has_pending_task_for_asset(asset_id):
+            del self._pending_tasks[asset_id]
+
     def stop(self):
         if self._loop.is_running():
             self._loop.call_soon_threadsafe(self._loop.stop)
@@ -74,7 +83,7 @@ class DownloadManager(object):
     def _run_loop(self):
         sqlhub.threadConnection = SQLObjectThreadConnection.get_conn()
         asyncio.set_event_loop(self._loop)
-        if not self._loop.is_closed():
+        if not self._loop.is_closed() and not self._loop.is_running():
             self._loop.run_forever()
             self._loop.close()
 
@@ -88,13 +97,25 @@ class DownloadManager(object):
 
     @staticmethod
     async def _cache_asset(url, path):
-        content = await DownloadManager._get_content(url)
-        with open(os.path.join(get_root_path(), path), 'wb') as f:
+        file_path = os.path.join(get_root_path(), path)
+        if os.path.exists(file_path):
+            last_modified = werkzeug.http.http_date(os.stat(file_path).st_mtime)
+        else:
+            last_modified = None
+        content = await DownloadManager._get_content(url, last_modified)
+        if not content:
+            return None, None
+        with open(file_path, 'wb') as f:
             f.write(content)
         return magic.from_buffer(content, mime=True), len(content)
 
     @staticmethod
-    async def _get_content(url):
+    async def _get_content(url, last_modified=None):
         async with aiohttp.ClientSession() as session:
-            async with session.get(url) as resp:
-                return await resp.read()
+            async with session.get(url, headers={'If-Modified-Since': last_modified} if last_modified else {}) as resp:
+                if resp.status is 304:
+                    return None
+                elif resp.status is 200:
+                    return await resp.read()
+                else:
+                    return None

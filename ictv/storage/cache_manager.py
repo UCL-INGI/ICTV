@@ -77,6 +77,18 @@ class CacheManager(StorageManager):
                 CacheManager._get_lock(cache_asset_hash, blocking=True)
                 CacheManager._release_lock(cache_asset_hash)
                 asset = Asset.selectBy(plugin_channel=self.channel_id, filename=filename, is_cached=True).getOne(None)
+        elif datetime.datetime.now() - asset.last_update > datetime.timedelta(minutes=5):
+            logger.debug('Refreshing asset %d at url %s', asset.id, url)
+            CacheManager._get_lock(cache_asset_hash, blocking=True)
+            asset.last_update = datetime.datetime.now()
+            try:
+                self.download_manager.clear_pending_task_for_asset(asset.id)
+                self.download_manager.enqueue_asset(asset)
+            except (URLError, OSError):
+                logger.warning('Exception encountered when attempting to update file at url %s', url, exc_info=True)
+                CacheManager._release_lock(cache_asset_hash)
+                return None
+            CacheManager._release_lock(cache_asset_hash)
         return asset
 
     _name_to_lock = {}

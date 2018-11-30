@@ -22,7 +22,10 @@
 import os
 import random
 import string
-from datetime import date, datetime
+import tempfile
+import subprocess
+from datetime import date, datetime, timedelta
+from time import sleep
 
 import web
 from nose.tools import *
@@ -32,7 +35,7 @@ from sqlobject.dberrors import DuplicateEntryError
 from ictv.common import get_root_path
 from ictv.models.asset import Asset
 from ictv.models.building import Building
-from ictv.models.channel import PluginChannel, ChannelBundle
+from ictv.models.channel import PluginChannel, ChannelBundle, Channel
 from ictv.models.plugin import Plugin
 from ictv.models.plugin_param_access_rights import PluginParamAccessRights
 from ictv.models.role import UserPermissions, Role
@@ -43,6 +46,8 @@ from ictv.common.enum import EnumMask
 from ictv.common.feedbacks import get_feedbacks, add_feedback, get_next_feedbacks, ImmediateFeedback
 from ictv.common.json_datetime import DateTimeDecoder, DateTimeEncoder
 from ictv.plugin_manager import plugin_manager
+from ictv.storage.cache_manager import CacheManager
+from ictv.storage.download_manager import DownloadManager
 from ictv.tests import ICTVTestCase, FakePluginTestCase
 
 
@@ -532,3 +537,45 @@ class CommonTests(ICTVTestCase):
         add_feedback(type=1, message="This is a test feedback from the unit test")
         assert_true(feedbacks_has_type(type=1, feedbacks=get_next_feedbacks()))
         assert_false(feedbacks_has_type(type="NOTESTINGFEEDBACK", feedbacks=get_next_feedbacks()))
+
+
+class CacheManagerTest(ICTVTestCase):
+    def runTest_(self):
+        """ Tests the cache mechanism. """
+        dm = DownloadManager()
+
+        c = PluginChannel(name='Channel', subscription_right='public', secret='abcdef', plugin=Plugin(name='channel_plugin', activated='no'))
+        cm = CacheManager(c, dm)
+        port = 64080
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            os.chdir(tmpdir)
+            p = subprocess.Popen(['python3', '-m', 'http.server', '--b', '127.0.0.1', str(port)])
+            sleep(2)
+
+            with open(os.path.join(tmpdir, 'a.txt'), 'w') as f:
+                f.write('ABCDEFG')
+
+            a = cm.cache_file_at_url('http://127.0.0.1:%d/a.txt' % port)
+            sleep(1)
+
+            assert a.file_size == 7
+            a.last_update -= timedelta(minutes=10)
+
+            last_update = a.created
+            with open(os.path.join(tmpdir, 'a.txt'), 'w') as f:  # There is no touch in Python
+                f.write('ABCDEFG')
+
+            a = cm.cache_file_at_url('http://127.0.0.1:%d/a.txt' % port)
+            sleep(1)
+            assert a.created > last_update
+            last_update = a.created
+
+            a = cm.cache_file_at_url('http://127.0.0.1:%d/a.txt' % port)
+            sleep(1)
+            assert a.created == last_update
+
+            os.unlink(os.path.join(get_root_path()), a.path)
+            p.kill()
+
+        dm.stop()

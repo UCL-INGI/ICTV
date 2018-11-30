@@ -109,7 +109,11 @@ def update_database():
         DBVersion(version=database_version)
     db_version = DBVersion.select().getOne().version
     if db_version < 1:
-        # Do upgrade stuff
+        print('Updating database to version %d' % 1)
+        column_sql = Asset.sqlmeta.getColumns()['last_update'].sqliteCreateSQL()
+        table = PluginChannel.sqlmeta.table
+        assert conn.queryOne('ALTER TABLE %s ADD %s' % (table, column_sql)) is None
+        db_version = 1
         pass
     DBVersion.select().getOne().set(version=db_version)
 
