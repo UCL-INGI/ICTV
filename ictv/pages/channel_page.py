@@ -27,12 +27,13 @@ from email.mime.text import MIMEText
 
 import web
 from datetime import timedelta, datetime
-from sqlobject import SQLObjectNotFound
-
+from sqlobject import SQLObjectNotFound, SQLObjectIntegrityError
+from sqlobject.dberrors import DuplicateEntryError
 import logging
 
 from ictv.models.channel import Channel, ChannelBundle, PluginChannel
 from ictv.models.role import UserPermissions
+from ictv.models.screen import Screen
 from ictv.models.user import User
 from ictv.app import sidebar
 from ictv.pages.utils import ICTVAuthPage, PermissionGate
@@ -94,6 +95,76 @@ class DetailPage(ICTVAuthPage):
                                       can_force_update=UserPermissions.administrator in current_user.highest_permission_level
                                                        or (type(channel) is PluginChannel and channel.has_contrib(current_user)),
                                       last_update=last_update,vertical= vertical)
+
+class SubscribeScreensPage(ICTVAuthPage):
+
+    @sidebar
+    def GET(self, channel_id):
+        channel = Channel.get(channel_id)
+        current_user = User.get(self.session['user']['id'])
+        screens_of_current_user = Screen.get_visible_screens_of(current_user)
+        return self.renderer.channel_subscriptions(channel = channel, possible_screens= screens_of_current_user,user = current_user, subscriptions = current_user.get_subscriptions_of_owned_screens())
+
+    @PermissionGate.administrator
+    def POST(self,channel_id):
+        form = web.input()
+        u = User.get(self.session['user']['id'])
+        subscribed = []
+        unsubscribed = []
+        if form.diff == 'diff':
+            raise ImmediateFeedback(form.action, 'nothing_changed')
+        try:
+            diff = json.loads(form.diff)
+        except (json.JSONDecodeError, ValueError):
+            raise ImmediateFeedback(form.action, 'inconsistent_diff')
+        try:
+            channelid = int(channel_id)
+        except ValueError:
+            raise ImmediateFeedback(form.action, 'invalid_channel/screen_id')
+        for k, v in diff.items():
+            try:
+                sub = bool(v)
+            except ValueError:
+                raise ImmediateFeedback(form.action, 'invalid_channel/screen_id')
+            try:
+                screenid = int(k)
+            except ValueError:
+                raise ImmediateFeedback(form.action, 'invalid_channel/screen_id')
+            try:
+                channel = Channel.get(channelid)
+                if not channel.can_subscribe(u):
+                    raise web.forbidden(message="You're not allow to do that")
+                screen = Screen.get(screenid)
+                if not u in screen.owners:
+                    raise web.forbidden(message="You're not allow to do that")
+                #sub true -> New subscription
+                #sub false -> Remove subscription
+                if sub:
+                    screen.subscribe_to(u, channel)
+                    subscribed.append(str(channel.id))
+                else:
+                    screen.unsubscribe_from(u, channel)
+                    unsubscribed.append(str(channel.id))
+                if subscribed and unsubscribed:
+                    message = "user %s has subscribed screen %d to channel(s) %s and unsubscribed from channel(s) %s" % \
+                              (u.log_name, screen.id, ', '.join(subscribed), ', '.join(unsubscribed))
+                else:
+                    message = "user %s has %s screen %d to channel(s) %s" % \
+                              (u.log_name, "subscribed" if subscribed else "unsubscribed", screen.id,
+                               ', '.join(subscribed if subscribed else unsubscribed))
+                logger.info(message)
+                add_feedback("subscription", 'ok')
+
+            except SQLObjectNotFound:
+                raise ImmediateFeedback(form.action, 'invalid_channel/screen_id')
+            except DuplicateEntryError:
+                # if the user has checked + unchecked the same checkbox, it will appear on the diff,
+                # we just need to do nothing.
+                pass
+            except SQLObjectIntegrityError:
+                # when there id more than one subscription matching the pair channel/screen
+                pass
+        raise web.seeother("/channels/%s/subscriptions" % channel_id)
 
 
 class ForceUpdateChannelPage(ICTVAuthPage):
