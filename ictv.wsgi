@@ -22,17 +22,22 @@
 
 import os
 
-from ictv.common import get_root_path
-from ictv.app import get_app
-from ictv.database import update_database, create_database
+from ictv import database
+from ictv.app import get_app, get_config
+from ictv.database import update_database
 
 """ Offers a WSGI function """
 
 curdir = os.path.dirname(__file__)
-if not os.path.exists(os.path.join(get_root_path(), 'database.sqlite')):
-    create_database()
-else:
-    update_database()
-app = get_app(os.path.join(curdir, 'configuration.yaml'), curdir)
-session = app.session
+config_file = os.path.join(curdir, 'configuration.yaml')
+
+if not os.path.isfile(config_file):
+    raise Exception('File %s could not be found', config_file)
+
+config = get_config(config_file)
+if database.database_path is None:
+    database.database_path = config['database_uri']
+
+update_database()
+app = get_app(config_file, curdir)
 application = app.wsgifunc()
