@@ -74,6 +74,8 @@ class BuildingsPage(ICTVAuthPage):
                 name = form.name.strip()
                 if name == "":
                     raise ImmediateFeedback(form.action, 'empty_name')
+                if len(form.name) > Building.sqlmeta.columns['name'].length:
+                    raise ImmediateFeedback(form.action, 'too_long_name')
                 if form.action == 'create':
                     try:
                         Building(name=form.name, city=form.city)

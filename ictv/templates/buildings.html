@@ -99,6 +99,11 @@ $code:
                             <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
                             You must enter a name to create a new building
                         </div>
+                    $if feedbacks.has('create', 'too_long_name'):
+                        <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
+                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                            You must enter a shorter name to create a new building
+                        </div>
                     $if feedbacks.has('create', 'name_already_exists'):
                         <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
                             <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
@@ -140,6 +145,16 @@ $code:
                             <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
                                 <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
                                 You must enter a name to edit this building
+                            </div>
+                        $if feedbacks.has('edit', 'too_long_name'):
+                            <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
+                                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                                You must enter a shorter name to edit this building
+                            </div>
+                        $if feedbacks.has('create', 'too_long_name'):
+                            <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
+                                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                                You must enter a shorter name to create a new building
                             </div>
                         $if feedbacks.has('edit', 'name_already_exists'):
                             <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">

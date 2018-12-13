@@ -325,6 +325,11 @@ $if UserPermissions.channel_administrator in current_user.highest_permission_lev
                                 <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
                                 This name is not valid. Please enter a name longer than 2 characters without any whitespaces.
                             </div>
+                        $if feedbacks.has('create-channel', 'too_long_name'):
+                            <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
+                                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                                You must enter a shorter name to create a new channel
+                            </div>
 
                         $if feedbacks.has('create-channel', 'name_already_exists'):
                             <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
@@ -397,6 +402,11 @@ $if UserPermissions.channel_administrator in current_user.highest_permission_lev
                             <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
                                 <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
                                 This name is not valid. Please enter a name longer than 2 characters without any whitespaces.
+                            </div>
+                        $if feedbacks.has('edit-channel', 'too_long_name'):
+                            <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
+                                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                                You must enter a shorter name to edit this channel
                             </div>
 
                         <div class="form-group">
@@ -474,6 +484,11 @@ $if UserPermissions.channel_administrator in current_user.highest_permission_lev
                                 <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
                                 This name is not valid. Please enter a name longer than 2 characters without any whitespaces.
                             </div>
+                        $if feedbacks.has('create-bundle', 'too_long_name'):
+                            <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
+                                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                                You must enter a shorter name to create a new bundle
+                            </div>
 
                         $if feedbacks.has('create-bundle', 'name_already_exists'):
                             <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
@@ -538,6 +553,11 @@ $if UserPermissions.channel_administrator in current_user.highest_permission_lev
                             <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
                                 <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
                                 This name is not valid. Please enter a name longer than 2 characters without any whitespaces.
+                            </div>
+                        $if feedbacks.has('edit-bundle', 'too_long_name'):
+                            <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
+                                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                                You must enter a shorter name to edit this bundle
                             </div>
 
                         <div class="form-group">

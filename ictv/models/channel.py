@@ -36,7 +36,7 @@ from ictv.models.user import User
 
 
 class Channel(InheritableSQLObject):
-    name = StringCol(notNone=True, unique=True)
+    name = StringCol(notNone=True, unique=True, length=100)
     description = StringCol(default=None)
     enabled = BoolCol(notNone=True, default=True)
     subscription_right = EnumCol(enumValues=['public', 'restricted', 'private'])
