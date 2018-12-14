@@ -73,7 +73,10 @@ class UsersPage(ICTVAuthPage):
 
                 if email is None and len(form.email) != 0:
                     raise ImmediateFeedback(form.action, 'invalid_email')
-
+                if len(email) > User.sqlmeta.columns['email'].length:
+                    raise ImmediateFeedback(form.action, 'too_long_email')
+                if len(username) > User.sqlmeta.columns['username'].length:
+                    raise ImmediateFeedback(form.action, 'too_long_username')
                 if not username:
                     username = None
                 elif len(username) < 3:
@@ -106,7 +109,8 @@ class UsersPage(ICTVAuthPage):
                         except DuplicateEntryError:
                             raise ImmediateFeedback(form.action, 'email_already_exists')
                     form.email = u.email
-
+                    if len(email) > User.sqlmeta.columns['email'].length:
+                        raise ImmediateFeedback(form.action, 'too_long_email')
                     if not current_user.super_admin:
                         if u.super_admin:
                             raise web.forbidden()

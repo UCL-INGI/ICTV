@@ -25,7 +25,7 @@ from ictv.models.ictv_object import ICTVObject
 
 
 class LogStat(ICTVObject):
-    logger_name = StringCol(notNone=True, alternateID=True)
+    logger_name = StringCol(notNone=True, alternateID=True,length=50)
     last_debug = DateTimeCol(default=None)
     last_info = DateTimeCol(default=None)
     last_warning = DateTimeCol(default=None)

@@ -218,6 +218,9 @@ class ScreensPage(ICTVAuthPage):
                 form.building_name = building.name
                 if not name:
                     raise ImmediateFeedback(form.action, 'empty_name')
+                if len(name) > Screen.sqlmeta.columns['name'].length:
+                    raise ImmediateFeedback(form.action,'too_long_name')
+
                 try:
                     macs = {self.check_mac_address(mac) for mac in form.mac.strip().lower().split(';') if mac}
                 except ValueError:
