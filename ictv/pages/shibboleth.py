@@ -147,13 +147,13 @@ class Shibboleth(ICTVPage):
                 email = attrs[settings['sp']['attrs']['email']][0]
 
                 u = User.selectBy(email=email).getOne(None)
+                
                 if not u:  # The user does not exist in our DB
                     u = User(username=username,
                              email=email,
                              fullname=realname,
                              super_admin=False,
                              disabled=True)
-
                 self.session['user'] = u.to_dictionary(['id', 'fullname', 'username', 'email'])
 
                 self_url = OneLogin_Saml2_Utils.get_self_url(req)

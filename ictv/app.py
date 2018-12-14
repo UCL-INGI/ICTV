@@ -215,7 +215,9 @@ def get_authentication_processor(app):
     def authentication_processor(handler):
         def post_auth():
             if 'user' in app.session:
-                User.get(id=app.session['user']['id'])
+                u = User.get(id=app.session['user']['id'])
+                from datetime import datetime
+                u.last_connection = datetime.now()
                 app.session.pop('sidebar', None)
             return handler()
 

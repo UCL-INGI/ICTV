@@ -77,6 +77,8 @@ $code:
                             <th>Email</th>
                             <th>Permissions</th>
                             <th>Status</th>
+                            <th>Last connection</th>
+                            <th>Creation date</th>
                             <th>Actions</th>
                         </tr>
                         </thead>
@@ -87,6 +89,8 @@ $code:
                             <th>Email</th>
                             <th>Permissions</th>
                             <th>Status</th>
+                            <th>Last connection</th>
+                            <th>Creation date</th>
                             <th>Actions</th>
                         </tr>
                         </tfoot>
@@ -133,6 +137,12 @@ $code:
                                 <td data-disable="$user.disabled">
                                     $('Deactivated' if user.disabled else 'Activated')
                                 </td>
+                                <td data-last_connection="$user.last_connection">
+                                    <p>$("{:%d-%m-%Y}".format(user.last_connection) if user.last_connection else "")</p>
+                                </td>
+                                <td data-last_connection="$user.creation_date">
+                                    <p>$("{:%d-%m-%Y}".format(user.creation_date) if user.creation_date else "")</p>
+                                </td>
                                 <td>
                                     $if 'real_user' not in session or session['real_user']['email'] != user.email:
                                         <button class="btn btn-xs btn-primary" data-toggle="modal" data-target="#edit-user-modal"><i class="fa fa-pencil-square-o"></i>Edit</button>
@@ -144,7 +154,6 @@ $code:
                                             </button>
                                         $if user.highest_permission_level in current_user.highest_permission_level:
                                             <a href="/logas/$user.email" class="btn btn-xs btn-success"><i class="fa fa-user-secret"></i>Log as</a>
-
                                     $if show_reset_button and UserPermissions.administrator in current_user.highest_permission_level:
                                         <button class="btn btn-xs copy-secret pull-right" data-clipboard-text="$homedomain()/reset/$:user.reset_secret">
                                             Copy password reset link
@@ -406,7 +415,8 @@ $if UserPermissions.administrator in current_user.highest_permission_level:
                     $$modal.find('#' + prefix + 'super_admin').prop('disabled', is_current_user_admin || $session['user']['id'] == $$td.parent().attr('data-user-id'));
                     $$modal.find('#' + prefix + 'admin').prop('disabled', is_current_user_admin || super_admin || $session['user']['id'] == $$td.parent().attr('data-user-id'));
                 }
-
+                $$td = $$td.prev();
+                $$td = $$td.prev();
                 $$td = $$td.prev();
                 $$modal.find('#'+prefix+'email').val($$td.children().html());
                 $$td = $$td.prev();
@@ -419,6 +429,8 @@ $if UserPermissions.administrator in current_user.highest_permission_level:
         var $$modal = $$('#toggle-activation-user-modal');
         $$modal.on('show.bs.modal', function(e) {
             $$td = $$(e.relatedTarget.parentElement).prev();
+            $$td = $$td.prev();
+            $$td = $$td.prev();
             const disabled = $$td.attr('data-disable') == 'True';
             $$modal.find('.modal-title').html((disabled ? 'Activate' : 'Deactivate') + ' this user account')
             $$modal.find('button[type="submit"]').html('<span class="glyphicon glyphicon-alert"></span>' + (disabled ? 'Activate' : 'Deactivate'))

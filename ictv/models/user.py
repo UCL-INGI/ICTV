@@ -20,11 +20,12 @@
 #    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
 
 from ictv.common import utils
-from sqlobject import StringCol, BoolCol, SQLMultipleJoin, SQLRelatedJoin, SQLRelatedJoin
+from sqlobject import StringCol, BoolCol, SQLMultipleJoin, SQLRelatedJoin, SQLRelatedJoin, DateTimeCol
 
 from ictv.models.ictv_object import ICTVObject
 from ictv.models.role import UserPermissions, Role
 from ictv.models.subscription import Subscription
+from datetime import datetime
 
 
 class User(ICTVObject):
@@ -41,6 +42,8 @@ class User(ICTVObject):
     password = StringCol(default=None)  # Used for local login
     reset_secret = StringCol(notNone=True)  # Used for local login to reset password
     has_toured = BoolCol(default=False)  # Has the user completed the app tour
+    creation_date = DateTimeCol(default=DateTimeCol.now)
+    last_connection = DateTimeCol(default=None)
 
     def __init__(self, *args, **kwargs):
         kwargs['reset_secret'] = utils.generate_secret()
@@ -83,6 +86,13 @@ class User(ICTVObject):
         if UserPermissions.administrator in self.highest_permission_level:
             return Subscription.select()
         return self.screens.throughTo.subscriptions
+    
+    def connected_since_creation(self):
+        if self.last_connection is None:
+            return False
+        if self.last_connection > self.creation_date:
+            return True
+        return False
 
     class sqlmeta:
         table = "user_table"   # prevent table name to collide with reserved keywords of some databases

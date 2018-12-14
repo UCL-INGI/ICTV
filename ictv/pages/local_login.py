@@ -21,7 +21,6 @@
 
 import hashlib
 from logging import getLogger
-
 import web
 from ictv.common import utils
 
