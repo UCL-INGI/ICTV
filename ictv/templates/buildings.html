@@ -273,10 +273,13 @@ $if current_user.super_admin:
     modaledit.on('show.bs.modal', function(e){
         $$tdAction = e.relatedTarget.parentElement;
         var id = $$tdAction.parentElement.getAttribute('data-building-id');
-        $$tdName = $$(e.relatedTarget.parentElement).prev();
+        $$tdcity = $$(e.relatedTarget.parentElement).prev();
+        $$tdName = $$(e.relatedTarget.parentElement).prev().prev();
         $$('#form-edit')[0].reset();
         var name = $$tdName[0].innerHTML;
+        var city = $$tdcity[0].innerHTML;
         $$('#nameedit').val(name);
+        $$('#cityedit').val(city);
         $$('#form-building-id').val(id);
     });
 
@@ -284,7 +287,7 @@ $if current_user.super_admin:
     modaldelete.on('show.bs.modal', function(e){
         $$tdAction = e.relatedTarget.parentElement;
         var id = $$tdAction.parentElement.getAttribute('data-building-id');
-        $$tdName = $$(e.relatedTarget.parentElement).prev();
+        $$tdName = $$(e.relatedTarget.parentElement).prev().prev();
         $$('#form-delete')[0].reset();
         var name = $$tdName[0].innerHTML;
         $$('#form-building-delete').val(name);
