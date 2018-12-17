@@ -308,6 +308,14 @@ class ChannelBundle(Channel):
     def get_type_name(self):
         return 'Bundle'
 
+    def is_vertical_bundle(self):
+        vertical = False
+        for c in self.flatten(False):
+            if c.get_config_param('vertical'):
+                vertical = True
+                break
+        return vertical
+
     def has_no_cycles(self, channels, marked=None):
         if marked is None:
             marked = set()
