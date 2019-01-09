@@ -39,7 +39,7 @@ retval = setup(
     description='ICTV is a simple content management system for digital signage on multiple screens.',
     install_requires=['sqlobject', 'typing', 'icalendar', 'pyyaml', 'urllib3', 'web.py>=0.40.dev0',
                       'yamlordereddictloader', 'pyquery', 'BeautifulSoup4', 'python-magic', 'aiohttp', 'wand',
-                      'feedparser', 'qrcode', 'selenium', 'python3-saml', 'pymediainfo'],
+                      'feedparser', 'qrcode', 'selenium', 'python3-saml', 'pymediainfo', 'werkzeug'],
     setup_requires=['pytest-runner', 'pytest-env'] if not is_running_on_macos else [],
     tests_require=['pytest', 'pytest-xdist', 'pytest-cov', 'paste', 'nose', 'coverage<5'],
     dependency_links=['https://github.com/formencode/formencode.git#egg=FormEncode'],
