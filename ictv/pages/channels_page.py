@@ -77,7 +77,7 @@ class ChannelsPage(ICTVAuthPage):
                             raise ImmediateFeedback(form.action, 'invalid_plugin')
                         p = Plugin.get(plugin_id)
                         channel = PluginChannel(name=name, plugin=p, subscription_right=form.subscription_right, description=description,
-                                                enabled=enabled)
+                                                enabled=enabled, drop_silently_non_complying_slides=p.drop_silently_non_complying_slides_default)
                         if p.webapp:
                             self.plugin_manager.add_mapping(self.app, channel)
 
@@ -253,6 +253,7 @@ class ChannelsPage(ICTVAuthPage):
                             channel.cache_validity = int(form['cache-validity']) if 'cache-validity' in form and form[
                                 'cache-validity'] else channel.cache_validity
                             channel.keep_noncomplying_capsules = 'keep-capsules' in form and form['keep-capsules'] == 'on'
+                            channel.drop_silently_non_complying_slides = 'drop_silently_non_complying_slides' in form and form['drop_silently_non_complying_slides'] == 'on'
 
                         channel.plugin_config = channel.plugin_config  # Force SQLObject update
                         try:

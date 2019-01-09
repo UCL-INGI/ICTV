@@ -113,7 +113,7 @@ class PluginManager(object):
                         plugin_logger.warning(
                             'Id %s from template %s has a length of %d but only %d characters are permitted. It\'s text was "%s"',
                             *field, extra=logger_extra)
-                if self.template_limits_emailing_activated:
+                if self.template_limits_emailing_activated and ( not channel.drop_silently_non_complying_slides if channel.drop_silently_non_complying_slides is not None else not channel.plugin.drop_silently_non_complying_slides_default):
                     self.send_email_alert(channel, filtered_out_content)
 
             self.dereference_assets(content)
@@ -348,7 +348,7 @@ class PluginManager(object):
                 self.template_limits_email_digester.add_email(super_admin, message, message_hash)
         else:
             for administrator in Role.selectBy(channel=channel,
-                                               permission_level='channel_administrator').throughTo.user:
+                                            permission_level='channel_administrator').throughTo.user:
                 self.template_limits_email_digester.add_email(administrator, message, message_hash)
 
     def check_all_plugins_dependencies(self):

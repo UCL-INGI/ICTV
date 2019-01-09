@@ -78,6 +78,7 @@ class PluginsPage(ICTVAuthPage):
                         if 'cache-validity' in form:
                             p.cache_validity_default = int(form['cache-validity'])
                         p.keep_noncomplying_capsules_default = form.get('keep-capsules') == 'on'
+                        p.drop_silently_non_complying_slides_default = form.get('drop-silently') == 'on'
                         form.name = p.name
                         add_feedback('general', 'plugin_configured')
                     except (SQLObjectNotFound, ValueError):

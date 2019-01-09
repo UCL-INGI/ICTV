@@ -46,6 +46,7 @@ class Plugin(ICTVObject):
     cache_activated_default = BoolCol(default=True)
     cache_validity_default = IntCol(default=60)
     keep_noncomplying_capsules_default = BoolCol(default=False)
+    drop_silently_non_complying_slides_default = BoolCol(default=False)
 
     def _get_channels_number(self):
         """ Return the number of channels instantiated with this plugin. """
