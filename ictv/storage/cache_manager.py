@@ -132,7 +132,7 @@ class CleanupScheduler(object):
         unused_assets = Asset.selectBy(is_cached=True).filter(Asset.q.last_reference < sqlbuilder.func.date(str(today)))
         total_assets_size = 0
         if unused_assets.count() > 0:
-            total_assets_size = unused_assets.sum(Asset.q.file_size)
+            total_assets_size = int(unused_assets.sum(Asset.q.file_size))
         Asset.deleteMany(AND(Asset.q.last_reference < sqlbuilder.func.date(str(today)), Asset.q.is_cached == True))
         logger.info('Ran cache cleanup and deleted %d assets for a total size of %s', unused_assets.count(),
                     CleanupScheduler._human_readable_size(total_assets_size))

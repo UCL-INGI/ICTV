@@ -45,9 +45,10 @@ class StoragePage(ICTVAuthPage):
         total_size = 0
         for channel in Asset.select().throughTo.plugin_channel.distinct():
             channel_info = {'id': channel.id, 'name': channel.name, 'plugin': channel.plugin.name, 'assets_count': channel.assets.count(),
-                            'assets_size': channel.assets.sum(Asset.q.file_size) or 0, 'cache_percentage': 0}
+                            'assets_size': int(channel.assets.sum(Asset.q.file_size) or 0), 'cache_percentage': 0}
             cache_size = channel.assets.filter(Asset.q.is_cached == True).sum(Asset.q.file_size)
             if cache_size is not None:
+                cache_size = int(cache_size)
                 channel_info['cache_percentage'] = cache_size / channel_info['assets_size']
             total_size += (channel_info['assets_size'] if channel_info['assets_size'] is not None else 0)
             channels.append(channel_info)
@@ -70,7 +71,7 @@ class StorageChannel(ICTVAuthPage):
         data = []
         for type, size in con.queryAll(con.sqlrepr(select_query)):
             labels.append(type)
-            data.append(size)
+            data.append(int(size))
         palette = [(0.86, 0.37119999999999997, 0.33999999999999997), (0.86, 0.7612000000000001, 0.33999999999999997), (0.56880000000000008, 0.86, 0.33999999999999997), (0.33999999999999997, 0.86, 0.50120000000000009), (0.33999999999999997, 0.82879999999999987, 0.86), (0.33999999999999997, 0.43879999999999986, 0.86), (0.63119999999999976, 0.33999999999999997, 0.86), (0.86, 0.33999999999999997, 0.69879999999999964)]
         background_color = []
         border_color = []
