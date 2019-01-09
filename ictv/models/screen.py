@@ -33,7 +33,7 @@ from ictv.models.subscription import Subscription
 
 
 class Screen(ICTVObject):
-    name = StringCol(notNone=True)
+    name = StringCol(notNone=True, length =100)
     building = ForeignKey('Building', notNone=True, cascade=False)
     location = StringCol(default=None)  # A free text field to precise the screen location
     screen_id = DatabaseIndex('name', 'building', unique=True)
@@ -142,7 +142,7 @@ class Screen(ICTVObject):
 class ScreenMac(ICTVObject):
     """ A simple class to associate multiple MACs to a screen. """
     screen = ForeignKey('Screen', cascade=True)
-    mac = StringCol(unique=True)
+    mac = StringCol(unique=True,length=50)
 
     def get_pretty_mac(self):
         """ Returns the prettyfied version of the mac. """

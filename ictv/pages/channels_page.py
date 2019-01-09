@@ -60,6 +60,8 @@ class ChannelsPage(ICTVAuthPage):
                     raise ImmediateFeedback(form.action, 'invalid_subscription_right')
                 if len(name) < 3:
                     raise ImmediateFeedback(form.action, 'invalid_name')
+                if len(name)> Channel.sqlmeta.columns['name'].length:
+                    raise ImmediateFeedback(form.action,'too_long_name')
 
 
             if form.action.startswith('create'):

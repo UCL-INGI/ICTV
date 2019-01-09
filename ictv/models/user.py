@@ -28,9 +28,9 @@ from ictv.models.subscription import Subscription
 
 
 class User(ICTVObject):
-    username = StringCol(unique=True, default=None)
+    username = StringCol(unique=True, default=None,length=255)
     fullname = StringCol(default=None)
-    email = StringCol(notNone=True, alternateID=True)
+    email = StringCol(notNone=True, alternateID=True,length=255)
     super_admin = BoolCol(notNone=True, default=False)
     admin = BoolCol(notNone=True, default=False)
     disabled = BoolCol(notNone=True, default=True)

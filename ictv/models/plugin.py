@@ -34,7 +34,7 @@ from ictv.models.subscription import Subscription
 
 
 class Plugin(ICTVObject):
-    name = StringCol(notNone=True, alternateID=True)
+    name = StringCol(notNone=True, alternateID=True,length=50)
     description = StringCol(default=None)
     version = IntCol(notNone=True, default=0)
     activated = EnumCol(notNone=True, enumValues=['yes', 'no', 'notfound'])

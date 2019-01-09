@@ -99,6 +99,11 @@ $code:
                             <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
                             You must enter a name to create a new building
                         </div>
+                    $if feedbacks.has('create', 'too_long_name'):
+                        <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
+                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                            You must enter a shorter name to create a new building
+                        </div>
                     $if feedbacks.has('create', 'name_already_exists'):
                         <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
                             <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
@@ -140,6 +145,16 @@ $code:
                             <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
                                 <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
                                 You must enter a name to edit this building
+                            </div>
+                        $if feedbacks.has('edit', 'too_long_name'):
+                            <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
+                                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                                You must enter a shorter name to edit this building
+                            </div>
+                        $if feedbacks.has('create', 'too_long_name'):
+                            <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
+                                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                                You must enter a shorter name to create a new building
                             </div>
                         $if feedbacks.has('edit', 'name_already_exists'):
                             <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
@@ -258,10 +273,13 @@ $if current_user.super_admin:
     modaledit.on('show.bs.modal', function(e){
         $$tdAction = e.relatedTarget.parentElement;
         var id = $$tdAction.parentElement.getAttribute('data-building-id');
-        $$tdName = $$(e.relatedTarget.parentElement).prev();
+        $$tdcity = $$(e.relatedTarget.parentElement).prev();
+        $$tdName = $$(e.relatedTarget.parentElement).prev().prev();
         $$('#form-edit')[0].reset();
         var name = $$tdName[0].innerHTML;
+        var city = $$tdcity[0].innerHTML;
         $$('#nameedit').val(name);
+        $$('#cityedit').val(city);
         $$('#form-building-id').val(id);
     });
 
@@ -269,7 +287,7 @@ $if current_user.super_admin:
     modaldelete.on('show.bs.modal', function(e){
         $$tdAction = e.relatedTarget.parentElement;
         var id = $$tdAction.parentElement.getAttribute('data-building-id');
-        $$tdName = $$(e.relatedTarget.parentElement).prev();
+        $$tdName = $$(e.relatedTarget.parentElement).prev().prev();
         $$('#form-delete')[0].reset();
         var name = $$tdName[0].innerHTML;
         $$('#form-building-delete').val(name);

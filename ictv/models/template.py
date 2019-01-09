@@ -25,4 +25,4 @@ from ictv.models.ictv_object import ICTVObject
 
 
 class Template(ICTVObject):
-    name = StringCol(notNone=True, alternateID=True)
+    name = StringCol(notNone=True, alternateID=True,length=100)

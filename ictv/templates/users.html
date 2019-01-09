@@ -209,6 +209,16 @@ $code:
                             <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
                             This email address is non-conforming.
                         </div>
+                    $if feedbacks.has('create', 'too_long_email'):
+                        <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
+                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                            This email address is too long.
+                        </div>
+                    $if feedbacks.has('create', 'too_long_username'):
+                        <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
+                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                            This username is too long.
+                        </div>
 
                     $elif feedbacks.has('create', 'email_already_exists'):
                         <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
@@ -272,6 +282,12 @@ $code:
                         <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
                             <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
                             This email address is non-conforming.
+                        </div>
+
+                    $if feedbacks.has('create', 'too_long_email'):
+                        <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
+                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                            This email address is too long.
                         </div>
 
                     $elif feedbacks.has('edit', 'email_already_exists'):
