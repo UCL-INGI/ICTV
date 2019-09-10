@@ -39,7 +39,7 @@ from ictv.models.template import Template
 from ictv.models.user import User
 from ictv.common.utils import is_test
 
-database_version = 0
+database_version = 1
 if is_test():
     database_path = 'sqlite://' + tempfile.mkstemp()[1]
 else:
