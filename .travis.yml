@@ -1,6 +1,6 @@
 language: python
 python:
-  - "3.5"
+  - "3.6"
 install:
   - sudo apt-get install -y libxml2 xmlsec1 libxmlsec1 libxmlsec1-dev libxmlsec1-openssl libltdl-dev mediainfo libmagickwand-dev
   - SETUP_ENV=travis python setup.py install
