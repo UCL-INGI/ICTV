@@ -65,8 +65,8 @@ def prepare_request():
     data = web.input()
     return {
         'https': 'on' if web.ctx.protocol == 'https' else 'off',
-        'http_host': web.ctx.environ['HTTP_X_FORWARDED_SERVER'],  # ONLY IN FORWARDED MODE
-        'server_port': '443',  # should be dynmically discovered
+        'http_host': web.ctx.environ["SERVER_NAME"],
+        'server_port': web.ctx.environ["SERVER_PORT"],
         'script_name': web.ctx.homepath,
         'get_data': data.copy(),
         'post_data': data.copy(),
