@@ -18,21 +18,21 @@ ICTV has the following dependencies:
    technical and tag data for video and audio files.
 -  FFmpeg, for automatic video transcoding to WebM.
 
-The aforementioned dependencies can be installed on CentOS 7 as
+The aforementioned dependencies can be installed on CentOS 8 as
 follows:
 
 .. highlight:: console
 
 ::
 
-    yum install -y https://centos7.iuscommunity.org/ius-release.rpm
-    yum install -y git python35u python35u-pip python35u-devel ImageMagick-devel mediainfo
+    dnf config-manager --set-enabled PowerTools
+    dnf install python36 python36-devel git ImageMagick-devel mediainfo
 
 Using SAML for authentication requires the following additional dependencies:
 
 ::
 
-    yum install -y libxml2 xmlsec1 libxml2-devel xmlsec1-devel xmlsec1-openssl-devel libtool-ltdl-devel
+    dnf install wget gcc xmlsec1-devel libtool-ltdl-devel
 
 
 Installing the dependencies on macOS
@@ -45,17 +45,17 @@ All dependencies can be installed using brew.
     brew install imagemagick Libxml2 MediaInfo FFmpeg xmlsec1 libmagic
 
 
-Installing ffmpeg on CentOS 7
+Installing ffmpeg on CentOS 8
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Installing ffmpeg on CentOS 7 is not easy as packages are not broadly available. Moreover, no package have compiled
-ffmpeg with the support for WebM encoders (libvpx and libvpx-vp9). We built new packages for this purpose. The
-nux-desktop repository offers their dependencies.
+Installing ffmpeg on CentOS 8 can be done via the RPMFusion repositories. It is compiled with the
+support for WebM encoders (libvpx and libvpx-vp9).
 
 ::
 
-    yum install -y http://li.nux.ro/download/nux/dextop/el7/x86_64/nux-dextop-release-0-5.el7.nux.noarch.rpm
-    yum install -y http://studmanager.info.ucl.ac.be/repo/repo-INGI/centos/7/x86_64/ffmpeg-2.8.13-2.el7.centos.x86_64.rpm http://studmanager.info.ucl.ac.be/repo/repo-INGI/centos/7/x86_64/ffmpeg-libs-2.8.13-2.el7.centos.x86_64.rpm http://studmanager.info.ucl.ac.be/repo/repo-INGI/centos/7/x86_64/libavdevice-2.8.13-2.el7.centos.x86_64.rpm
+    dnf install https://download1.rpmfusion.org/free/el/rpmfusion-free-release-8.noarch.rpm
+    dnf install https://download1.rpmfusion.org/nonfree/el/rpmfusion-nonfree-release-8.noarch.rpm
+    dnf install ffmpeg
     ffmpeg -encoders | grep vpx  # Check that both vpx encoders are available
 
 Installing ICTV
