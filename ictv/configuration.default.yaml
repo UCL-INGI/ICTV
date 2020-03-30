@@ -52,3 +52,6 @@ homepage_description: |
   <p>
     ICTV is a free and open-source application <a href="#" data-toggle="popover" data-trigger="focus" title="Authors" data-content="N. Detienne, F. Michel, M. Piraux, P. Reinbold, L. Taffin">developed</a> within the <a href="https://uclouvain.be/en/research-institutes/icteam/ingi">INGI</a> department and funded by the <a href="https://uclouvain.be/">Université catholique de Louvain</a>. You are welcome to contribute to the project by reporting bugs, suggesting new features or developing plugins on <a href="https://github.com/UCL-INGI/ICTV">GitHub</a>.
   </p>
+client:
+  root_password: ~
+  authorized_keys: ~
