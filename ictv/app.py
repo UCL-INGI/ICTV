@@ -54,6 +54,8 @@ from ictv.storage.cache_manager import CleanupScheduler
 from ictv.storage.download_manager import DownloadManager
 from ictv.storage.transcoding_queue import TranscodingQueue
 
+from web.contrib.template import render_jinja
+
 urls = (
     '/', 'ictv.app.IndexPage',
     '/users', 'ictv.pages.users_page.UsersPage',
@@ -423,6 +425,7 @@ def get_app(config_path, sessions_path=""):
 
     # Create a persistent HTTP session storage for the app
     app.session = web.session.Session(app, OptimisticThreadSafeDisktore(os.path.join(sessions_path, 'sessions')))
+
     # Populate the web.py templates globals
     template_globals = {'session': app.session,
                         'get_feedbacks': get_feedbacks, 'get_next_feedbacks': get_next_feedbacks,
@@ -439,10 +442,24 @@ def get_app(config_path, sessions_path=""):
     template_kwargs = {'loc': os.path.join(get_root_path(), 'templates/'),
                        'cache': not app.config['debug']['debug_on_error'],
                        'globals': template_globals}
+
+    """
+    old code
     app.renderer = web.template.render(base='base', **template_kwargs)
 
     # Init a second web.py renderer without any base template
     app.standalone_renderer = web.template.render(**template_kwargs)
+    """
+
+    # Migrating to Jinja2
+
+    app.renderer = render_jinja(os.path.join(get_root_path(), 'templates/'))
+    app.renderer._lookup.globals.update(base='base', **template_kwargs)
+
+    app.standalone_renderer = render_jinja(os.path.join(get_root_path(), 'templates/'))
+    app.standalone_renderer._lookup.globals.update(**template_kwargs)
+
+    # Jinja2 migration
 
     # Init loggers
     load_loggers_stats()
@@ -503,6 +520,7 @@ def close_app(app):
 
 def main(config_file):
     logger = logging.getLogger('app')
+    print("uhuhuhu")
     try:
         app = get_app(config_file)
         if is_test() or app.config['debug']['serve_static']:
