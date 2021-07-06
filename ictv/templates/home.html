@@ -1,4 +1,5 @@
-$def with (homepage_description, user_disabled)
+
+<!-- $def with (homepage_description, user_disabled)
 
 $#    This file belongs to the ICTV project, written by Nicolas Detienne,
 $#    Francois Michel, Maxime Piraux, Pierre Reinbold and Ludovic Taffin
@@ -20,7 +21,10 @@ $#    You should have received a copy of the GNU Affero General Public License
 $#    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
 
 $ user = session['user']
-$var has_tour: True
+$var has_tour: True -->
+{%extends "%s" % base %}
+
+{%block content %}
 <style>
     .introjs-helperLayer {
         z-index: inherit !important;
@@ -112,3 +116,4 @@ $$(document).ready(function(){
     $$('[data-toggle="popover"]').popover();
 });
 </script>
+{% endblock %}

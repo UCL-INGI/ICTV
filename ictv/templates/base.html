@@ -1,4 +1,4 @@
-$def with (content)
+<!-- $def with (content)
 
 $#    This file belongs to the ICTV project, written by Nicolas Detienne,
 $#    Francois Michel, Maxime Piraux, Pierre Reinbold and Ludovic Taffin
@@ -20,7 +20,7 @@ $#    You should have received a copy of the GNU Affero General Public License
 $#    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
 
 $ user = session['user']
-$ user_object = User.get(user['id'])
+$ user_object = User.get(user['id']) -->
 
 <!DOCTYPE html>
 <html>
@@ -209,9 +209,10 @@ $ user_object = User.get(user['id'])
     </aside>
 
     <div class="content-wrapper">
-        $if 'real_user' in session and session['real_user']['email'] != user['email']:
-            <div style="padding: 10px 25px; text-align: center; background: #14d1ff; z-index: 999999; font-size: 16px; color: white;">You are currently logged as <b>$user['email']</b>. Click <a style="color: white" href="/logas/nobody" style=""> <u>here</u> </a> to log out from $user['email']'s account</div>
-        $:content
+        <!-- $if 'real_user' in session and session['real_user']['email'] != user['email']: -->
+            <!-- <div style="padding: 10px 25px; text-align: center; background: #14d1ff; z-index: 999999; font-size: 16px; color: white;">You are currently logged as <b>$user['email']</b>. Click <a style="color: white" href="/logas/nobody" style=""> <u>here</u> </a> to log out from $user['email']'s account</div> -->
+
+        {% block content %}{% endblock %}
     </div>
 
     $if show_footer:

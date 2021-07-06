@@ -454,10 +454,10 @@ def get_app(config_path, sessions_path=""):
     # Migrating to Jinja2
 
     app.renderer = render_jinja(os.path.join(get_root_path(), 'templates/'))
-    app.renderer._lookup.globals.update(base='base', **template_kwargs)
+    app.renderer._lookup.globals.update(base='base.html', **template_globals)
 
     app.standalone_renderer = render_jinja(os.path.join(get_root_path(), 'templates/'))
-    app.standalone_renderer._lookup.globals.update(**template_kwargs)
+    app.standalone_renderer._lookup.globals.update(**template_globals)
 
     # Jinja2 migration
 
@@ -520,7 +520,6 @@ def close_app(app):
 
 def main(config_file):
     logger = logging.getLogger('app')
-    print("uhuhuhu")
     try:
         app = get_app(config_file)
         if is_test() or app.config['debug']['serve_static']:
