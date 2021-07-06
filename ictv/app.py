@@ -443,23 +443,20 @@ def get_app(config_path, sessions_path=""):
                        'cache': not app.config['debug']['debug_on_error'],
                        'globals': template_globals}
 
-    """
-    old code
-    app.renderer = web.template.render(base='base', **template_kwargs)
+    ### OLD ###
+    # app.renderer = web.template.render(base='base', **template_kwargs)
 
-    # Init a second web.py renderer without any base template
-    app.standalone_renderer = web.template.render(**template_kwargs)
-    """
+    # # Init a second web.py renderer without any base template
+    # app.standalone_renderer = web.template.render(**template_kwargs)
+    ###########
 
-    # Migrating to Jinja2
-
+    ### Jinja2 ###
     app.renderer = render_jinja(os.path.join(get_root_path(), 'templates/'))
     app.renderer._lookup.globals.update(base='base.html', **template_globals)
 
     app.standalone_renderer = render_jinja(os.path.join(get_root_path(), 'templates/'))
     app.standalone_renderer._lookup.globals.update(**template_globals)
-
-    # Jinja2 migration
+    ###########
 
     # Init loggers
     load_loggers_stats()

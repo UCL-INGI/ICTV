@@ -1,26 +1,29 @@
-<!-- $def with (content)
+{# 
 
-$#    This file belongs to the ICTV project, written by Nicolas Detienne,
-$#    Francois Michel, Maxime Piraux, Pierre Reinbold and Ludovic Taffin
-$#    at Université catholique de Louvain.
-$#
-$#    Copyright (C) 2016-2018  Université catholique de Louvain (UCL, Belgium)
-$#
-$#    ICTV is free software: you can redistribute it and/or modify
-$#    it under the terms of the GNU Affero General Public License as published
-$#    by the Free Software Foundation, either version 3 of the License, or
-$#    (at your option) any later version.
-$#
-$#    ICTV is distributed in the hope that it will be useful,
-$#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-$#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-$#    GNU Affero General Public License for more details.
-$#
-$#    You should have received a copy of the GNU Affero General Public License
-$#    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
+    This file belongs to the ICTV project, written by Nicolas Detienne,
+    Francois Michel, Maxime Piraux, Pierre Reinbold and Ludovic Taffin
+    at Université catholique de Louvain.
 
-$ user = session['user']
-$ user_object = User.get(user['id']) -->
+    Copyright (C) 2016-2018  Université catholique de Louvain (UCL, Belgium)
+
+    ICTV is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published
+    by the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    ICTV is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
+
+    $def with (content)
+#}
+
+{% set user = session['user'] %}
+{% set user_object = User.get(user['id']) %}
 
 <!DOCTYPE html>
 <html>
@@ -130,13 +133,14 @@ $ user_object = User.get(user['id']) -->
             <span class="logo-mini"><b>IC</b>TV</span>
             <span class="logo-lg"><b>ICTV</b></span>
         </a>
-        $if show_header:
+        {% if show_header %}
             <nav class="navbar navbar-static-top" role="navigation">
                 <a href="#" class="sidebar-toggle" data-toggle="offcanvas" role="button">
                     <span class="sr-only">Toggle navigation</span>
                 </a>
                 <div class="navbar-custom-menu">
                     <ul class="nav navbar-nav">
+{# TODO : retrieve content['has_tour'] from child #}
                         $if content.get('has_tour'):
                             <li class="dropdown help-menu" onclick="$$('#tour-started').submit();">
                                 <a class="dropdown-toggle" data-toggle="dropdown">
@@ -150,7 +154,7 @@ $ user_object = User.get(user['id']) -->
                                 <!-- The user image in the navbar-->
                                 <img src="/static/images/user-default.png" class="user-image" alt="User Image">
                                 <!-- hidden-xs hides the username on small devices so only the image appears. -->
-                                <span class="hidden-xs">$(user_object.readable_name)</span>
+                                <span class="hidden-xs">{{ user_object.readable_name }}</span>
                             </a>
                             <ul class="dropdown-menu">
                                 <!-- The user image in the menu -->
@@ -158,7 +162,7 @@ $ user_object = User.get(user['id']) -->
                                     <img src="/static/images/user-default.png" class="img-circle" alt="User Image">
                                     <a href="/users/$user['id']">
                                         <p style="color:white;">
-                                            $(user_object.readable_name)
+                                            {{ user_object.readable_name }}
                                         </p>
                                     </a>
                                 </li>
@@ -179,6 +183,7 @@ $ user_object = User.get(user['id']) -->
                     </ul>
                 </div>
             </nav>
+        {% endif %}
     </header>
 
     <!-- Left side column. contains the logo and sidebar -->
@@ -209,8 +214,10 @@ $ user_object = User.get(user['id']) -->
     </aside>
 
     <div class="content-wrapper">
-        <!-- $if 'real_user' in session and session['real_user']['email'] != user['email']: -->
-            <!-- <div style="padding: 10px 25px; text-align: center; background: #14d1ff; z-index: 999999; font-size: 16px; color: white;">You are currently logged as <b>$user['email']</b>. Click <a style="color: white" href="/logas/nobody" style=""> <u>here</u> </a> to log out from $user['email']'s account</div> -->
+        $if 'real_user' in session and session['real_user']['email'] != user['email']:
+            <div style="padding: 10px 25px; text-align: center; background: #14d1ff; z-index: 999999; font-size: 16px; color: white;">
+                You are currently logged as <b>{{user['email']}}</b>. Click <a style="color: white" href="/logas/nobody" style=""> <u>here</u> </a> to log out from {{user['email']}}'s account
+            </div>
 
         {% block content %}{% endblock %}
     </div>
@@ -223,7 +230,7 @@ $ user_object = User.get(user['id']) -->
                 ICTV is distributed under the AGPL license.
             </div>
             <!-- Default to the left -->
-            <strong>ICTV v$version() - Copyright &copy; 2016-2018 <a href="http://www.uclouvain.be/">Université catholique de Louvain</a>.</strong>
+            <strong>ICTV v{{ version() }} - Copyright &copy; 2016-2018 <a href="http://www.uclouvain.be/">Université catholique de Louvain</a>.</strong>
         </footer>
 </div>
 <form id="tour-started" action="/tour/started" method="post" style="display: none"></form>
