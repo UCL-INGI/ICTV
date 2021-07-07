@@ -1,30 +1,35 @@
-$def with (channel, chart_data)
+{#
 
-$#    This file belongs to the ICTV project, written by Nicolas Detienne,
-$#    Francois Michel, Maxime Piraux, Pierre Reinbold and Ludovic Taffin
-$#    at Université catholique de Louvain.
-$#
-$#    Copyright (C) 2016-2018  Université catholique de Louvain (UCL, Belgium)
-$#
-$#    ICTV is free software: you can redistribute it and/or modify
-$#    it under the terms of the GNU Affero General Public License as published
-$#    by the Free Software Foundation, either version 3 of the License, or
-$#    (at your option) any later version.
-$#
-$#    ICTV is distributed in the hope that it will be useful,
-$#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-$#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-$#    GNU Affero General Public License for more details.
-$#
-$#    You should have received a copy of the GNU Affero General Public License
-$#    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
+    This file belongs to the ICTV project, written by Nicolas Detienne,
+    Francois Michel, Maxime Piraux, Pierre Reinbold and Ludovic Taffin
+    at Université catholique de Louvain.
+
+    Copyright (C) 2016-2018  Université catholique de Louvain (UCL, Belgium)
+
+    ICTV is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published
+    by the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    ICTV is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
+
+#}
+{% extends "%s" % base %}
+
+{% block content %}
 
 <style>
 </style>
 <section class="content-header">
     <h1>
         Storage details
-        <small>List all assets of channel $channel.name</small>
+        <small>List all assets of channel {{channel.name}}</small>
     </h1>
 </section>
 <section class="content">
@@ -56,21 +61,23 @@ $#    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
                         </tr>
                         </tfoot>
                         <tbody>
-                        $for asset in channel.assets:
-                            <tr data-asset-path="$asset.path" data-asset-mime-type="$asset.mime_type">
-                                <td>$asset.filename</td>
-                                <td>$asset.extension</td>
-                                <td>$asset.mime_type</td>
-                                <td>$pretty_print_size(asset.file_size)</td>
-                                <td>$(asset.user.fullname if asset.user is not None else '~')</td>
-                                <td>$asset.created</td>
+                        {% for asset in channel.assets %}
+                            <tr data-asset-path="{{asset.path}}" data-asset-mime-type="{{asset.mime_type}}">
+                                <td>{{asset.filename}}</td>
+                                <td>{{asset.extension}}</td>
+                                <td>{{asset.mime_type}}</td>
+                                <td>{{pretty_print_size(asset.file_size)}}</td>
+                                <td>{{(asset.user.fullname if asset.user is not None else '~')}}</td>
+                                <td>{{asset.created}}</td>
                                 <td style="vertical-align: middle;">
-                                    $if asset.is_cached:
+                                    {% if asset.is_cached %}
                                         <span class="label label-info">Cached asset</span>
-                                    $else:
+                                    {% else %}
                                         <span class="label label-primary">Regular asset</span>
+                                    {% endif %}
                                 </td>
                             </tr>
+                        {% endfor %}
                         </tbody>
                     </table>
                 </div>
@@ -97,22 +104,22 @@ $#    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
 </section>
 <script src="/static/js/Chart.bundle.min.js"></script>
 <script>
-    $$(document).ready(function () {
-        $$('#table').on('draw.dt', function(e) {
-            $$('tr').on('mouseenter', function(e) {
+    $(document).ready(function () {
+        $('#table').on('draw.dt', function(e) {
+            $('tr').on('mouseenter', function(e) {
                 if(this.hasAttribute('data-asset-path') && this.hasAttribute('data-asset-mime-type')) {
                     const mime_type = this.getAttribute('data-asset-mime-type');
                     const path = this.getAttribute('data-asset-path');
                     if(mime_type.startsWith('video')) {
-                        $$('#preview').html(' <video style="max-width: 100%; max-height: 100%;" controls autoplay><source src="/' + path + '" type="' + mime_type +'"></video>');
+                        $('#preview').html(' <video style="max-width: 100%; max-height: 100%;" controls autoplay><source src="/' + path + '" type="' + mime_type +'"></video>');
                     } else {
-                        $$('#preview').html('<img src="/' + path + '" style="max-width: 100%; max-height: 100%;">');
+                        $('#preview').html('<img src="/' + path + '" style="max-width: 100%; max-height: 100%;">');
                     }
                 }
             })
         });
-        $$('#table').DataTable({stateSave: true});
-        var myDoughnutChart = new Chart($$('#assets-chart'), {
+        $('#table').DataTable({stateSave: true});
+        var myDoughnutChart = new Chart($('#assets-chart'), {
             type: 'doughnut',
             data: $:chart_data,
             options: {
@@ -126,3 +133,4 @@ $#    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
         });
     });
 </script>
+{% endblock %}
