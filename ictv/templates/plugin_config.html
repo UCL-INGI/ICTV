@@ -1,27 +1,30 @@
-$def with (plugin)
+{#
+    This file belongs to the ICTV project, written by Nicolas Detienne,
+    Francois Michel, Maxime Piraux, Pierre Reinbold and Ludovic Taffin
+    at Université catholique de Louvain.
 
-$#    This file belongs to the ICTV project, written by Nicolas Detienne,
-$#    Francois Michel, Maxime Piraux, Pierre Reinbold and Ludovic Taffin
-$#    at Université catholique de Louvain.
-$#
-$#    Copyright (C) 2016-2018  Université catholique de Louvain (UCL, Belgium)
-$#
-$#    ICTV is free software: you can redistribute it and/or modify
-$#    it under the terms of the GNU Affero General Public License as published
-$#    by the Free Software Foundation, either version 3 of the License, or
-$#    (at your option) any later version.
-$#
-$#    ICTV is distributed in the hope that it will be useful,
-$#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-$#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-$#    GNU Affero General Public License for more details.
-$#
-$#    You should have received a copy of the GNU Affero General Public License
-$#    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
+    Copyright (C) 2016-2018  Université catholique de Louvain (UCL, Belgium)
 
+    ICTV is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published
+    by the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    ICTV is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
+#}
+
+{% extends "%s" % base %}
+
+{% block content %}
 <section class="content-header">
     <h1>
-        $plugin.name
+        {{plugin.name}}
         <small>Plugin configuration</small>
     </h1>
 </section>
@@ -34,7 +37,7 @@ $#    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
                 </div>
                 <form action="/plugins" method="post">
                     <div class="box-body">
-                        <input type="hidden" name="id" value="$plugin.id">
+                        <input type="hidden" name="id" value="{{plugin.id}}">
                         <input type="hidden" name="action" value="configure">
 
                         <h4>Channel parameters access rights</h4>
@@ -57,29 +60,30 @@ $#    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
                                 </tr>
                             </thead>
                             <tbody>
-                            $for param in plugin.params_access_rights:
+                            {%for param in plugin.params_access_rights %}
                                 <tr>
-                                    <td>$param.name</td>
-                                    <td>$plugin.channels_params[param.name]['name']</td>
-                                    <td><input type="checkbox" name="$param.name-cc-r"
+                                    <td>{{param.name}}</td>
+                                    <td>{{plugin.channels_params[param.name]['name']}}</td>
+                                    <td><input type="checkbox" name="{{param.name}}-cc-r"
                                                onclick="enforceCheckbox(this, 'chan-contrib', true);"
-                                               $('checked' if param.channel_contributor_read else '')></td>
-                                    <td><input type="checkbox" name="$param.name-cc-w"
+                                               {{'checked' if param.channel_contributor_read else ''}}></td>
+                                    <td><input type="checkbox" name="{{param.name}}-cc-w"
                                                onclick="enforceCheckbox(this, 'chan-contrib', false);"
-                                               $('checked' if param.channel_contributor_write else '')></td>
-                                    <td><input type="checkbox" name="$param.name-ca-r"
+                                               {{'checked' if param.channel_contributor_write else ''}}></td>
+                                    <td><input type="checkbox" name="{{param.name}}-ca-r"
                                                onclick="enforceCheckbox(this, 'chan-admin', true);"
-                                               $('checked' if param.channel_administrator_read else '')></td>
-                                    <td><input type="checkbox" name="$param.name-ca-w"
+                                               {{'checked' if param.channel_administrator_read else ''}}></td>
+                                    <td><input type="checkbox" name="{{param.name}}-ca-w"
                                                onclick="enforceCheckbox(this, 'chan-admin', false);"
-                                               $('checked' if param.channel_administrator_write else '')></td>
-                                    <td><input type="checkbox" name="$param.name-a-r"
+                                               {{'checked' if param.channel_administrator_write else ''}}></td>
+                                    <td><input type="checkbox" name="{{param.name}}-a-r"
                                                onclick="enforceCheckbox(this, 'admin', true);"
-                                               $('checked' if param.administrator_read else '')></td>
-                                    <td><input type="checkbox" name="$param.name-a-w"
+                                               {{'checked' if param.administrator_read else ''}}></td>
+                                    <td><input type="checkbox" name="{{param.name}}-a-w"
                                                onclick="enforceCheckbox(this, 'admin', false);"
-                                               $('checked' if param.administrator_write else '')></td>
+                                               {{'checked' if param.administrator_write else ''}}></td>
                                 </tr>
+                            {% endfor %}
                             </tbody>
                         </table>
 
@@ -88,27 +92,27 @@ $#    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
                         <h4>Cache default configuration</h4>
                         <div class="form-group">
                             <label><input type="checkbox" name="cache-activated"
-                                          onclick="$$('#cache-validity').attr('disabled', function(_, attr){ return !attr});"
-                                          $:('checked' if plugin.cache_activated_default else '')>Cache activated</label>
+                                          onclick="$('#cache-validity').attr('disabled', function(_, attr){ return !attr});"
+                                          {{'checked' if plugin.cache_activated_default else '' |safe}}>Cache activated</label>
                         </div>
                         <div class="form-group">
                             <label for="cache-validity">Cache validity (minutes)</label>
-                            <input type="number" class="form-control" name="cache-validity" id="cache-validity" value="$:plugin.cache_validity_default" min="1" $('disabled' if not plugin.cache_activated_default else '')>
+                            <input type="number" class="form-control" name="cache-validity" id="cache-validity" value="{{plugin.cache_validity_default |safe}}" min="1" {{'disabled' if not plugin.cache_activated_default else ''}}>
                         </div>
 
                         <h4>Non-complying capsules filtering default configuration</h4>
                         <div class="form-group">
-                            $:make_tooltip(info['channel']['misc']['keep_noncomplying_capsules'], placement='left', icon=True)
+                            {{ make_tooltip(info['channel']['misc']['keep_noncomplying_capsules'], placement='left', icon=True) |safe}}
                             <label><input type="checkbox" name="keep-capsules"
-                                          $('checked' if plugin.keep_noncomplying_capsules_default else '')>Keep capsule with non-complying slides</label>
+                                          {{'checked' if plugin.keep_noncomplying_capsules_default else ''}}>Keep capsule with non-complying slides</label>
                             <p><i>Check this box if you would like to keep all capsules even if some may have slides
                                 that are missing due to being filtered out.</i></p>
                         </div>
                         <h4>Drop silently non-complying slides</h4>
                         <div class="form-group">
-                            $:make_tooltip(info['channel']['misc']['drop_silently_non_complying_slides'], placement='left', icon=True)
+                            {{ make_tooltip(info['channel']['misc']['drop_silently_non_complying_slides'], placement='left', icon=True) |safe}}
                             <label><input type="checkbox" name="drop-silently"
-                                          $('checked' if plugin.drop_silently_non_complying_slides_default else '')>Drop silently non-complying slides</label>
+                                          {{'checked' if plugin.drop_silently_non_complying_slides_default else ''}}>Drop silently non-complying slides</label>
                             <p><i>Check this box if you would like to deactivate notification regarding templates limits for this channel.</i></p>
                         </div>
                     </div>
@@ -126,56 +130,57 @@ $#    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
         if (type == 'chan-contrib') {
             if (read) {
                 if(self.checked) {
-                    $$(self).parent().parent().children().eq(4).children().eq(0).prop('checked', true);
-                    $$(self).parent().parent().children().eq(6).children().eq(0).prop('checked', true);
+                    $(self).parent().parent().children().eq(4).children().eq(0).prop('checked', true);
+                    $(self).parent().parent().children().eq(6).children().eq(0).prop('checked', true);
                 } else {
-                    $$(self).parent().parent().children().eq(3).children().eq(0).prop('checked', false);
+                    $(self).parent().parent().children().eq(3).children().eq(0).prop('checked', false);
                 }
             } else {
                 if(self.checked) {
-                    $$(self).parent().parent().children().eq(2).children().eq(0).prop('checked', true);
-                    $$(self).parent().parent().children().eq(4).children().eq(0).prop('checked', true);
-                    $$(self).parent().parent().children().eq(5).children().eq(0).prop('checked', true);
-                    $$(self).parent().parent().children().eq(6).children().eq(0).prop('checked', true);
-                    $$(self).parent().parent().children().eq(7).children().eq(0).prop('checked', true);
+                    $(self).parent().parent().children().eq(2).children().eq(0).prop('checked', true);
+                    $(self).parent().parent().children().eq(4).children().eq(0).prop('checked', true);
+                    $(self).parent().parent().children().eq(5).children().eq(0).prop('checked', true);
+                    $(self).parent().parent().children().eq(6).children().eq(0).prop('checked', true);
+                    $(self).parent().parent().children().eq(7).children().eq(0).prop('checked', true);
                 }
             }
         } else if (type == 'chan-admin') {
             if (read) {
                 if(self.checked) {
-                    $$(self).parent().parent().children().eq(6).children().eq(0).prop('checked', true);
+                    $(self).parent().parent().children().eq(6).children().eq(0).prop('checked', true);
                 } else {
-                    $$(self).parent().parent().children().eq(2).children().eq(0).prop('checked', false);
-                    $$(self).parent().parent().children().eq(3).children().eq(0).prop('checked', false);
-                    $$(self).parent().parent().children().eq(5).children().eq(0).prop('checked', false);
+                    $(self).parent().parent().children().eq(2).children().eq(0).prop('checked', false);
+                    $(self).parent().parent().children().eq(3).children().eq(0).prop('checked', false);
+                    $(self).parent().parent().children().eq(5).children().eq(0).prop('checked', false);
                 }
             } else {
                 if(self.checked) {
-                    $$(self).parent().parent().children().eq(4).children().eq(0).prop('checked', true);
-                    $$(self).parent().parent().children().eq(6).children().eq(0).prop('checked', true);
-                    $$(self).parent().parent().children().eq(7).children().eq(0).prop('checked', true);
+                    $(self).parent().parent().children().eq(4).children().eq(0).prop('checked', true);
+                    $(self).parent().parent().children().eq(6).children().eq(0).prop('checked', true);
+                    $(self).parent().parent().children().eq(7).children().eq(0).prop('checked', true);
                 } else {
-                    $$(self).parent().parent().children().eq(3).children().eq(0).prop('checked', false);
+                    $(self).parent().parent().children().eq(3).children().eq(0).prop('checked', false);
                 }
             }
         } else {
-            $# Administrator
+            {# Administrator #}
             if(read) {
                 if (!self.checked) {
-                    $$(self).parent().parent().children().eq(2).children().eq(0).prop('checked', false);
-                    $$(self).parent().parent().children().eq(3).children().eq(0).prop('checked', false);
-                    $$(self).parent().parent().children().eq(4).children().eq(0).prop('checked', false);
-                    $$(self).parent().parent().children().eq(5).children().eq(0).prop('checked', false);
-                    $$(self).parent().parent().children().eq(7).children().eq(0).prop('checked', false);
+                    $(self).parent().parent().children().eq(2).children().eq(0).prop('checked', false);
+                    $(self).parent().parent().children().eq(3).children().eq(0).prop('checked', false);
+                    $(self).parent().parent().children().eq(4).children().eq(0).prop('checked', false);
+                    $(self).parent().parent().children().eq(5).children().eq(0).prop('checked', false);
+                    $(self).parent().parent().children().eq(7).children().eq(0).prop('checked', false);
                 }
             } else {
                 if (self.checked) {
-                    $$(self).parent().parent().children().eq(6).children().eq(0).prop('checked', true);
+                    $(self).parent().parent().children().eq(6).children().eq(0).prop('checked', true);
                 } else {
-                    $$(self).parent().parent().children().eq(3).children().eq(0).prop('checked', false);
-                    $$(self).parent().parent().children().eq(5).children().eq(0).prop('checked', false);
+                    $(self).parent().parent().children().eq(3).children().eq(0).prop('checked', false);
+                    $(self).parent().parent().children().eq(5).children().eq(0).prop('checked', false);
                 }
             }
         }
     }
 </script>
+{% endblock %}
