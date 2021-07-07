@@ -45,6 +45,7 @@
     {% endmacro %}
     {% set types = [('create', 'fa-check'), ('edit', 'fa-pencil'), ('delete', 'fa-trash-o'), ('configure', 'fa-wrench')] %}
     {% set objects = ['channel', 'bundle'] %}
+    
 
     {% for object in objects %}
         {% for type, icon in types %}
@@ -76,7 +77,7 @@
         <div class="tab-content" style="padding-top: 15px">
             {% macro make_name_cell(channel, info_key='channel') %}
                 <td>
-                    <a href="/channel/$channel.id">{{ channel.name }}</a>
+                    <a href="/channel/{{ channel.id }}">{{ channel.name }}</a>
                     {% if channel.description %}
                         <a type="button" class="btn btn-xs btn-default pull-right" style="margin-top: 5px; "
                                 tabindex="0" role="button" data-trigger="focus"
@@ -84,7 +85,7 @@
 
                                 data-placement="right"
                                 title="Channel description"
-                                data-content="$channel.description">
+                                data-content="{{channel.description}}">
                             <i class="fa fa-info" style="margin-right: 0 !important;"></i>
                         </a>
                     {% endif %}
@@ -96,7 +97,7 @@
                 </td>
             {% endmacro %}
             {% macro make_subscription_right_cell(channel) %}
-                <td data-subscription-right="$channel.subscription_right">
+                <td data-subscription-right="{{channel.subscription_right}}">
                     {% if channel.subscription_right == 'public' %}
                         <h6 class="label label-success"><i class="fa fa-sign-in"></i>Public</h6>
 
@@ -112,14 +113,14 @@
                 {% if UserPermissions.administrator in current_user.highest_permission_level %}
                     <button class="btn btn-xs bg-maroon" data-toggle="modal" data-target="#manage-bundles-modal" onclick="data_bundles = $json.dumps([b.id for b in channel.bundles])"><span class="glyphicon glyphicon-gift"></span>Add to bundles</button>
                     {% if hasattr(channel, 'bundled_channels') %}
-                        <a class="btn btn-xs btn-info" href="/channels/$(channel.id)/manage_bundle"><i class="fa fa-rss"></i>Manage bundle</a>
+                        <a class="btn btn-xs btn-info" href="/channels/{{channel.id}}/manage_bundle"><i class="fa fa-rss"></i>Manage bundle</a>
                     {% endif %}
                 {% endif %}
                 {% if active and ((channel.subscription_right == 'public') or UserPermissions.administrator in current_user.highest_permission_level or (channel.subscription_right in ['restricted', 'private'] and current_user in channel.authorized_subscribers)) %}
-                    <a class="btn btn-xs btn-success" href="$:channel.get_preview_link()"><i class="fa fa-eye"></i>Preview</a>
+                    <a class="btn btn-xs btn-success" href="{{ channel.get_preview_link() |safe }}"><i class="fa fa-eye"></i>Preview</a>
                 {% endif %}
                 {% if (channel.subscription_right in ['restricted', 'private'] and current_user not in channel.authorized_subscribers and current_user.owns_screen()) %}
-                    <a class="btn btn-xs btn-success" href="/channels/$(channel.id)/request/$(current_user.id)"><i class="fa fa-envelope-o"></i>Request subscription</a>
+                    <a class="btn btn-xs btn-success" href="/channels/{{channel.id}}/request/{{current_user.id}}"><i class="fa fa-envelope-o"></i>Request subscription</a>
                 {% endif %}
 
             {% endmacro %}
@@ -127,51 +128,51 @@
                 <table class="table table-hover table-bordered" cellspacing="0" width="100%" data-page-length='25'>
                     <thead>
                     <tr>
-                        <th $:make_tooltip(info['channel']['name'])>Name</th>
-                        <th $:make_tooltip(info['channel']['plugin'])>Plugin</th>
+                        <th {{ make_tooltip(info['channel']['name']) |safe}}>Name</th>
+                        <th {{ make_tooltip(info['channel']['plugin']) |safe}}>Plugin</th>
                         <th>Orientation</th>
-                        <th $:make_tooltip(info['channel']['update_period'])>Update period</th>
+                        <th {{ make_tooltip(info['channel']['update_period']) |safe}}>Update period</th>
                         {% if UserPermissions.administrator not in current_user.highest_permission_level %}
-                            <th $:make_tooltip(info['channel']['role'])>Your role</th>
+                            <th {{ make_tooltip(info['channel']['role']) |safe}}>Your role</th>
                         {% endif %}
-                        <th $:make_tooltip(info['channel']['subscription_right'])>Subscription right</th>
-                        <th $:make_tooltip(info['channel']['actions'])>Actions</th>
+                        <th {{ make_tooltip(info['channel']['subscription_right']) |safe}}>Subscription right</th>
+                        <th {{ make_tooltip(info['channel']['actions']) |safe}}>Actions</th>
                     </tr>
                     </thead>
                     <tfoot>
                     <tr>
-                        <th $:make_tooltip(info['channel']['name'], placement='bottom')>Name</th>
-                        <th $:make_tooltip(info['channel']['plugin'], placement='bottom')>Plugin</th>
+                        <th {{ make_tooltip(info['channel']['name'], placement='bottom') |safe}}>Name</th>
+                        <th {{ make_tooltip(info['channel']['plugin'], placement='bottom') |safe}}>Plugin</th>
                         <th>Orientation</th>
-                        <th $:make_tooltip(info['channel']['update_period'], placement='bottom')>Update period</th>
+                        <th {{ make_tooltip(info['channel']['update_period'], placement='bottom') |safe}}>Update period</th>
                         {% if UserPermissions.administrator not in current_user.highest_permission_level %}
-                            <th $:make_tooltip(info['channel']['role'], placement='bottom')>Your role</th>
+                            <th {{ make_tooltip(info['channel']['role'], placement='bottom') |safe}}>Your role</th>
                         {% endif %}
-                        <th $:make_tooltip(info['channel']['subscription_right'], placement='bottom')>Subscription right</th>
-                        <th $:make_tooltip(info['channel']['actions'], placement='bottom')>Actions</th>
+                        <th {{ make_tooltip(info['channel']['subscription_right'], placement='bottom') |safe}}>Subscription right</th>
+                        <th {{ make_tooltip(info['channel']['actions'], placement='bottom') |safe}}>Actions</th>
                     </tr>
                     </tfoot>
                     <tbody>
                     {% for channel in plugin_channels %}
-                        <tr data-channel-id="$channel.id" data-channel-description="$channel.description"
-                            data-channel-name="$channel.name" data-channel-enabled="$('yes' if channel.enabled else 'no')" $:('class="not-activated"' if channel.plugin.activated != 'yes' else '')>
+                        <tr data-channel-id="{{channel.id}}" data-channel-description="{{channel.description}}"
+                            data-channel-name="{{channel.name}}" data-channel-enabled="{{'yes' if channel.enabled else 'no'}}" {{ 'class="not-activated"' if channel.plugin.activated != 'yes' else '' |safe }}>
                             {{ make_name_cell(channel) |safe}}
-                            <td data-plugin-id="$channel.plugin.id">
-                                $channel.plugin.name
+                            <td data-plugin-id="{{channel.plugin.id}}">
+                                {{channel.plugin.name}}
                                 {% if channel.plugin.activated != 'yes' %}
                                     <a type="button" class="btn btn-xs btn-warning pull-right" style="margin-top: 5px; ">
                                         {{ make_tooltip(info['plugin']['state']['not-activated'], icon=True, icon_class='fa-exclamation-triangle') |safe}}
                                     </a>
                                 {% endif %}
                             </td>
-                            <td>$("Portrait" if channel.plugin.name=="editor" and channel.get_config_param('vertical') else "Landscape")</td>
+                            <td>{{"Portrait" if channel.plugin.name=="editor" and channel.get_config_param('vertical') else "Landscape"}}</td>
                             <td>
                                 {% if channel.cache_activated %}
                                     Every
                                     {% if channel.cache_validity % 60 == 0 %}
-                                        $(int(channel.cache_validity / 60)) hour$('s' if channel.cache_validity / 60 > 1 else '')
+                                        {{int(channel.cache_validity / 60)}} hour{{'s' if channel.cache_validity / 60 > 1 else ''}}
                                     {% else %}
-                                        $channel.cache_validity minute$('s' if channel.cache_validity > 1 else '')
+                                        {{channel.cache_validity}} minute{{'s' if channel.cache_validity > 1 else ''}}
                                     {% endif %}
                                 {% else %}
                                     Continuous update
@@ -180,9 +181,9 @@
                             {% if UserPermissions.administrator not in current_user.highest_permission_level %}
                                 <td>
                                 {% if channel.has_admin(current_user) %}
-                                    <h6 class="label label-warning" $:make_tooltip(info['channel']['users']['administrator'])><i class="fa fa-user"></i>Administrator</h6>
+                                    <h6 class="label label-warning" {{ make_tooltip(info['channel']['users']['administrator']) |safe}}><i class="fa fa-user"></i>Administrator</h6>
                                 {% elif channel.has_contrib(current_user) %}
-                                    <h6 class="label label-info" $:make_tooltip(info['channel']['users']['contributor'])><i class="fa fa-user"></i>Contributor</h6>
+                                    <h6 class="label label-info" {{ make_tooltip(info['channel']['users']['contributor']) |safe}}><i class="fa fa-user"></i>Contributor</h6>
                                 {% else %}
                                     <h6 class="label label-default"><i class="fa fa-circle-o"></i>None</h6>
                                 {% endif %}
@@ -192,7 +193,7 @@
                             <td>
                                 {% if UserPermissions.administrator in current_user.highest_permission_level or channel.has_admin(current_user) %}
                                     <button class="btn btn-xs btn-warning" data-toggle="modal" data-target="#add-users-channel-modal"><i class="fa fa-users"></i>Users permissions</button>
-                                    <a class="btn btn-xs btn-default" href="/channels/$channel.id/subscriptions"><span class="fa fa-rss"></span>Subscribers</a>
+                                    <a class="btn btn-xs btn-default" href="/channels/{{channel.id}}/subscriptions"><span class="fa fa-rss"></span>Subscribers</a>
                                     {% if UserPermissions.administrator in current_user.highest_permission_level %}
                                         <button class="btn btn-xs btn-primary" data-toggle="modal" data-target="#edit-channel-modal"><i class="fa fa-pencil-square-o"></i>Edit</button>
                                     {% endif %}
@@ -202,11 +203,11 @@
                                     {% endif %}
                                 {% endif %}
                                 {% if channel.plugin.activated != 'notfound' and channel.has_visible_params_for(current_user) %}
-                                    <a class="btn btn-xs btn-default" href="/channels/$(channel.id)"><span class="glyphicon glyphicon-wrench"></span>Configure</a>
+                                    <a class="btn btn-xs btn-default" href="/channels/{{channel.id}}"><span class="glyphicon glyphicon-wrench"></span>Configure</a>
                                 {% endif %}
                                 {{ make_channel_common_actions(channel, channel.plugin.activated == 'yes') |safe}}
                                 {% if channel.plugin.webapp and (UserPermissions.administrator in current_user.highest_permission_level or channel.has_contrib(current_user)) %}
-                                    <a class="btn btn-xs bg-purple" href="/channels/$(channel.id)/index"><span class="glyphicon glyphicon-log-in"></span>Application</a>
+                                    <a class="btn btn-xs bg-purple" href="/channels/{{channel.id}}/index"><span class="glyphicon glyphicon-log-in"></span>Application</a>
                                 {% endif %}
                             </td>
                         </tr>
@@ -224,32 +225,32 @@
                     <thead>
                     <tr>
                         <th>Name</th>
-                        <th $:make_tooltip(info['bundle']['no_channels'])>No. of channels</th>
-                        <th $:make_tooltip(info['bundle']['subscription_right'])>Subscription right</th>
-                        <th $:make_tooltip(info['bundle']['actions'])>Actions</th>
+                        <th {{ make_tooltip(info['bundle']['no_channels']) |safe }}>No. of channels</th>
+                        <th {{ make_tooltip(info['bundle']['subscription_right']) |safe }}>Subscription right</th>
+                        <th {{ make_tooltip(info['bundle']['actions']) |safe }}>Actions</th>
                     </tr>
                     </thead>
                     <tfoot>
                     <tr>
                         <th>Name</th>
-                        <th $:make_tooltip(info['bundle']['no_channels'], placement='bottom')>No. of channels</th>
-                        <th $:make_tooltip(info['bundle']['subscription_right'], placement='bottom')>Subscription right</th>
-                        <th $:make_tooltip(info['bundle']['actions'], placement='bottom')>Actions</th>
+                        <th {{ make_tooltip(info['bundle']['no_channels'], placement='bottom') |safe }}>No. of channels</th>
+                        <th {{ make_tooltip(info['bundle']['subscription_right'], placement='bottom') |safe }}>Subscription right</th>
+                        <th {{ make_tooltip(info['bundle']['actions'], placement='bottom') |safe }}>Actions</th>
                     </tr>
                     </tfoot>
                     <tbody>
                         {% for channel in bundles %}
-                            $code:
-                                popover_content = ''
-                                for c in channel.bundled_channels:
-                                    popover_content += '<a href="channel/%d">%s</a><br>' % (c.id, c.name)
-                            <tr data-channel-id="$channel.id" data-channel-description="$channel.description"
-                                data-channel-name="$channel.name" data-channel-enabled="$('yes' if channel.enabled else 'no')">
+                            {% set popover_content = '' %}
+                            {% for c in channel.bundled_channels %}
+                                {% set popover_content = popover_content + '<a href="channel/%d">%s</a><br>' % (c.id, c.name) %}
+                            {% endfor %}
+                            <tr data-channel-id="{{channel.id}}" data-channel-description="{{channel.description}}"
+                                data-channel-name="{{channel.name}}" data-channel-enabled="{{'yes' if channel.enabled else 'no'}}">
                                 {{ make_name_cell(channel, info_key='bundle') |safe}}
                                 <td>
-                                    $channel.bundled_channels.count()
+                                    {{ channel.bundled_channels.count() }}
                                     <a href="#" class="btn btn-xs btn-default pull-right" style="margin-top: 5px;"
-                                       data-content="$popover_content"
+                                       data-content="{{ popover_content }}"
                                        data-container="body" data-toggle="popover"
                                        data-placement="right" data-original-title="Channels contained in this bundle"
                                        data-html="true">
@@ -300,27 +301,27 @@
                             <tr>
                                 <th>Username</th>
                                 <th>Email</th>
-                                <th $:make_tooltip(info['channel']['users']['contributor'])>Contributor</th>
-                                <th $:make_tooltip(info['channel']['users']['administrator'])>Administrator</th>
-                                <th $:make_tooltip(info['channel']['users']['authorized_subscriber'])>Authorized subscriber</th>
+                                <th {{ make_tooltip(info['channel']['users']['contributor']) |safe }}>Contributor</th>
+                                <th {{ make_tooltip(info['channel']['users']['administrator']) |safe }}>Administrator</th>
+                                <th {{ make_tooltip(info['channel']['users']['authorized_subscriber']) |safe }}>Authorized subscriber</th>
                             </tr>
                             </thead>
                             <tfoot>
                             <tr>
                                 <th>Username</th>
                                 <th>Email</th>
-                                <th $:make_tooltip(info['channel']['users']['contributor'], placement='bottom')>Contributor</th>
-                                <th $:make_tooltip(info['channel']['users']['administrator'], placement='bottom')>Administrator</th>
-                                <th $:make_tooltip(info['channel']['users']['authorized_subscriber'], placement='bottom')>Authorized subscriber</th>
+                                <th {{ make_tooltip(info['channel']['users']['contributor'], placement='bottom') |safe }}>Contributor</th>
+                                <th {{ make_tooltip(info['channel']['users']['administrator'], placement='bottom') |safe }}>Administrator</th>
+                                <th {{ make_tooltip(info['channel']['users']['authorized_subscriber'], placement='bottom') |safe }}>Authorized subscriber</th>
                             </tr>
                             </tfoot>
                             <tbody>
                                 {% for user in users %}
-                                    <tr data-user-id="$user.id">
-                                        <td>$user.fullname</td>
-                                        <td>$user.email</td>
-                                        <td><label><input type="checkbox" data-permission-level="$UserPermissions.channel_contributor.value" class="admin-checkbox"><small>Channel contributor</small></label></td>
-                                        <td><label class="$('disabled' if not current_user.super_admin else '')"><input type="checkbox" data-permission-level="$UserPermissions.channel_administrator.value" class="admin-checkbox" $('disabled' if not current_user.super_admin else '')><small>Channel administrator</small></label></td>
+                                    <tr data-user-id="{{user.id}}">
+                                        <td>{{user.fullname}}</td>
+                                        <td>{{user.email}}</td>
+                                        <td><label><input type="checkbox" data-permission-level="{{UserPermissions.channel_contributor.value}}" class="admin-checkbox"><small>Channel contributor</small></label></td>
+                                        <td><label class="{{'disabled' if not current_user.super_admin else ''}}"><input type="checkbox" data-permission-level="{{UserPermissions.channel_administrator.value}}" class="admin-checkbox" {{'disabled' if not current_user.super_admin else ''}}><small>Channel administrator</small></label></td>
                                         <td><label><input type="checkbox" data-authorized-subscriber class="admin-checkbox"><small>Authorized subscriber</small></label></td>
                                     </tr>
                                 {% endfor %}
@@ -353,7 +354,7 @@
                             <label for="channel-name">Channel name</label>
                             {{ make_tooltip(info['channel']['name'], placement='left', icon=True) |safe}}
                             <input type="text" name="name" class="form-control" id="channel-name" placeholder="Name"
-                                   value="$(form.get('name') if form.get('action') == 'create-channel' else None)" required>
+                                   value="{{form.get('name') if form.get('action') == 'create-channel' }}" required>
                         </div>
                         {% if feedbacks.has('create-channel', 'invalid_name') %}
                             <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
@@ -378,7 +379,7 @@
                             <label for="channel-description">Channel description</label>
                             {{ make_tooltip(info['channel']['description'], placement='left', icon=True) |safe}}
                             <input type="text" name="description" class="form-control" id="channel-description" placeholder="Description"
-                                   value="$(form.get('description') if form.get('action') == 'create-channel' else None)">
+                                   value="{{form.get('description') if form.get('action') == 'create-channel' }}">
                         </div>
 
                         <div class="form-group">
@@ -386,7 +387,7 @@
                             {{ make_tooltip(info['channel']['plugin'], placement='left', icon=True) |safe}}
                             <select class="form-control" id="channel-plugin" name="plugin" required>
                                 {% for p in activated_plugins %}
-                                    <option value="$p.id" $('selected' if form.get('action') == 'create' and form.get('plugin') == '$p.id' else None)>$p.name</option>
+                                    <option value="{{p.id}}" {{'selected' if form.get('action') == 'create' and form.get('plugin') == '{{p.id}}' }}>{{p.name}}</option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -395,16 +396,16 @@
                             <label for="channel-subscription-right">Subscription right</label>
                             {{ make_tooltip(info['channel']['subscription_right'], placement='left', icon=True) |safe}}
                             <select class="form-control" id="channel-subscription-right" name="subscription_right" required>
-                                <option value="public" $('selected' if form.get('action') == 'create-channel' and form.get('subscription_right') == 'public' else None)>Public</option>
-                                <option value="restricted" $('selected' if form.get('action') == 'create-channel' and form.get('subscription_right') == 'restricted' else None)>Restricted</option>
-                                <option value="private" $('selected' if form.get('action') == 'create-channel' and form.get('subscription_right') == 'private' else None)>Private</option>
+                                <option value="public" {{'selected' if form.get('action') == 'create-channel' and form.get('subscription_right') == 'public' }}>Public</option>
+                                <option value="restricted" {{'selected' if form.get('action') == 'create-channel' and form.get('subscription_right') == 'restricted' }}>Restricted</option>
+                                <option value="private" {{'selected' if form.get('action') == 'create-channel' and form.get('subscription_right') == 'private' }}>Private</option>
                             </select>
                         </div>
                         <div class="form-group" >
                             <div class="checkbox">
                                 {{ make_tooltip(info['channel']['enabled']['description'], placement='left', icon=True) |safe}}
                                 <label class="text-danger">
-                                    <input type="checkbox" name="enabled" $('' if form.get('action') == 'create-channel' and 'enabled' not in form else 'checked')>
+                                    <input type="checkbox" name="enabled" {{'' if form.get('action') == 'create-channel' and 'enabled' not in form else 'checked'}}>
                                     <span class="glyphicon glyphicon-alert"></span> Enabled
                                 </label>
                             </div>
@@ -429,7 +430,7 @@
                     </div>
                     <div class="modal-body">
                         <input type="hidden" name="action" value="edit-channel">
-                        <input type="hidden" id="edit-channel-id" name="id" value="$(form.get('id') if form.get('action') == 'edit-channel' else None)">
+                        <input type="hidden" id="edit-channel-id" name="id" value="{{form.get('id') if form.get('action') == 'edit-channel' }}">
 
                         {% if feedbacks.has('edit-channel', 'name_already_exists') %}
                             <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
@@ -455,7 +456,7 @@
                             <label for="edit-channel-name">Channel name</label>
                             {{ make_tooltip(info['channel']['name'], placement='left', icon=True) |safe}}
                             <input type="text" name="name" class="form-control" id="edit-channel-name" placeholder="Name"
-                                   value="$(form.get('name') if form.get('action') == 'edit-channel' else None)" required>
+                                   value="{{form.get('name') if form.get('action') == 'edit-channel' }}" required>
                         </div>
 
 
@@ -463,7 +464,7 @@
                             <label for="edit-channel-description">Channel description</label>
                             {{ make_tooltip(info['channel']['description'], placement='left', icon=True) |safe}}
                             <input type="text" name="description" class="form-control" id="edit-channel-description" placeholder="Description"
-                                   value="$(form.get('description') if form.get('action') == 'edit-channel' else None)" >
+                                   value="{{form.get('description') if form.get('action') == 'edit-channel' }}" >
                         </div>
 
                         <div class="form-group">
@@ -471,7 +472,7 @@
                             {{ make_tooltip(info['channel']['plugin'], placement='left', icon=True) |safe}}
                             <select class="form-control" id="edit-channel-plugin" name="plugin" required>
                                 {% for p in found_plugins %}
-                                    <option value="$p.id" $('selected' if form.get('action') == 'edit-channel' and form.get('plugin') == str(p.id) else None)>$p.name</option>
+                                    <option value="{{p.id}}" {{'selected' if form.get('action') == 'edit-channel' and form.get('plugin') == str(p.id) }}>{{p.name}}</option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -480,16 +481,16 @@
                             <label for="edit-channel-subscription-right">Subscription right</label>
                             {{ make_tooltip(info['channel']['subscription_right'], placement='left', icon=True) |safe}}
                             <select class="form-control" id="edit-channel-subscription-right" name="subscription_right" required>
-                                <option value="public" $('selected' if form.get('action') == 'edit-channel' and form.get('subscription_right') == 'public' else None)>Public</option>
-                                <option value="restricted" $('selected' if form.get('action') == 'edit-channel' and form.get('subscription_right') == 'restricted' else None)>Restricted</option>
-                                <option value="private" $('selected' if form.get('action') == 'edit-channel' and form.get('subscription_right') == 'private' else None)>Private</option>
+                                <option value="public" {{'selected' if form.get('action') == 'edit-channel' and form.get('subscription_right') == 'public' }}>Public</option>
+                                <option value="restricted" {{'selected' if form.get('action') == 'edit-channel' and form.get('subscription_right') == 'restricted' }}>Restricted</option>
+                                <option value="private" {{'selected' if form.get('action') == 'edit-channel' and form.get('subscription_right') == 'private' }}>Private</option>
                             </select>
                         </div>
 
                         <div class="form-group" >
                             <div class="checkbox">
                                 {{ make_tooltip(info['channel']['enabled']['description'], placement='left', icon=True) |safe}}
-                                <label class="text-danger"><input type="checkbox" id="edit-channel-enabled" name="enabled" $('checked' if form.get('action') == 'edit-channel' and form.get('enabled') == 'on' else '')>
+                                <label class="text-danger"><input type="checkbox" id="edit-channel-enabled" name="enabled" {{'checked' if form.get('action') == 'edit-channel' and form.get('enabled') == 'on' else ''}}>
                                     <span class="glyphicon glyphicon-alert"></span> Enabled
                                 </label>
                             </div>
@@ -519,7 +520,7 @@
                             <label for="bundle-name">Bundle name</label>
                             {{ make_tooltip(info['bundle']['name'], placement='left', icon=True) |safe}}
                             <input type="text" name="name" class="form-control" id="bundle-name" placeholder="Name"
-                                   value="$(form.get('name') if form.get('action') == 'create-bundle' else None)" required>
+                                   value="{{form.get('name') if form.get('action') == 'create-bundle' }}" required>
                         </div>
 
                         {% if feedbacks.has('create-bundle', 'invalid_name') %}
@@ -546,23 +547,23 @@
                             <label for="bundle-description">Channel description</label>
                             {{ make_tooltip(info['bundle']['description'], placement='left', icon=True) |safe}}
                             <input type="text" name="description" class="form-control" id="bundle-description" placeholder="Description"
-                                   value="$(form.get('description') if form.get('action') == 'create-bundle' else None)">
+                                   value="{{form.get('description') if form.get('action') == 'create-bundle' }}">
                         </div>
 
                         <div class="form-group" >
                             <label for="bundle-subscription-right">Subscription right</label>
                             {{ make_tooltip(info['bundle']['subscription_right'], placement='left', icon=True) |safe}}
                             <select class="form-control" id="bundle-subscription-right" name="subscription_right" required>
-                                <option value="public" $('selected' if form.get('action') == 'create-bundle' and form.get('subscription_right') == 'public' else None)>Public</option>
-                                <option value="restricted" $('selected' if form.get('action') == 'create-bundle' and form.get('subscription_right') == 'restricted' else None)>Restricted</option>
-                                <option value="private" $('selected' if form.get('action') == 'create-bundle' and form.get('subscription_right') == 'private' else None)>Private</option>
+                                <option value="public" {{'selected' if form.get('action') == 'create-bundle' and form.get('subscription_right') == 'public' }}>Public</option>
+                                <option value="restricted" {{'selected' if form.get('action') == 'create-bundle' and form.get('subscription_right') == 'restricted' }}>Restricted</option>
+                                <option value="private" {{'selected' if form.get('action') == 'create-bundle' and form.get('subscription_right') == 'private' }}>Private</option>
                             </select>
                         </div>
                         <div class="form-group" >
                             <div class="checkbox">
                                 {{ make_tooltip(info['bundle']['enabled']['description'], placement='left', icon=True) |safe}}
                                 <label class="text-danger">
-                                    <input type="checkbox" name="enabled" id="create-bundle-enabled" $('' if form.get('action') == 'create-bundle' and 'enabled' not in form else 'checked')>
+                                    <input type="checkbox" name="enabled" id="create-bundle-enabled" {{'' if form.get('action') == 'create-bundle' and 'enabled' not in form else 'checked'}}>
                                     <span class="glyphicon glyphicon-alert"></span> Enabled
                                 </label>
                             </div>
@@ -587,7 +588,7 @@
                     </div>
                     <div class="modal-body">
                         <input type="hidden" name="action" value="edit-bundle">
-                        <input type="hidden" id="edit-bundle-id" name="id" value="$(form.get('id') if form.get('action') == 'edit-channel' else None)">
+                        <input type="hidden" id="edit-bundle-id" name="id" value="{{form.get('id') if form.get('action') == 'edit-channel' }}">
 
                         {% if feedbacks.has('edit-bundle', 'name_already_exists') %}
                             <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
@@ -613,14 +614,14 @@
                             <label for="edit-bundle-name">Bundle name</label>
                             {{ make_tooltip(info['bundle']['name'], placement='left', icon=True) |safe}}
                             <input type="text" name="name" class="form-control" id="edit-bundle-name" placeholder="Name"
-                                   value="$(form.get('name') if form.get('action') == 'edit-bundle' else None)" required>
+                                   value="{{form.get('name') if form.get('action') == 'edit-bundle' }}" required>
                         </div>
 
                         <div class="form-group">
                             <label for="edit-bundle-description">Bundle description</label>
                             {{ make_tooltip(info['bundle']['description'], placement='left', icon=True) |safe}}
                             <input type="text" name="description" class="form-control" id="edit-bundle-description" placeholder="Description"
-                                   value="$(form.get('description') if form.get('action') == 'edit-bundle' else None)" >
+                                   value="{{form.get('description') if form.get('action') == 'edit-bundle' }}" >
                         </div>
 
 
@@ -629,16 +630,16 @@
                             <label for="edit-bundle-subscription-right">Subscription right</label>
                             {{ make_tooltip(info['bundle']['subscription_right'], placement='left', icon=True) |safe}}
                             <select class="form-control" id="edit-bundle-subscription-right" name="subscription_right" required>
-                                <option value="public" $('selected' if form.get('action') == 'edit-bundle' and form.get('subscription_right') == 'public' else None)>Public</option>
-                                <option value="restricted" $('selected' if form.get('action') == 'edit-bundle' and form.get('subscription_right') == 'restricted' else None)>Restricted</option>
-                                <option value="private" $('selected' if form.get('action') == 'edit-bundle' and form.get('subscription_right') == 'private' else None)>Private</option>
+                                <option value="public" {{'selected' if form.get('action') == 'edit-bundle' and form.get('subscription_right') == 'public' }}>Public</option>
+                                <option value="restricted" {{'selected' if form.get('action') == 'edit-bundle' and form.get('subscription_right') == 'restricted' }}>Restricted</option>
+                                <option value="private" {{'selected' if form.get('action') == 'edit-bundle' and form.get('subscription_right') == 'private' }}>Private</option>
                             </select>
                         </div>
 
                         <div class="form-group" >
                             <div class="checkbox">
                                 {{ make_tooltip(info['bundle']['enabled']['description'], placement='left', icon=True) |safe}}
-                                <label class="text-danger"><input type="checkbox" id="edit-bundle-enabled" name="enabled" $('checked' if form.get('action') == 'edit-bundle' and form.get('enabled') == 'on' else '')>
+                                <label class="text-danger"><input type="checkbox" id="edit-bundle-enabled" name="enabled" {{'checked' if form.get('action') == 'edit-bundle' and form.get('enabled') == 'on' else ''}}>
                                     <span class="glyphicon glyphicon-alert"></span> Enabled
                                 </label>
                             </div>
@@ -666,10 +667,10 @@
                     </div>
                     <div class="modal-body">
                         {% if feedbacks_v2.has('add-channel-to-bundles', 'bundle_cycle') %}
-                            $ bundle_name = feedbacks_v2.feedback_value()
+                            {% set bundle_name = feedbacks_v2.feedback_value() %}
                             <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
                                 <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
-                                Adding this channel to bundle <b>$bundle_name</b> would create a cycle as this channel already contains <b>$bundle_name</b> either directly or through another bundle.
+                                Adding this channel to bundle <b>{{bundle_name}}</b> would create a cycle as this channel already contains <b>{{bundle_name}}</b> either directly or through another bundle.
                             </div>
 
                         {% endif %}
@@ -690,9 +691,9 @@
                             </tfoot>
                             <tbody>
                                 {% for bundle in bundles %}
-                                    <tr data-bundle-id="$bundle.id">
+                                    <tr data-bundle-id="{{bundle.id}}">
                                         <td>
-                                            <a href="/channel/$channel.id">$bundle.name</a>
+                                            <a href="/channel/{{channel.id}}">{{bundle.name}}</a>
                                             {% if bundle.description %}
                                                 <a type="button" class="btn btn-xs btn-default pull-right"
                                                    style="margin-top: 5px; "
@@ -701,7 +702,7 @@
 
                                                    data-placement="right"
                                                    title="Channel description"
-                                                   data-content="$bundle.description">
+                                                   data-content="{{bundle.description}}">
                                                     <i class="fa fa-info" style="margin-right: 0 !important;"></i>
                                                 </a>
                                             {% endif %}
@@ -712,7 +713,7 @@
                                                 </a>
                                             {% endif %}
                                         </td>
-                                        <td data-subscription-right="$bundle.subscription_right">
+                                        <td data-subscription-right="{{bundle.subscription_right}}">
                                             {% if bundle.subscription_right == 'public' %}
                                                 <h6 class="label label-success"><i class="fa fa-sign-in"></i>Public</h6>
                                             {% elif bundle.subscription_right == 'restricted' %}
@@ -722,7 +723,7 @@
                                             {% endif %}
                                         </td>
                                         <td>
-                                            <input type="checkbox" class="bundle-checkbox" $('checked' if bundle in channel.bundles else '' )>
+                                            <input type="checkbox" class="bundle-checkbox" {{'checked' if bundle in channel.bundles else '' }}>
                                         </td>
                                     </tr>
                                 {% endfor %}
@@ -756,7 +757,7 @@
                                     <ul>
                                         {%for id, name, building in feedbacks.feedback_value()['subscriptions'] %}
                                             <li>
-                                                <a href="/screens/$id">$name</a> in $building
+                                                <a href="/screens/{{id}}">{{name}}</a> in {{building}}
                                             </li>
                                         {% endfor %}
                                     </ul>
@@ -764,21 +765,20 @@
                                 </div>
                                 <input type="hidden" name="confirm-delete" value="confirm-delete">
                             {% endif %}
-                            $code:
-                                fb_value = feedbacks.feedback_value('delete-channel', 'channel_has_subscriptions')
-                                channel = fb_value['channel'] if fb_value is not None else None
-                                plugin_id = fb_value['plugin_id'] if fb_value is not None else None
+                            {% set fb_value = feedbacks.feedback_value('delete-channel', 'channel_has_subscriptions')%}
+                            {% set channel = fb_value['channel'] if fb_value  %}
+                            {% set plugin_id = fb_value['plugin_id'] if fb_value  %}
                             <input type="hidden" name="action" value="delete-channel">
-                            <input type="hidden" id="delete-channel-id" name="id" value="$(channel['id'] if channel else None)">
+                            <input type="hidden" id="delete-channel-id" name="id" value="{{channel['id'] if channel }}">
                             <div class="form-group">
                                 <label for="delete-channel-name">Channel name</label>
-                                <input type="text" class="form-control" id="delete-channel-name" value="$(channel['name'] if channel else None)" disabled>
+                                <input type="text" class="form-control" id="delete-channel-name" value="{{channel['name'] if channel }}" disabled>
                             </div>
 
                             <div class="form-group">
                                 <label for="delete-channel-description">Channel description</label>
                                 <input type="text" name="description" class="form-control" id="delete-channel-description"
-                                       value="$(channel['description'] if channel else None)"
+                                       value="{{channel['description'] if channel }}"
                                        disabled>
                             </div>
 
@@ -786,7 +786,7 @@
                                 <label for="delete-channel-plugin">Plugin</label>
                                 <select class="form-control" id="delete-channel-plugin" name="plugin" disabled>
                                 {% for p in found_plugins %}
-                                    <option value="$p.id" $('selected' if p.id == plugin_id else '')>$p.name</option>
+                                    <option value="{{p.id}}" {{'selected' if p.id == plugin_id else ''}}>{{p.name}}</option>
                                 {% endfor %}
                                 </select>
                             </div>
@@ -794,15 +794,15 @@
                             <div class="form-group" >
                                 <label for="delete-channel-subscription-right">Plugin</label>
                                 <select class="form-control" id="delete-channel-subscription-right" disabled>
-                                    <option value="public" $('selected' if channel and channel['subscription_right'] == 'public' else '')>Public</option>
-                                    <option value="restricted" $('selected' if channel and channel['subscription_right'] == 'restricted' else '')>Restricted</option>
-                                    <option value="private" $('selected' if channel and channel['subscription_right'] == 'private' else '')>Private</option>
+                                    <option value="public" {{'selected' if channel and channel['subscription_right'] == 'public' else ''}}>Public</option>
+                                    <option value="restricted" {{'selected' if channel and channel['subscription_right'] == 'restricted' else ''}}>Restricted</option>
+                                    <option value="private" {{'selected' if channel and channel['subscription_right'] == 'private' else ''}}>Private</option>
                                 </select>
                             </div>
 
                             <div class="form-group" >
                                 <div class="checkbox" disabled>
-                                    <label class="text-danger"><input type="checkbox" id="delete-channel-enabled" name="enabled" $('checked' if form.get('enabled') == 'on' else '')>
+                                    <label class="text-danger"><input type="checkbox" id="delete-channel-enabled" name="enabled" {{'checked' if form.get('enabled') == 'on' else ''}}>
                                         <span class="glyphicon glyphicon-alert"></span> Enabled
                                     </label>
                                 </div>
@@ -833,42 +833,41 @@
                                     <ul>
                                         {% for id, name, building in feedbacks.feedback_value()['subscriptions'] %}
                                             <li>
-                                                <a href="/screens/$id">$name</a> in $building
+                                                <a href="/screens/{{id}}">{{name}}</a> in {{building}}
                                             </li>
                                         {% endfor %}
                                     </ul>
                                 </div>
                             {% endif %}
-                            $code:
-                                fb_value = feedbacks.feedback_value('delete', 'channel_has_subscriptions')
-                                channel = fb_value['channel'] if fb_value is not None else None
-                                plugin_id = fb_value['plugin_id'] if fb_value is not None else None
+                            {% set fb_value = feedbacks.feedback_value('delete', 'channel_has_subscriptions')%}
+                            {% set channel = fb_value['channel'] if fb_value  %}
+                            {% set plugin_id = fb_value['plugin_id'] if fb_value  %}
                             <input type="hidden" name="action" value="delete-bundle">
-                            <input type="hidden" id="delete-bundle-id" name="id" value="$(channel['id'] if channel else None)">
+                            <input type="hidden" id="delete-bundle-id" name="id" value="{{channel['id'] if channel }}">
                             <div class="form-group">
                                 <label for="delete-channel-name">Channel name</label>
-                                <input type="text" class="form-control" id="delete-bundle-name" value="$(channel['name'] if channel else None)" disabled>
+                                <input type="text" class="form-control" id="delete-bundle-name" value="{{channel['name'] if channel }}" disabled>
                             </div>
 
                             <div class="form-group">
                                 <label for="delete-channel-description">Channel description</label>
                                 <input type="text" name="description" class="form-control" id="delete-bundle-description"
-                                       value="$(channel['description'] if channel else None)"
+                                       value="{{channel['description'] if channel }}"
                                        disabled>
                             </div>
 
                             <div class="form-group" >
                                 <label for="delete-bundle-subscription-right">Plugin</label>
                                 <select class="form-control" id="delete-bundle-subscription-right" disabled>
-                                    <option value="public" $('selected' if channel and channel['subscription_right'] == 'public' else '')>Public</option>
-                                    <option value="restricted" $('selected' if channel and channel['subscription_right'] == 'restricted' else '')>Restricted</option>
-                                    <option value="private" $('selected' if channel and channel['subscription_right'] == 'private' else '')>Private</option>
+                                    <option value="public" {{'selected' if channel and channel['subscription_right'] == 'public' else ''}}>Public</option>
+                                    <option value="restricted" {{'selected' if channel and channel['subscription_right'] == 'restricted' else ''}}>Restricted</option>
+                                    <option value="private" {{'selected' if channel and channel['subscription_right'] == 'private' else ''}}>Private</option>
                                 </select>
                             </div>
 
                             <div class="form-group" >
                                 <div class="checkbox" disabled>
-                                    <label class="text-danger"><input type="checkbox" id="delete-bundle-enabled" name="enabled" $('checked' if form.get('enabled') == 'on' else '')>
+                                    <label class="text-danger"><input type="checkbox" id="delete-bundle-enabled" name="enabled" {{'checked' if form.get('enabled') == 'on' else ''}}>
                                         <span class="glyphicon glyphicon-alert"></span> Enabled
                                     </label>
                                 </div>
@@ -899,7 +898,7 @@
 
         {% if feedbacks_v2.has_type('add-channel-to-bundles') and not feedbacks_v2.has('add-channel-to-bundles', 'ok') %}
             {# Has to be fired before datatables pagination comes into play #}
-            $$('tr[data-bundle-id="$form.channel_id"], tr[data-channel-id="$form.channel_id"]').find('[data-target="#manage-bundles-modal"]').click();
+            $$('tr[data-bundle-id="{{form.channel_id}}"], tr[data-channel-id="{{form.channel_id}}"]').find('[data-target="#manage-bundles-modal"]').click();
 
 
         {% endif %}
@@ -986,12 +985,12 @@
             }
 
             {% if plugin_channels|length() > 0 %}
-                var channels_users = $:plugin_channels[0].get_channels_users_as_json(plugin_channels);
-                var channels_authorized_subscribers = $:plugin_channels[0].get_channels_authorized_subscribers_as_json(plugin_channels)
+                var channels_users = {{ plugin_channels[0].get_channels_users_as_json(plugin_channels) |safe }};
+                var channels_authorized_subscribers = {{ plugin_channels[0].get_channels_authorized_subscribers_as_json(plugin_channels) |safe }};
 
-                var administrator = $UserPermissions.channel_administrator.value;
-                var contributor = $UserPermissions.channel_contributor.value;
-                var no_permission = $UserPermissions.no_permission.value;
+                var administrator = {{UserPermissions.channel_administrator.value}};
+                var contributor = {{UserPermissions.channel_contributor.value}};
+                var no_permission = {{UserPermissions.no_permission.value}};
 
                 var right_public = 'public';  {# TODO: Enum this #}
                 var right_restricted = 'restricted';
@@ -1013,7 +1012,7 @@
                     saveState: true
                 });
 
-                function updateUsersTableState() {  $#  TODO: Not all state should be restored on a table update
+                function updateUsersTableState() {  {#  TODO: Not all state should be restored on a table update #}
                     if ($$channel == null)
                         return;
 
