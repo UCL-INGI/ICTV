@@ -1,4 +1,4 @@
-{# 
+{#
 
     This file belongs to the ICTV project, written by Nicolas Detienne,
     Francois Michel, Maxime Piraux, Pierre Reinbold and Ludovic Taffin
@@ -140,13 +140,13 @@
                 </a>
                 <div class="navbar-custom-menu">
                     <ul class="nav navbar-nav">
-{# TODO : retrieve content['has_tour'] from child #}
-                        $if content.get('has_tour'):
+                        {% if has_tour %}
                             <li class="dropdown help-menu" onclick="$$('#tour-started').submit();">
                                 <a class="dropdown-toggle" data-toggle="dropdown">
                                     <i class="fa fa-2x fa-question-circle" style="max-height: 20px; position: relative; left: 3px; bottom: 4px;"></i>
                                 </a>
                             </li>
+                        {% endif %}
                         <!-- User Account Menu -->
                         <li class="dropdown user user-menu">
                             <!-- Menu Toggle Button -->
@@ -198,15 +198,21 @@
                     <img src="/static/images/user-default.png" class="img-circle" alt="User Image">
                 </div>
                 <div class="pull-left info">
-                    <p>$(user_object.readable_name)</p>
+                    <p>{{ user_object.readable_name }}</p>
                 </div>
             </div>
 
             <!-- Sidebar Menu -->
             <ul class="sidebar-menu">
-                $if 'sidebar' in session:
-                    $for k, v in session.sidebar:
-                        <li class="$('active' if (k == content.active_element if 'active_element' in content else False) else '')"><a href="$v['url']"><i class="fa $v['icon']"></i><span>$k</span></a></li>
+                {% if 'sidebar' in session %}
+                    {% for k, v in session.sidebar %}
+                      {%  if (active_element) and (k == active_element)  %}
+                        <li class="active"><a href="{{ v['url'] }}"><i class="fa {{ v['icon'] }}"></i><span>{{ k }}</span></a></li>
+                      {% else %}
+                        <li><a href="{{ v['url'] }}"><i class="fa {{ v['icon'] }}"></i><span>{{ k }}</span></a></li>
+                      {% endif %}
+                    {% endfor %}
+                {% endif %}
             </ul>
             <!-- /.sidebar-menu -->
         </section>
@@ -214,15 +220,16 @@
     </aside>
 
     <div class="content-wrapper">
-        $if 'real_user' in session and session['real_user']['email'] != user['email']:
+        {% if 'real_user' in session and session['real_user']['email'] != user['email'] %}
             <div style="padding: 10px 25px; text-align: center; background: #14d1ff; z-index: 999999; font-size: 16px; color: white;">
                 You are currently logged as <b>{{user['email']}}</b>. Click <a style="color: white" href="/logas/nobody" style=""> <u>here</u> </a> to log out from {{user['email']}}'s account
             </div>
+        {% endif %}
 
         {% block content %}{% endblock %}
     </div>
 
-    $if show_footer:
+    {% if show_footer %}
         <!-- Main Footer -->
         <footer class="main-footer">
             <!-- To the right -->
@@ -232,6 +239,7 @@
             <!-- Default to the left -->
             <strong>ICTV v{{ version() }} - Copyright &copy; 2016-2018 <a href="http://www.uclouvain.be/">Université catholique de Louvain</a>.</strong>
         </footer>
+    {% endif %}
 </div>
 <form id="tour-started" action="/tour/started" method="post" style="display: none"></form>
 <form id="tour-ended" action="/tour/ended" method="post" style="display: none"></form>
