@@ -125,7 +125,7 @@
          user experience. Slimscroll is required when using the
          fixed layout. -->
 </head>
-<body class="hold-transition sidebar-mini skin-blue $('sidebar-collapse' if sidebar_collapse else '')">
+<body class="hold-transition sidebar-mini skin-blue {{ ('sidebar-collapse' if sidebar_collapse else '') }}">
 <div class="wrapper">
 
     <header class="main-header">
@@ -141,7 +141,7 @@
                 <div class="navbar-custom-menu">
                     <ul class="nav navbar-nav">
                         {% if has_tour %}
-                            <li class="dropdown help-menu" onclick="$$('#tour-started').submit();">
+                            <li class="dropdown help-menu" onclick="$('#tour-started').submit();">
                                 <a class="dropdown-toggle" data-toggle="dropdown">
                                     <i class="fa fa-2x fa-question-circle" style="max-height: 20px; position: relative; left: 3px; bottom: 4px;"></i>
                                 </a>
@@ -160,7 +160,7 @@
                                 <!-- The user image in the menu -->
                                 <li class="user-header">
                                     <img src="/static/images/user-default.png" class="img-circle" alt="User Image">
-                                    <a href="/users/$user['id']">
+                                    <a href="/users/{{ user['id'] }}">
                                         <p style="color:white;">
                                             {{ user_object.readable_name }}
                                         </p>
@@ -246,12 +246,12 @@
 <form id="tour-ended" action="/tour/ended" method="post" style="display: none"></form>
 <script>
     window.setTimeout(function() {
-        $$(".alert.alert-success.alert-dismissible").fadeTo(500, 0).slideUp(500, function(){
-            $$(this).remove();
+        $(".alert.alert-success.alert-dismissible").fadeTo(500, 0).slideUp(500, function(){
+            $(this).remove();
         });
     }, 3000);
-    $$(window).load(function () {
-        $$('div.modal').appendTo('body');
+    $(window).load(function () {
+        $('div.modal').appendTo('body');
         var has_toured = {{ 'true' if user_object.has_toured else 'false'|safe }};
         if (window.intro !== undefined && !has_toured) {
             var steps_key = intro_id + '-steps';
@@ -276,11 +276,11 @@
             }
             intro.onexit(function() {
                 localStorage.is_touring = false;
-                $$('#tour-ended').submit();
+                $('#tour-ended').submit();
             });
             intro.oncomplete(function() {
                 localStorage.is_touring = false;
-                $$('#tour-ended').submit();
+                $('#tour-ended').submit();
             });
         }
     });

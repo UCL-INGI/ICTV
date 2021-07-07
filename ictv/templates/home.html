@@ -35,7 +35,7 @@
 </style>
 <section class="content-header">
     <h1>
-        Welcome {{ user['fullname'] if user['fullname'] is not none else user.get('username') }} 
+        Welcome {{ user['fullname'] if user['fullname'] else user.get('username') }} 
         <small>ICTV v{{ version() }}</small>
     </h1>
 </section>
@@ -85,7 +85,7 @@
     </div>
 </section>
 <script>
-    $$(document).ready(function () {
+    $(document).ready(function () {
         intro_id = 'home';
         intro = introJs();
         intro.setOptions({
@@ -108,7 +108,7 @@
                 }
             ]
         });
-        $$('#ictv-presentation').load(function () {
+        $('#ictv-presentation').load(function () {
             this.contentWindow.Reveal.addEventListener('endOfSlideshow', function () {
                 setTimeout(function () {
                     intro.nextStep();
@@ -118,8 +118,8 @@
     });
 </script>
 <script>
-    $$(document).ready(function () {
-        $$('[data-toggle="popover"]').popover();
+    $(document).ready(function () {
+        $('[data-toggle="popover"]').popover();
     });
 </script>
 {% endblock %}
