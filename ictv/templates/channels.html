@@ -885,30 +885,30 @@
     {% endif %}
 {% endif %}
 <script>
-    $$(document).ready(function () {
-        var $$bundles_modal = $$("#manage-bundles-modal");
-        $$bundles_modal.on('show.bs.modal', function(e) {
+    $(document).ready(function () {
+        var $bundles_modal = $("#manage-bundles-modal");
+        $bundles_modal.on('show.bs.modal', function(e) {
             bundles_diff = {};
             console.log(e);
-            $$channel = $$(e.relatedTarget.parentElement).parent();
-            $$('#add-channel-name').text($$channel.data('channel-name'));
-            $$(this).find('form').attr('action', 'channel/' + $$channel.data('channel-id'));
+            $channel = $(e.relatedTarget.parentElement).parent();
+            $('#add-channel-name').text($channel.data('channel-name'));
+            $(this).find('form').attr('action', 'channel/' + $channel.data('channel-id'));
             updateBundlesTableState();
         });
 
         {% if feedbacks_v2.has_type('add-channel-to-bundles') and not feedbacks_v2.has('add-channel-to-bundles', 'ok') %}
             {# Has to be fired before datatables pagination comes into play #}
-            $$('tr[data-bundle-id="{{form.channel_id}}"], tr[data-channel-id="{{form.channel_id}}"]').find('[data-target="#manage-bundles-modal"]').click();
+            $('tr[data-bundle-id="{{form.channel_id}}"], tr[data-channel-id="{{form.channel_id}}"]').find('[data-target="#manage-bundles-modal"]').click();
 
 
         {% endif %}
-        $$('a[data-toggle="tab"]').on('shown.bs.tab', function () {
-            $$.fn.dataTable.tables({visible: true, api: true}).columns.adjust();
+        $('a[data-toggle="tab"]').on('shown.bs.tab', function () {
+            $.fn.dataTable.tables({visible: true, api: true}).columns.adjust();
         });
-        $$('table').on('draw.dt', function() {
-            $$('[data-toggle="popover"]').popover();
+        $('table').on('draw.dt', function() {
+            $('[data-toggle="popover"]').popover();
         });
-        $$('.tab-pane table').DataTable({stateSave: true});
+        $('.tab-pane table').DataTable({stateSave: true});
 
         {% if feedbacks.has_type('create-channel', 'edit-channel', 'delete-channel', 'configure-channel', 'add-users-channel') %}
             window.location.hash = '#plugin-channels';
@@ -919,11 +919,11 @@
                 window.location.hash = '#plugin-channels';
             }
         {% endif %}
-        $$('[data-toggle="tab"][href="'+window.location.hash+'"]').tab('show');
-        $$('[data-toggle="tab"][href]').click(function() {
+        $('[data-toggle="tab"][href="'+window.location.hash+'"]').tab('show');
+        $('[data-toggle="tab"][href]').click(function() {
             window.location.hash = this.getAttribute('href');
         });
-        $$.fn.dataTable.tables({visible: true, api: true}).columns.adjust();
+        $.fn.dataTable.tables({visible: true, api: true}).columns.adjust();
 
         {% if UserPermissions.channel_administrator in current_user.highest_permission_level %}
             {% if feedbacks.has_type('create-channel') and not feedbacks.has('create-channel', 'ok') %}
@@ -952,34 +952,34 @@
             load_modal('#delete-bundle-modal', 'delete-bundle-');
 
             {% if feedbacks.has('create', 'ok') %}
-                $$('#create-channel-modal').find('form')[0].reset();
+                $('#create-channel-modal').find('form')[0].reset();
 
             {% endif %}
             function fire_modal(modalSelector) {
-                var $$modal = $$(modalSelector);
-                $$modal.removeClass('fade');
-                $$modal.one('hidden.bs.modal', function () {
-                    $$modal.find('.alert').detach();
-                    $$modal.addClass('fade');
-                    $$modal.find('form')[0].reset();
+                var $modal = $(modalSelector);
+                $modal.removeClass('fade');
+                $modal.one('hidden.bs.modal', function () {
+                    $modal.find('.alert').detach();
+                    $modal.addClass('fade');
+                    $modal.find('form')[0].reset();
                 });
-                $$modal.modal('show')
+                $modal.modal('show')
             }
 
             function load_modal(modalSelector, prefix) {
-                var $$modal = $$(modalSelector);
-                $$modal.on('show.bs.modal', function(e) {
-                    $$tr = $$(e.relatedTarget).parent().parent();
-                    $$modal.find('#'+prefix+'subscription-right').val($$tr.find('[data-subscription-right]').attr('data-subscription-right'));
-                    $$modal.find('#'+prefix+'plugin').val($$tr.find('[data-plugin-id]').attr('data-plugin-id'));
-                    $$modal.find('#'+prefix+'name').val($$tr.attr('data-channel-name'));
-                    $$modal.find('#'+prefix+'id').val($$tr.attr('data-channel-id'));
-                    $$modal.find('#'+prefix+'description').val($$tr.attr('data-channel-description'));
-                    const state = $$tr.attr('data-channel-enabled') == 'yes';
+                var $modal = $(modalSelector);
+                $modal.on('show.bs.modal', function(e) {
+                    $tr = $(e.relatedTarget).parent().parent();
+                    $modal.find('#'+prefix+'subscription-right').val($tr.find('[data-subscription-right]').attr('data-subscription-right'));
+                    $modal.find('#'+prefix+'plugin').val($tr.find('[data-plugin-id]').attr('data-plugin-id'));
+                    $modal.find('#'+prefix+'name').val($tr.attr('data-channel-name'));
+                    $modal.find('#'+prefix+'id').val($tr.attr('data-channel-id'));
+                    $modal.find('#'+prefix+'description').val($tr.attr('data-channel-description'));
+                    const state = $tr.attr('data-channel-enabled') == 'yes';
                     if(state) {
-                        $$modal.find('#'+prefix+'enabled').prop('checked', true)
+                        $modal.find('#'+prefix+'enabled').prop('checked', true)
                     } else {
-                        $$modal.find('#'+prefix+'enabled').removeAttr('checked');
+                        $modal.find('#'+prefix+'enabled').removeAttr('checked');
                     }
                 });
             }
@@ -997,11 +997,11 @@
                 var right_private = 'private';
 
                 var users_diff = {};
-                var $$channel = null;
-                var $$modal = $$("#add-users-channel-modal");
+                var $channel = null;
+                var $modal = $("#add-users-channel-modal");
 
-                $$('#table-users').on('draw.dt', updateUsersTableState);
-                $$('#table-users').DataTable({
+                $('#table-users').on('draw.dt', updateUsersTableState);
+                $('#table-users').DataTable({
                     "aoColumns": [
                         null,
                         null,
@@ -1013,52 +1013,52 @@
                 });
 
                 function updateUsersTableState() {  {#  TODO: Not all state should be restored on a table update #}
-                    if ($$channel == null)
+                    if ($channel == null)
                         return;
 
-                    $$modal.find('input[data-permission-level="'+administrator+'"]').change(function(e) {
-                        $$prev = $$(e.currentTarget).parent().parent().prev().find('input[type="checkbox"]');
-                        $$prev.prop('checked', e.currentTarget.checked)
+                    $modal.find('input[data-permission-level="'+administrator+'"]').change(function(e) {
+                        $prev = $(e.currentTarget).parent().parent().prev().find('input[type="checkbox"]');
+                        $prev.prop('checked', e.currentTarget.checked)
                     });
                 {% if UserPermissions.channel_administrator in current_user.highest_permission_level %}
-                    $$modal.find('input[data-permission-level="'+contributor+'"]').change(function(e) {
-                        $$prev = $$(e.currentTarget).parent().parent().next().find('input[type="checkbox"]');
-                        if(!e.currentTarget.checked && $$prev.prop('checked')) {
-                            $$prev.prop('checked', e.currentTarget.checked)
+                    $modal.find('input[data-permission-level="'+contributor+'"]').change(function(e) {
+                        $prev = $(e.currentTarget).parent().parent().next().find('input[type="checkbox"]');
+                        if(!e.currentTarget.checked && $prev.prop('checked')) {
+                            $prev.prop('checked', e.currentTarget.checked)
                         }
                     });
-                    $$modal.find('input[data-permission-level]').prop("checked", false);
-                    $$modal.find('input[data-authorized-subscriber]').prop("checked", false);
-                    $$modal.find('input[data-permission-level="'+contributor+'"]').removeAttr('disabled').parent().removeClass('disabled');
-                    var subscription_right = $$channel.find('[data-subscription-right]').attr('data-subscription-right');
+                    $modal.find('input[data-permission-level]').prop("checked", false);
+                    $modal.find('input[data-authorized-subscriber]').prop("checked", false);
+                    $modal.find('input[data-permission-level="'+contributor+'"]').removeAttr('disabled').parent().removeClass('disabled');
+                    var subscription_right = $channel.find('[data-subscription-right]').attr('data-subscription-right');
                     if(subscription_right==right_public) {
-                        $$modal.find('[data-authorized-subscriber]').attr('disabled', '').parent().addClass('disabled');
+                        $modal.find('[data-authorized-subscriber]').attr('disabled', '').parent().addClass('disabled');
                     } else {
-                        $$modal.find('[data-authorized-subscriber]').removeAttr('disabled').parent().removeClass('disabled');
+                        $modal.find('[data-authorized-subscriber]').removeAttr('disabled').parent().removeClass('disabled');
                     }
-                    var channel_id = $$channel.attr('data-channel-id');
-                    $$modal.find('#add-users-id').val(channel_id);
+                    var channel_id = $channel.attr('data-channel-id');
+                    $modal.find('#add-users-id').val(channel_id);
                     for (var user_id in channels_users[channel_id]) {
                         var permission_level = channels_users[channel_id][user_id];
-                        $$modal.find('tr[data-user-id="'+user_id+'"] td input[data-permission-level="'+permission_level+'"]').prop('checked', true);
+                        $modal.find('tr[data-user-id="'+user_id+'"] td input[data-permission-level="'+permission_level+'"]').prop('checked', true);
                         if(permission_level==administrator) {
-                            $$modal.find('tr[data-user-id="'+user_id+'"] td input[data-permission-level="'+contributor+'"]').prop('checked', true);
+                            $modal.find('tr[data-user-id="'+user_id+'"] td input[data-permission-level="'+contributor+'"]').prop('checked', true);
                             {% if not current_user.super_admin %}
-                                $$modal.find('tr[data-user-id="'+user_id+'"] td input[data-permission-level="'+contributor+'"]').attr('disabled', '').parent().addClass('disabled');
+                                $modal.find('tr[data-user-id="'+user_id+'"] td input[data-permission-level="'+contributor+'"]').attr('disabled', '').parent().addClass('disabled');
                             {% endif %}
                         }
                     }
                     for (var i in channels_authorized_subscribers[channel_id]) {
-                        $$modal.find('tr[data-user-id="'+channels_authorized_subscribers[channel_id][i]+'"] td input[data-authorized-subscriber]').prop('checked', true)
+                        $modal.find('tr[data-user-id="'+channels_authorized_subscribers[channel_id][i]+'"] td input[data-authorized-subscriber]').prop('checked', true)
                     }
-                    const $$users = $$modal.find('tr[data-user-id]');
-                    $$users.off('change');
-                    $$users.change(function() {
-                        const $$userTr = $$(this);
-                        var user_id = $$userTr.attr('data-user-id');
+                    const $users = $modal.find('tr[data-user-id]');
+                    $users.off('change');
+                    $users.change(function() {
+                        const $userTr = $(this);
+                        var user_id = $userTr.attr('data-user-id');
                         var current_permission = channels_users[channel_id][user_id] || 0;
-                        var highest_permission = getHighestPermission($$userTr);
-                        var authorized_subscriber = $$userTr.find('[data-authorized-subscriber]').prop('checked');
+                        var highest_permission = getHighestPermission($userTr);
+                        var authorized_subscriber = $userTr.find('[data-authorized-subscriber]').prop('checked');
                         var authorized_changed = authorized_subscriber != (channels_authorized_subscribers[channel_id].indexOf(parseInt(user_id)) != -1);
                         if (current_permission != highest_permission || authorized_changed) {
                             users_diff[user_id] = {}
@@ -1070,47 +1070,47 @@
                             users_diff[user_id].authorized_subscriber = authorized_subscriber
                         }
                     });
-                    const $$form = $$modal.find('form');
-                    $$form.off('submit');
-                    $$form.submit(function () {
-                        $$('#users-diff').val(JSON.stringify(users_diff));
+                    const $form = $modal.find('form');
+                    $form.off('submit');
+                    $form.submit(function () {
+                        $('#users-diff').val(JSON.stringify(users_diff));
                     });
                 {% endif %}
                 }
 
-                $$modal.on('show.bs.modal', function(e) {
+                $modal.on('show.bs.modal', function(e) {
                     users_diff = {};
-                    $$channel = $$(e.relatedTarget.parentElement).parent();
+                    $channel = $(e.relatedTarget.parentElement).parent();
                     updateUsersTableState();
                 });
 
                 var bundles_diff = {};
 
                 function updateBundlesTableState() {
-                    if ($$channel == null)
+                    if ($channel == null)
                         return;
 
-                    const channel_id = $$channel.data('channel-id');
+                    const channel_id = $channel.data('channel-id');
 
-                    $$bundles_modal.find('.bundle-checkbox').each(function(a, b) {
-                        const $$bundle = $$(b).parent().parent();
-                        const bundle_id = $$bundle.data('bundle-id');
-                        $$bundle.toggleClass('not-activated', channel_id == bundle_id);
-                        $$(b).prop('disabled', channel_id == bundle_id);
-                        b.checked = $$.inArray(parseInt(bundle_id), data_bundles) != -1;
+                    $bundles_modal.find('.bundle-checkbox').each(function(a, b) {
+                        const $bundle = $(b).parent().parent();
+                        const bundle_id = $bundle.data('bundle-id');
+                        $bundle.toggleClass('not-activated', channel_id == bundle_id);
+                        $(b).prop('disabled', channel_id == bundle_id);
+                        b.checked = $.inArray(parseInt(bundle_id), data_bundles) != -1;
                         if(bundle_id in bundles_diff) {
                             b.checked = bundles_diff[bundle_id];
                         }
                     }).off('change').change(function(e) {
-                        const $$bundle = $$(this).parent().parent();
-                        const bundle_id = $$bundle.data('bundle-id');
+                        const $bundle = $(this).parent().parent();
+                        const bundle_id = $bundle.data('bundle-id');
                         bundles_diff[bundle_id] = this.checked;
-                        $$('#diff-bundles').val(JSON.stringify(bundles_diff));
+                        $('#diff-bundles').val(JSON.stringify(bundles_diff));
                     });
                 }
 
-                $$('#table-bundles').on('draw.dt', updateBundlesTableState);
-                $$('#table-bundles').DataTable({
+                $('#table-bundles').on('draw.dt', updateBundlesTableState);
+                $('#table-bundles').DataTable({
                     "aoColumns": [
                         null,
                         null,
@@ -1119,26 +1119,26 @@
                     saveState: true
                 });
 
-                function getHighestPermission($$userTr) {
-                    if($$userTr.find('input[data-permission-level="'+administrator+'"]').prop('checked'))
+                function getHighestPermission($userTr) {
+                    if($userTr.find('input[data-permission-level="'+administrator+'"]').prop('checked'))
                         return administrator;
-                    if($$userTr.find('input[data-permission-level="'+contributor+'"]').prop('checked'))
+                    if($userTr.find('input[data-permission-level="'+contributor+'"]').prop('checked'))
                         return contributor;
                     return no_permission
                 }
 
             {% endif %}
-            $$.fn.dataTable.ext.order['dom-checkbox'] = function  ( settings, col ) {
+            $.fn.dataTable.ext.order['dom-checkbox'] = function  ( settings, col ) {
                 return this.api().column( col, {order:'index'} ).nodes().map( function ( td, i ) {
-                    return $$('input', td).prop('checked') ? '1' : '0';
+                    return $('input', td).prop('checked') ? '1' : '0';
                 } );
             }
         {% endif %}
     });
 </script>
 <script>
-    $$(document).ready(function () {
-        $$('[data-toggle="popover"]').popover();
+    $(document).ready(function () {
+        $('[data-toggle="popover"]').popover();
 
         intro_id = 'channels';
         intro = introJs();

@@ -1,28 +1,33 @@
-$def with (plugins, missing_dependencies, current_user)
+{#
+    This file belongs to the ICTV project, written by Nicolas Detienne,
+    Francois Michel, Maxime Piraux, Pierre Reinbold and Ludovic Taffin
+    at Université catholique de Louvain.
 
-$#    This file belongs to the ICTV project, written by Nicolas Detienne,
-$#    Francois Michel, Maxime Piraux, Pierre Reinbold and Ludovic Taffin
-$#    at Université catholique de Louvain.
-$#
-$#    Copyright (C) 2016-2018  Université catholique de Louvain (UCL, Belgium)
-$#
-$#    ICTV is free software: you can redistribute it and/or modify
-$#    it under the terms of the GNU Affero General Public License as published
-$#    by the Free Software Foundation, either version 3 of the License, or
-$#    (at your option) any later version.
-$#
-$#    ICTV is distributed in the hope that it will be useful,
-$#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-$#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-$#    GNU Affero General Public License for more details.
-$#
-$#    You should have received a copy of the GNU Affero General Public License
-$#    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
+    Copyright (C) 2016-2018  Université catholique de Louvain (UCL, Belgium)
 
-$var active_element: Plugins
-$code:
-    feedbacks = get_next_feedbacks()
-    form = pop_previous_form()
+    ICTV is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published
+    by the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    ICTV is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
+#}
+
+
+{% set active_element = "Plugins" %}
+
+{% set feedbacks = get_next_feedbacks() %}
+{% set form = pop_previous_form() %}
+
+{% extends "%s" % base %}
+
+{% block content %}
 <section class="content-header">
     <h1>
         Plugins
@@ -30,39 +35,46 @@ $code:
     </h1>
 </section>
 <section class="content">
-    $def general_feedback(icon, action):
+    {% macro general_feedback(icon, action) %}
         <div class="alert alert-success alert-dismissible">
         <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
-        <h4><i class="icon fa $icon"></i>$action.title()</h4>
-        The plugin <strong><i>$form.name.strip()</i></strong> has been successfully $action.
+        <h4><i class="icon fa {{icon}}"></i>{{action.title()}}</h4>
+        The plugin <strong><i>{{form.name.strip()}}</i></strong> has been successfully {{action}}.
         </div>
 
-    $if feedbacks.has('general', 'plugin_activated'):
-        $:general_feedback('fa-check', 'activated')
+    {% endmacro %}
+    {% if feedbacks.has('general', 'plugin_activated') %}
+        {{ general_feedback('fa-check', 'activated') |safe}}
 
-    $if feedbacks.has('general', 'plugin_disabled'):
-        $:general_feedback('fa-frown-o', 'disabled')
+    {% endif %}
+    {% if feedbacks.has('general', 'plugin_disabled') %}
+        {{ general_feedback('fa-frown-o', 'disabled') |safe}}
 
-    $if feedbacks.has('general', 'plugin_configured'):
-        $:general_feedback('fa-wrench', 'configured')
+    {% endif %}
+    {% if feedbacks.has('general', 'plugin_configured') %}
+        {{ general_feedback('fa-wrench', 'configured') |safe}}
 
-    $if feedbacks.has('general', 'plugin_deleted'):
-        $:general_feedback('fa-trash-o', 'deleted')
+    {% endif %}
+    {% if feedbacks.has('general', 'plugin_deleted') %}
+        {{ general_feedback('fa-trash-o', 'deleted') |safe}}
 
-    $if feedbacks.has('general', 'plugin_activate_not_found'):
+    {% endif %}
+    {% if feedbacks.has('general', 'plugin_activate_not_found') %}
         <div class="alert alert-error alert-dismissible">
             <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
             <h4><i class="icon fa fa-remove"></i>Plugin not found</h4>
-            The plugin <strong><i>$form.name.strip()</i></strong> could not be activated because it has not been found on the server filesystem.
+            The plugin <strong><i>{{form.name.strip()}}</i></strong> could not be activated because it has not been found on the server filesystem.
             Please that check the plugin directory is present and contains files respecting the ICTV plugin standard.
         </div>
 
-    $if feedbacks.has('general', 'plugin_activation_error'):
+    {% endif %}
+    {% if feedbacks.has('general', 'plugin_activation_error') %}
         <div class="alert alert-error alert-dismissible">
             <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
             <h4><i class="icon fa fa-remove"></i>An error occured</h4>
-            The plugin <strong><i>$form.name.strip()</i></strong> could not be activated because an error occured. Please check the plugin log and dependencies.
+            The plugin <strong><i>{{form.name.strip()}}</i></strong> could not be activated because an error occured. Please check the plugin log and dependencies.
         </div>
+    {% endif %}
     <div class="row"><div class="col-md-12">
     <div class="box">
         <div class="box-body">
@@ -94,50 +106,56 @@ $code:
                 </tr>
                 </tfoot>
                 <tbody>
-                $for plugin in plugins:
-                    <tr data-plugin-id="$plugin.id">
+                {% for plugin in plugins %}
+                    <tr data-plugin-id="{{plugin.id}}">
                         <td>
-                            $if plugin.description:
-                                    $plugin.name
+                            {% if plugin.description %}
+                                    {{plugin.name}}
                                 <a type="button" class="btn btn-xs btn-default pull-right" style="margin-top: 5px; "
                                         tabindex="0" role="button" data-trigger="focus"
                                         data-container="body" data-toggle="popover"
                                         data-placement="right"
                                         title="Plugin description"
-                                        data-content="$plugin.description">
+                                        data-content="{{plugin.description}}">
                                     <i class="fa fa-info" style="margin-right: 0 !important;"></i>
                                 </a>
-                            $else:
-                                $plugin.name
+                            {% else %}
+                                {{plugin.name}}
+                            {% endif %}
                         </td>
-                        <td data-plugin-activated="$plugin.activated">
-                            $if plugin.activated == 'yes':
+                        <td data-plugin-activated="{{plugin.activated}}">
+                            {% if plugin.activated == 'yes' %}
                                 <h6 class="label label-success"><i class="fa fa-check"></i>Activated</h6>
-                            $elif plugin.activated == 'no':
+                            {% elif plugin.activated == 'no' %}
                                 <h6 class="label label-danger"><i class="fa fa-frown-o"></i>Disabled</h6>
-                            $elif plugin.activated == 'notfound':
+                            {% elif plugin.activated == 'notfound' %}
                                 <h6 class="label bg-black"><i class="fa fa-remove"></i>Not Found</h6>
 
-                            $if plugin.name not in missing_dependencies:
-                                <h6 class="label bg-black" $:make_tooltip('The state of this plugin dependencies is unknown, either because the plugin cannot be found or because it was not checked.')><i class="fa fa-question"></i>Unknown dependencies</h6>
-                            $elif not missing_dependencies[plugin.name]:
+                            {% endif %}
+                            {% if plugin.name not in missing_dependencies %}
+                                <h6 class="label bg-black" {{ make_tooltip('The state of this plugin dependencies is unknown, either because the plugin cannot be found or because it was not checked.') |safe}}><i class="fa fa-question"></i>Unknown dependencies</h6>
+                            {% elif not missing_dependencies[plugin.name] %}
                                 <h6 class="label label-success"><i class="fa fa-check"></i>Dependencies ok</h6>
-                            $else:
-                                <h6 class="label label-danger" $:make_tooltip('Missing module(s): %s' % ', '.join(missing_dependencies[plugin.name]))><i class="fa fa-remove"></i>Missing dependencies</h6>
+                            {% else %}
+                                <h6 class="label label-danger" {{ make_tooltip('Missing module(s): %s' % ', '.join(missing_dependencies[plugin.name])) |safe}}><i class="fa fa-remove"></i>Missing dependencies</h6>
+                            {% endif %}
                         </td>
-                        <td>$plugin.channels_number</td>
-                        <td>$plugin.screens_number</td>
-                        <td data-activated="$(plugin.activated == 'yes')">
-                            $if current_user.super_admin:
-                                $if plugin.activated != 'notfound':
-                                    <button class="btn btn-xs btn-$('danger' if plugin.activated == 'yes' else 'success')" data-toggle="modal" data-target="#edit-plugin-modal">
-                                        <i class="fa fa-fa fa-thumbs-$('up' if plugin.activated != 'yes' else 'down')"></i>$('Activate' if plugin.activated == 'no' else 'Deactivate')
+                        <td>{{plugin.channels_number}}</td>
+                        <td>{{plugin.screens_number}}</td>
+                        <td data-activated="{{plugin.activated == 'yes'}}">
+                            {% if current_user.super_admin %}
+                                {% if plugin.activated != 'notfound' %}
+                                    <button class="btn btn-xs btn-{{'danger' if plugin.activated == 'yes' else 'success'}}" data-toggle="modal" data-target="#edit-plugin-modal">
+                                        <i class="fa fa-fa fa-thumbs-{{'up' if plugin.activated != 'yes' else 'down'}}"></i>{{'Activate' if plugin.activated == 'no' else 'Deactivate'}}
                                     </button>
-                                    <a class="btn btn-xs btn-default" href="/plugins/$(plugin.id)/config"><span class="glyphicon glyphicon-wrench"></span>Configure</a>
-                                $else:
+                                    <a class="btn btn-xs btn-default" href="/plugins/{{plugin.id}}/config"><span class="glyphicon glyphicon-wrench"></span>Configure</a>
+                                {% else %}
                                     <button class="btn btn-xs btn-danger" data-toggle="modal" data-target="#delete-plugin-modal"><span class="glyphicon glyphicon-trash"></span>Delete</button>
+                                {% endif %}
+                            {% endif %}
                         </td>
                     </tr>
+                {% endfor %}
                 </tbody>
             </table>
 
@@ -195,47 +213,48 @@ $code:
                     <h4 class="modal-title">Delete this plugin</h4>
                 </div>
                 <div class="modal-body">
-                    $code:
-                        fb_value = feedbacks.feedback_value('delete', 'plugin_has_channels') or {}
-                        plugin = fb_value.get('plugin', {})
-                        channels = fb_value.get('channels', [])
+                    {% set fb_value = feedbacks.feedback_value('delete', 'plugin_has_channels') or {} %}
+                    {% set plugin = fb_value.get('plugin', {}) %}
+                    {% set channels = fb_value.get('channels', []) %}
 
-                    $if feedbacks.has('delete', 'plugin_has_channels'):
+                    {% if feedbacks.has('delete', 'plugin_has_channels') %}
                         <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
                             <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
                             Channels using this plugin exist. Deleting it will delete the following channels:
                             <ul>
-                                $for id, name, enabled in channels:
+                                {% for id, name, enabled in channels %}
                                     <li>
-                                        <a href="/channels/$id">$name</a> (<i>$('enabled' if enabled else 'disabled')</i>)
+                                        <a href="/channels/{{id}}">{{name}}</a> (<i>{{'enabled' if enabled else 'disabled'}}</i>)
                                     </li>
+                                {% endfor %}
                             </ul>
                             Please confirm this action by submitting this form again.
                         </div>
                         <input type="hidden" name="confirm-delete" value="confirm-delete">
 
-                    $else:
+                    {% else %}
                         <div id="create-warning-text" class="alert alert-warning" style="display: block;" hidden="">
                             <b>Warning</b>: This operation will delete this plugin and all its configuration. All channels that use this plugin will also be delete.<br>
                             This operation is not reversible.
                         </div>
 
+                    {% endif %}
                     <input type="hidden" name="action" value="delete">
-                    <input type="hidden" id="delete-id" name="id" value="$plugin.get('id')">
+                    <input type="hidden" id="delete-id" name="id" value="{{plugin.get('id')}}">
 
                     <div class="form-group">
                         <label for="edit-name">Plugin name</label>
-                        <input type="text" class="form-control" id="delete-name" placeholder="Name" disabled value="$plugin.get('name')">
+                        <input type="text" class="form-control" id="delete-name" placeholder="Name" disabled value="{{plugin.get('name')}}">
                     </div>
 
                     <div class="form-group">
                         <label for="edit-channels-number">No. of channels</label>
-                        <input type="text" class="form-control" id="delete-channels-number" placeholder="No. of channels" disabled value="$plugin.get('channels_number')">
+                        <input type="text" class="form-control" id="delete-channels-number" placeholder="No. of channels" disabled value="{{plugin.get('channels_number')}}">
                     </div>
 
                     <div class="form-group">
                         <label for="edit-screens-number">No. of screens</label>
-                        <input type="text" class="form-control" id="delete-screens-number" placeholder="No. of screens" disabled value="$plugin.get('screens_number')">
+                        <input type="text" class="form-control" id="delete-screens-number" placeholder="No. of screens" disabled value="{{plugin.get('screens_number')}}">
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -249,61 +268,63 @@ $code:
 
 
 <script>
-    $$(document).ready(function () {
-        $$('#table').on('draw.dt', function() {
-            $$('[data-toggle="popover"]').popover();
+    $(document).ready(function () {
+        $('#table').on('draw.dt', function() {
+            $('[data-toggle="popover"]').popover();
         });
-        $$('#table').DataTable({stateSave: true});
-        $$('#dependencies-btn').click(function(e) {
+        $('#table').DataTable({stateSave: true});
+        $('#dependencies-btn').click(function(e) {
             // Avoid the column to be sorted if we click on this button
             e.stopPropagation();
         });
 
-        $if feedbacks.has_type('delete') and not feedbacks.has('delete', 'ok'):
+        {% if feedbacks.has_type('delete') and not feedbacks.has('delete', 'ok') %}
                 fire_modal('#delete-plugin-modal');
 
+        {% endif %}
         load_modal('#edit-plugin-modal', 'edit-');
         load_modal('#delete-plugin-modal', 'delete-');
 
         function load_modal(modalSelector, prefix) {
-            var $$modal = $$(modalSelector);
-            $$modal.on('show.bs.modal', function(e) {
-                $$td = $$(e.relatedTarget.parentElement).prev();
-                $$modal.find('#'+prefix+'screens-number').val($$td.html());
-                $$td = $$td.prev();
-                $$modal.find('#'+prefix+'channels-number').val($$td.html());
-                $$td = $$td.prev();
-                state = $$td.attr('data-plugin-activated') == 'yes';
+            var $modal = $(modalSelector);
+            $modal.on('show.bs.modal', function(e) {
+                $td = $(e.relatedTarget.parentElement).prev();
+                $modal.find('#'+prefix+'screens-number').val($td.html());
+                $td = $td.prev();
+                $modal.find('#'+prefix+'channels-number').val($td.html());
+                $td = $td.prev();
+                state = $td.attr('data-plugin-activated') == 'yes';
                 if(state) {
-                    $$modal.find('#'+prefix+'state').prop('checked', true)
+                    $modal.find('#'+prefix+'state').prop('checked', true)
                 } else {
-                    $$modal.find('#'+prefix+'state').removeAttr('checked');
+                    $modal.find('#'+prefix+'state').removeAttr('checked');
                 }
-                $$td = $$td.prev();
-                $$modal.find('#'+prefix+'name').val($$td[0].innerText);
-                $$modal.find('#'+prefix+'id').val($$td.parent().attr('data-plugin-id'));
+                $td = $td.prev();
+                $modal.find('#'+prefix+'name').val($td[0].innerText);
+                $modal.find('#'+prefix+'id').val($td.parent().attr('data-plugin-id'));
             });
         }
 
         function fire_modal(modalSelector) {
-                var $$modal = $$(modalSelector);
-                $$modal.removeClass('fade');
-                $$modal.one('hidden.bs.modal', function () {
-                    $$modal.find('.alert').detach();
-                    $$modal.addClass('fade');
-                    $$modal.find('form')[0].reset();
+                var $modal = $(modalSelector);
+                $modal.removeClass('fade');
+                $modal.one('hidden.bs.modal', function () {
+                    $modal.find('.alert').detach();
+                    $modal.addClass('fade');
+                    $modal.find('form')[0].reset();
                 });
-                $$modal.modal('show')
+                $modal.modal('show')
         }
 
 
-        var $$modal = $$('#edit-plugin-modal');
-        $$modal.on('show.bs.modal', function(e) {
-            $$td = $$(e.relatedTarget.parentElement);
-            const disabled = $$td.attr('data-activated') != 'True';
-            $$modal.find('.modal-title').html((disabled ? 'Activate' : 'Deactivate') + ' this plugin');
-            $$modal.find('#edit-state').val(disabled ? 'on' : '');
-            $$modal.find('button[type="submit"]').html('<span class="glyphicon glyphicon-alert"></span>' + (disabled ? 'Activate' : 'Deactivate'))
+        var $modal = $('#edit-plugin-modal');
+        $modal.on('show.bs.modal', function(e) {
+            $td = $(e.relatedTarget.parentElement);
+            const disabled = $td.attr('data-activated') != 'True';
+            $modal.find('.modal-title').html((disabled ? 'Activate' : 'Deactivate') + ' this plugin');
+            $modal.find('#edit-state').val(disabled ? 'on' : '');
+            $modal.find('button[type="submit"]').html('<span class="glyphicon glyphicon-alert"></span>' + (disabled ? 'Activate' : 'Deactivate'))
         });
     });
 </script>
+{% endblock %}

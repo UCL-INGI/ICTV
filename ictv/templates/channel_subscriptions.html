@@ -32,6 +32,10 @@ $code:
                 }
     screen_names = {s.id: s.name for s in possible_screens}
     subscriptions = {}
+
+{% extends "%s" % base %}
+
+{% block content %}
 <section class="content-header" style="margin-bottom: 5px">
     <h1>
         Subscription to channel $channel.name
@@ -234,3 +238,4 @@ $code:
             $$modal.modal('show')
         }
 </script>
+{% endblock %}
