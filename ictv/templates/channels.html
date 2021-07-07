@@ -111,7 +111,7 @@
             {% endmacro %}
             {% macro make_channel_common_actions(channel, active) %}
                 {% if UserPermissions.administrator in current_user.highest_permission_level %}
-                    <button class="btn btn-xs bg-maroon" data-toggle="modal" data-target="#manage-bundles-modal" onclick="data_bundles = $json.dumps([b.id for b in channel.bundles])"><span class="glyphicon glyphicon-gift"></span>Add to bundles</button>
+                    <button class="btn btn-xs bg-maroon" data-toggle="modal" data-target="#manage-bundles-modal" onclick="data_bundles = {{ channel.bundles|map(attribute='id')|tojson() }}"><span class="glyphicon glyphicon-gift"></span>Add to bundles</button>
                     {% if hasattr(channel, 'bundled_channels') %}
                         <a class="btn btn-xs btn-info" href="/channels/{{channel.id}}/manage_bundle"><i class="fa fa-rss"></i>Manage bundle</a>
                     {% endif %}
