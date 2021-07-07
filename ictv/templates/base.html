@@ -168,10 +168,11 @@
                                 </li>
                                 <!-- Menu Footer-->
                                 <li class="user-footer">
-                                    $if show_reset_password:
+                                    {% if show_reset_password %}
                                         <div class="pull-left">
                                             <a href="/reset" class="btn btn-default btn-flat">Reset password</a>
                                         </div>
+                                    {% endif %}
                                     <div class="pull-right">
                                         <form action="/logout" method="post" style="margin: 0;">
                                             <button type="submit" class="btn btn-default btn-flat">Sign out</button>
@@ -251,7 +252,7 @@
     }, 3000);
     $$(window).load(function () {
         $$('div.modal').appendTo('body');
-        var has_toured = $:('true' if user_object.has_toured else 'false');
+        var has_toured = {{ 'true' if user_object.has_toured else 'false'|safe }};
         if (window.intro !== undefined && !has_toured) {
             var steps_key = intro_id + '-steps';
             var is_touring = JSON.parse(localStorage.is_touring || !has_toured) || !has_toured;
