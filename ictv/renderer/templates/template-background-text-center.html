@@ -1,37 +1,42 @@
-$def with (slide)
+{#
+    This file belongs to the ICTV project, written by Nicolas Detienne,
+    Francois Michel, Maxime Piraux, Pierre Reinbold and Ludovic Taffin
+    at Université catholique de Louvain.
 
-$#    This file belongs to the ICTV project, written by Nicolas Detienne,
-$#    Francois Michel, Maxime Piraux, Pierre Reinbold and Ludovic Taffin
-$#    at Université catholique de Louvain.
-$#
-$#    Copyright (C) 2016-2018  Université catholique de Louvain (UCL, Belgium)
-$#
-$#    ICTV is free software: you can redistribute it and/or modify
-$#    it under the terms of the GNU Affero General Public License as published
-$#    by the Free Software Foundation, either version 3 of the License, or
-$#    (at your option) any later version.
-$#
-$#    ICTV is distributed in the hope that it will be useful,
-$#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-$#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-$#    GNU Affero General Public License for more details.
-$#
-$#    You should have received a copy of the GNU Affero General Public License
-$#    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
+    Copyright (C) 2016-2018  Université catholique de Louvain (UCL, Belgium)
 
-$var bg: $:background(content=slide, number=1, editor_default="/static/plugins/editor/images/beach.jpg")
-$var name: Plain image + text centered
-$var description: Plain image in background with text centered
-$code:
-    template_id = get_template_id()
+    ICTV is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published
+    by the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    ICTV is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
+#}
+
+
+{% set bg = background(content=slide, number=1, editor_default="/static/plugins/editor/images/beach.jpg") |safe %}
+{% set name = Plain image + text centered %}
+{% set description = Plain image in background with text centered %}
+{% set template_id = get_template_id() %}
+
+{% extends "%s" % base %}
+
+{% block content %}
 <style>
-    .content.$template_id ul {
+    .content.{{template_id}} ul {
         display: inline-block;
     }
 </style>
-<div class="content bg-dark $template_id">
-    $:title(content=slide, number=1, max_chars=35, editor_type="text", editor_placeholder="Title", editor_label="Title", editor_default="Title", editor_order="1")
+<div class="content bg-dark {{template_id}}">
+    {{title(content=slide, number=1, max_chars=35, editor_type="text", editor_placeholder="Title", editor_label="Title", editor_default="Title", editor_order="1") |safe}}
     <div style="display: flex; flex-direction: row;justify-content: space-around; align-items: center; padding-bottom: 20px">
-        $:text(content=slide, number=1, max_chars=3000, editor_type="textarea", editor_placeholder="Text", editor_label="Text", editor_default="Text", editor_order="3", wrap_in_div=False)
+        {{text(content=slide, number=1, max_chars=3000, editor_type="textarea", editor_placeholder="Text", editor_label="Text", editor_default="Text", editor_order="3", wrap_in_div=False) |safe}}
     </div>
 </div>
+{% endblock %}

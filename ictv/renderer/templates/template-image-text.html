@@ -1,56 +1,61 @@
-$def with (slide)
+{#
+    This file belongs to the ICTV project, written by Nicolas Detienne,
+    Francois Michel, Maxime Piraux, Pierre Reinbold and Ludovic Taffin
+    at Université catholique de Louvain.
 
-$#    This file belongs to the ICTV project, written by Nicolas Detienne,
-$#    Francois Michel, Maxime Piraux, Pierre Reinbold and Ludovic Taffin
-$#    at Université catholique de Louvain.
-$#
-$#    Copyright (C) 2016-2018  Université catholique de Louvain (UCL, Belgium)
-$#
-$#    ICTV is free software: you can redistribute it and/or modify
-$#    it under the terms of the GNU Affero General Public License as published
-$#    by the Free Software Foundation, either version 3 of the License, or
-$#    (at your option) any later version.
-$#
-$#    ICTV is distributed in the hope that it will be useful,
-$#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-$#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-$#    GNU Affero General Public License for more details.
-$#
-$#    You should have received a copy of the GNU Affero General Public License
-$#    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
+    Copyright (C) 2016-2018  Université catholique de Louvain (UCL, Belgium)
 
-$var name: Image on the left + 3 fields
-$var description: Image on the left side followed by text with title and subtitle
-$code:
-    template_id = get_template_id()
+    ICTV is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published
+    by the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    ICTV is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
+#}
+
+
+{% set name = Image on the left + 3 fields %}
+{% set description = Image on the left side followed by text with title and subtitle %}
+{% set template_id = get_template_id() %}
+
+{% extends "%s" % base %}
+
+{% block content %}
 <style>
-    .content.$template_id .flex-container {
+    .content.{{template_id}} .flex-container {
         display: flex;
         justify-content: center;
         align-items: center
     }
 
-    .content.$template_id .flex-item {
+    .content.{{template_id}} .flex-item {
         flex: auto;
         margin: auto;
     }
 </style>
 <div class="logo logo-ucl">
-    $:logo(content=slide, number=1, editor_type="image", editor_placeholder="Choose a logo", editor_default="/static/plugins/editor/placeholders/270x350.png", editor_label="Logo", editor_order="6")
+    {{ logo(content=slide, number=1, editor_type="image", editor_placeholder="Choose a logo", editor_default="/static/plugins/editor/placeholders/270x350.png", editor_label="Logo", editor_order="6") |safe}}
 </div>
 <div class="logo logo-fac">
-    $:logo(content=slide, number=2, editor_type="image", editor_placeholder="Choose a logo", editor_default="/static/plugins/editor/placeholders/270x350.png", editor_label="Logo", editor_order="5")
+    {{ logo(content=slide, number=2, editor_type="image", editor_placeholder="Choose a logo", editor_default="/static/plugins/editor/placeholders/270x350.png", editor_label="Logo", editor_order="5") |safe}}
 </div>
-<div class="content $template_id">
-    $:title(content=slide, number=1, max_chars=25, editor_type="text", editor_placeholder="Title", editor_label="Title", editor_default="Title", editor_order="1")
-    $:subtitle(content=slide, number=1, max_chars=130, editor_type="text", editor_placeholder="Subtitle", editor_label="Subtitle", editor_default="Subtitle", editor_order="2")
+<div class="content {{template_id}}">
+    {{ title(content=slide, number=1, max_chars=25, editor_type="text", editor_placeholder="Title", editor_label="Title", editor_default="Title", editor_order="1") |safe}}
+    {{ subtitle(content=slide, number=1, max_chars=130, editor_type="text", editor_placeholder="Subtitle", editor_label="Subtitle", editor_default="Subtitle", editor_order="2") |safe}}
 
     <div class="flex-container">
         <div class="flex-item">
-            $:img(content=slide, number=1, editor_type="image", editor_placeholder="Choose an image", editor_label="Image", editor_default="/static/plugins/editor/placeholders/270x350.png", editor_order="4")
+            {{ img(content=slide, number=1, editor_type="image", editor_placeholder="Choose an image", editor_label="Image", editor_default="/static/plugins/editor/placeholders/270x350.png", editor_order="4") |safe}}
         </div>
         <div class="flex-item">
-            $:text(content=slide, number=1, max_chars=640, style="margin: 20px", editor_type="textarea", editor_placeholder="Text", editor_label="Text", editor_default="Text", editor_order="3")
+            {{ text(content=slide, number=1, max_chars=640, style="margin: 20px", editor_type="textarea", editor_placeholder="Text", editor_label="Text", editor_default="Text", editor_order="3") |safe}}
         </div>
     </div>
 </div>
+{% endblock %}

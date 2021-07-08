@@ -1,31 +1,36 @@
-$def with (slide)
+{#
+    This file belongs to the ICTV project, written by Nicolas Detienne,
+    Francois Michel, Maxime Piraux, Pierre Reinbold and Ludovic Taffin
+    at Université catholique de Louvain.
 
-$#    This file belongs to the ICTV project, written by Nicolas Detienne,
-$#    Francois Michel, Maxime Piraux, Pierre Reinbold and Ludovic Taffin
-$#    at Université catholique de Louvain.
-$#
-$#    Copyright (C) 2016-2018  Université catholique de Louvain (UCL, Belgium)
-$#
-$#    ICTV is free software: you can redistribute it and/or modify
-$#    it under the terms of the GNU Affero General Public License as published
-$#    by the Free Software Foundation, either version 3 of the License, or
-$#    (at your option) any later version.
-$#
-$#    ICTV is distributed in the hope that it will be useful,
-$#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-$#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-$#    GNU Affero General Public License for more details.
-$#
-$#    You should have received a copy of the GNU Affero General Public License
-$#    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
+    Copyright (C) 2016-2018  Université catholique de Louvain (UCL, Belgium)
 
-$var bg: $:background(content=slide, number=1, editor_default="/static/plugins/editor/images/beach.jpg")
-$var name: Plain image + QR + legend + logos
-$var description: Plain image in background with QR Code and legend and two top logos
-$code:
-    template_id = get_template_id()
+    ICTV is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published
+    by the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    ICTV is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
+#}
+
+
+{% set bg = background(content=slide, number=1, editor_default="/static/plugins/editor/images/beach.jpg") |safe %}
+{% set name = Plain image + QR + legend + logos %}
+{% set description = Plain image in background with QR Code and legend and two top logos %}
+
+{% set template_id = get_template_id() %}
+
+{% extends "%s" % base %}
+
+{% block content %}
 <style>
-    .content.$template_id .text {
+    .content.{{template_id}} .text {
         margin-top: 50%;
         text-align: center !important;
         background-color: rgba(0, 0, 0, 0.45);
@@ -35,19 +40,20 @@ $code:
     }
 </style>
 <div class="logo logo-ucl" >
-    $:logo(content=slide, number=1, editor_type="image", editor_placeholder="Choose a logo", editor_default="/static/plugins/editor/placeholders/270x350.png", editor_label="Logo", editor_order="6")
+    {{ logo(content=slide, number=1, editor_type="image", editor_placeholder="Choose a logo", editor_default="/static/plugins/editor/placeholders/270x350.png", editor_label="Logo", editor_order="6") |safe}}
 </div>
 <div class="logo logo-r">
-    $:logo(content=slide,style="max-width:210px !important;max-height:210px !important;", number=2, editor_type="image", editor_placeholder="Choose a logo", editor_default="/static/plugins/editor/placeholders/270x350.png", editor_label="Logo", editor_order="6")
+    {{ logo(content=slide,style="max-width:210px !important;max-height:210px !important;", number=2, editor_type="image", editor_placeholder="Choose a logo", editor_default="/static/plugins/editor/placeholders/270x350.png", editor_label="Logo", editor_order="6") |safe}}
 </div>
 <div class="flex-container">
     <div class="flex-item" style="margin-left:100px;margin-top:500px">
-        $:img(content=slide, style="float: right; max-width: 200px;", number=1, editor_type="image", editor_placeholder="Choose an image", editor_label="Image", editor_default="/static/plugins/editor/placeholders/270x350.png", editor_order="1")
+        {{ img(content=slide, style="float: right; max-width: 200px;", number=1, editor_type="image", editor_placeholder="Choose an image", editor_label="Image", editor_default="/static/plugins/editor/placeholders/270x350.png", editor_order="1") |safe}}
     </div>
 </div>
-<div class="content $template_id">
+<div class="content {{template_id}}">
 
-    $:text(content=slide, number=1, max_chars=940, editor_type="textarea", editor_placeholder="Text", editor_label="Text", editor_default="Text", editor_order="2")
+    {{ text(content=slide, number=1, max_chars=940, editor_type="textarea", editor_placeholder="Text", editor_label="Text", editor_default="Text", editor_order="2") |safe}}
 
 </div>
+{% endblock %}
 
