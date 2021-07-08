@@ -1,131 +1,147 @@
-$def with (bundle,user,subscribed_channels,plugin_channels,bundle_channels)
+{#
+    This file belongs to the ICTV project, written by Nicolas Detienne,
+    Francois Michel, Maxime Piraux, Pierre Reinbold and Ludovic Taffin
+    at Université catholique de Louvain.
 
-$#    This file belongs to the ICTV project, written by Nicolas Detienne,
-$#    Francois Michel, Maxime Piraux, Pierre Reinbold and Ludovic Taffin
-$#    at Université catholique de Louvain.
-$#
-$#    Copyright (C) 2016-2018  Université catholique de Louvain (UCL, Belgium)
-$#
-$#    ICTV is free software: you can redistribute it and/or modify
-$#    it under the terms of the GNU Affero General Public License as published
-$#    by the Free Software Foundation, either version 3 of the License, or
-$#    (at your option) any later version.
-$#
-$#    ICTV is distributed in the hope that it will be useful,
-$#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-$#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-$#    GNU Affero General Public License for more details.
-$#
-$#    You should have received a copy of the GNU Affero General Public License
-$#    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
+    Copyright (C) 2016-2018  Université catholique de Louvain (UCL, Belgium)
 
-$code:
-    feedbacks = get_feedbacks()
-    form = pop_previous_form()
-    subscribed =   {channel.id:
-                    {
-                        'channel_name': channel.name,
-                        'plugin_channel': hasattr(channel, 'plugin')
-                    }
-                    for channel in subscribed_channels
+    ICTV is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published
+    by the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    ICTV is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
+#}
+
+
+{% set feedbacks = get_feedbacks() %}
+{% set form = pop_previous_form() %}
+{% set subscribed =   {channel.id:
+                {
+                    'channel_name': channel.name,
+                    'plugin_channel': hasattr(channel, 'plugin')
                 }
-    plugin_channels_names = {c.id: c.name for c in plugin_channels}
-    bundle_channels_names = {c.id: c.name for c in bundle_channels}
+                for channel in subscribed_channels
+            } %}
+{% set plugin_channels_names = {c.id: c.name for c in plugin_channels} %}
+{% set bundle_channels_names = {c.id: c.name for c in bundle_channels} %}
+
+{% extends "%s" % base %}
+
+{% block content %}
 <section class="content-header" style="margin-bottom: 5px">
     <h1>
         Manage bundle
-        <small>List and update all channels of $bundle.name</small>
+        <small>List and update all channels of {{bundle.name}}</small>
         <button type="button" data-toggle="modal" data-target="#confirm-subs-modal" class="btn btn-success pull-right">
             <i class="fa fa-check" aria-hidden="true"></i> Update channels offered by the bundle
         </button>
     </h1>
 </section>
 <section class="content">
-    $def create_alert(title, message, icon, type="success"):
-        <div class="alert alert-$type alert-dismissible">
+    {% macro create_alert(title, message, icon, type="success") %}
+        <div class="alert alert-{{type}} alert-dismissible">
             <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
-            <h4><i class="icon fa $icon"></i>$title</h4>
-            $message
+            <h4><i class="icon fa {{icon}}"></i>{{title}}</h4>
+            {{message}}
         </div>
 
-    $if feedbacks.has('manage_channels', 'ok'):
-        $:create_alert("Applied", "These changes have been successfully applied.", "fa-rss")
+    {% endmacro %}
+    {% if feedbacks.has('manage_channels', 'ok') %}
+        {{ create_alert("Applied", "These changes have been successfully applied.", "fa-rss") |safe}}
 
-    $if feedbacks.has('manage_channels', 'nothing_changed'):
-        $:create_alert("Nothing changed", "The changes you submitted did not affect the channels offered by the bundle", "fa-rss", "info")
+    {% endif %}
+    {% if feedbacks.has('manage_channels', 'nothing_changed') %}
+        {{ create_alert("Nothing changed", "The changes you submitted did not affect the channels offered by the bundle", "fa-rss", "info") |safe}}
 
-    $if feedbacks.has('manage_channels', 'added_to_itself'):
-        $:create_alert("Forbidden", "You cannot add a bundle to itself", "fa-times", "error")
+    {% endif %}
+    {% if feedbacks.has('manage_channels', 'added_to_itself') %}
+        {{ create_alert("Forbidden", "You cannot add a bundle to itself", "fa-times", "error") |safe}}
 
-    $if feedbacks.has('manage_channels', 'disabled_plugin'):
-        $:create_alert("Forbidden", "You cannot add a channel with a disabled plugin to your bundle", "fa-times", "error")
+    {% endif %}
+    {% if feedbacks.has('manage_channels', 'disabled_plugin') %}
+        {{ create_alert("Forbidden", "You cannot add a channel with a disabled plugin to your bundle", "fa-times", "error") |safe}}
 
-    $if feedbacks.has('manage_channels', 'bundle_cycle'):
-        $:create_alert("Forbidden", "Adding channel %s to your bundle created a cycle of bundle: this bundle contains itself because it is present through the bundle %s" % (form.channel_name, form.channel_name), "fa-times", "error")
+    {% endif %}
+    {% if feedbacks.has('manage_channels', 'bundle_cycle') %}
+        {{ create_alert("Forbidden", "Adding channel %s to your bundle created a cycle of bundle: this bundle contains itself because it is present through the bundle %s" % (form.channel_name, form.channel_name), "fa-times", "error") |safe}}
 
+    {% endif %}
     <div class="row">
-        $for tuple in [("Plugin Channel", plugin_channels), ("Bundle", bundle_channels)]:
-            $code:
-                type_name, channels = tuple
+        {% for tuple in [("Plugin Channel", plugin_channels), ("Bundle", bundle_channels)] %}
+            {% set type_name, channels = tuple %}
             <div class="col-md-6">
                 <div class="box">
                     <div class="box-body">
                         <table class="table table-hover table-bordered subscriptions-table" cellspacing="0" width="100%">
                             <thead>
                             <tr>
-                                <th>$type_name</th>
+                                <th>{{type_name}}</th>
                                 <th>In bundle</th>
                             </tr>
                             </thead>
                             <tfoot>
                             <tr>
-                                <th>$type_name</th>
+                                <th>{{type_name}}</th>
                                 <th>In bundle</th>
                             </tr>
                             </tfoot>
                             <tbody>
-                            $for channel in channels:
-                                <tr data-channel-id="$channel.id" $:('data-channel-activated="{}"'.format(channel.plugin.activated) if hasattr(channel, 'plugin') else 'data-channel-activated="yes"')
-                                $:('class="not-activated"' if hasattr(channel, 'plugin') and channel.plugin.activated != 'yes' else '')>
+                            {% for channel in channels %}
+                                <tr data-channel-id="{{channel.id}}" {{'data-channel-activated="{}"'.format(channel.plugin.activated) if hasattr(channel, 'plugin') else 'data-channel-activated="yes"' |safe}}
+                                {{ ('class="not-activated"' if hasattr(channel, 'plugin') and channel.plugin.activated != 'yes' else '' |safe}}> 
                                 <td>
-                                    $if type_name == "Bundle":
+                                    {% if type_name == "Bundle" %}
                                         <div class="accordion">
-                                            $channel.name <i class="fa fa-bars" aria-hidden="true"></i>
-                                                $if not channel.enabled:
+                                            {{channel.name}} <i class="fa fa-bars" aria-hidden="true"></i>
+                                                {% if not channel.enabled %}
+                                                {% endif %}
                                                 <a type="button" class="btn btn-xs btn-warning pull-right" style="margin-top: 5px; margin-right: 5px">
-                                                    $:make_tooltip(info['channel']['enabled']['channel_not_enabled'], icon=True, icon_class='fa-exclamation-triangle')
+                                                    {{ make_tooltip(info['channel']['enabled']['channel_not_enabled'], icon=True, icon_class='fa-exclamation-triangle') |safe}}
                                                 </a>
                                             <div>
-                                                $for elem in subscribed_channels:
-                                                <p>$elem.name</p>
+                                                {% for elem in subscribed_channels %}
+                                                {% endfor %}
+                                                <p>{{elem.name}}</p>
                                             </div>
                                         </div>
-                                    $else:
-                                        $channel.name
-                                        $if not channel.enabled:
+                                    {% else %}
+                                        {{channel.name}}
+                                        {% if not channel.enabled %}
                                             <a type="button" class="btn btn-xs btn-warning pull-right" style="margin-top: 5px; margin-right: 5px">
-                                                $:make_tooltip(info['channel']['enabled']['channel_not_enabled'], icon=True, icon_class='fa-exclamation-triangle')
+                                                {{ make_tooltip(info['channel']['enabled']['channel_not_enabled'], icon=True, icon_class='fa-exclamation-triangle') |safe}}
                                             </a>
+                                        {% endif %}
+                                    {% endif %}
                                 </td>
                                 <td>
-                                    <input type="checkbox" class="channel-add-to-bundle-checkbox" data-channel-id="$channel.id"
-                                           value="subs" $('disabled' if channel.id == bundle.id or (channel.id not in subscribed and hasattr(channel, 'plugin') and channel.plugin.activated != 'yes') else '')
-                                           $("checked" if channel.id in subscribed else '')>
-                                    $if hasattr(channel, 'plugin') and channel.plugin.activated != 'yes':
+                                    <input type="checkbox" class="channel-add-to-bundle-checkbox" data-channel-id="{{channel.id}}"
+                                           value="subs" {{'disabled' if channel.id == bundle.id or (channel.id not in subscribed and hasattr(channel, 'plugin') and channel.plugin.activated != 'yes') else ''}}
+                                           {{"checked" if channel.id in subscribed else ''}}>
+                                    {% if hasattr(channel, 'plugin') and channel.plugin.activated != 'yes' %}
                                         <a type="button" class="btn btn-xs btn-warning pull-right" style="margin-top: 5px; ">
-                                            $:make_tooltip(info['bundle']['misc']['not-activated-plugin'], icon=True, icon_class='fa-exclamation-triangle')
+                                            {{ make_tooltip(info['bundle']['misc']['not-activated-plugin'], icon=True, icon_class='fa-exclamation-triangle') |safe}}
                                         </a>
-                                    $elif channel.id == bundle.id:
+                                    {% elif channel.id == bundle.id %}
                                         <a type="button" class="btn btn-xs btn-default pull-right" style="margin-top: 5px; ">
-                                            $:make_tooltip(info['bundle']['subscribe_to_itself'], icon=True, icon_class='fa-info')
+                                            {{ make_tooltip(info['bundle']['subscribe_to_itself'], icon=True, icon_class='fa-info') |safe}}
                                         </a>
+                                    {% endif %}
                                 </td>
                                 </tr>
+                            {% endfor %}
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
+        {% endfor %}
     </div>
 </section>
 
@@ -140,7 +156,7 @@ $code:
                 </div>
                 <div class="modal-body">
                     <div id="summary-message" hidden>
-                        Do you confirm these change in channels of $bundle.name ?
+                        Do you confirm these change in channels of {{bundle.name}} ?
                         <div id="subscriptions-summary"></div>
                     </div>
                     <div id="summary-message-empty">
@@ -161,15 +177,16 @@ $code:
 
 <script src="/static/js/clipboard.min.js"></script>
 <script>
-    $$(document).ready(function () {
+    $(document).ready(function () {
 
-        const dataTable = $$('.subscriptions-table').DataTable({stateSave: true});
+        const dataTable = $('.subscriptions-table').DataTable({stateSave: true});
 
-        $if feedbacks.has_type('subscribe') and not feedbacks.has('subscribe', 'ok'):
+        {% if feedbacks.has_type('subscribe') and not feedbacks.has('subscribe', 'ok') %}
             fire_modal('#subscription-modal');
 
-        $$('.channel-add-to-bundle-checkbox').change(function(e){
-            const checkbox = $$(this);
+        {% endif %}
+        $('.channel-add-to-bundle-checkbox').change(function(e){
+            const checkbox = $(this);
             const channel_id = checkbox.attr("data-channel-id");
             if(channel_id in subscribed) {  // in the original state, the screen is subscribed to this channel
                 if(checkbox.prop("checked") && channel_id in subscriptions_diff)   delete subscriptions_diff[channel_id];    // we return to the originan state
@@ -181,10 +198,10 @@ $code:
         });
 
         dataTable.on( 'draw.dt', function () {
-            let checkboxes = $$('.channel-add-to-bundle-checkbox');
+            let checkboxes = $('.channel-add-to-bundle-checkbox');
             checkboxes.off("change");
             checkboxes.change(function(e){
-                const checkbox = $$(this);
+                const checkbox = $(this);
                 const channel_id = checkbox.attr("data-channel-id");
                 if(channel_id in subscribed) {  // in the original state, the screen is subscribed to this channel
                     if(checkbox.prop("checked") && channel_id in subscriptions_diff)   delete subscriptions_diff[channel_id];    // we return to the originan state
@@ -196,7 +213,7 @@ $code:
             });
         } );
 
-        const modaledit = $$('#confirm-subs-modal');
+        const modaledit = $('#confirm-subs-modal');
         modaledit.on('show.bs.modal', function(){
             const to_sub = [];
             const to_unsub = [];
@@ -206,9 +223,9 @@ $code:
                 // record the action in the correct list
                 list.push(parseInt(channel_id))
             }
-            const subscriptionsSummary = $$('#subscriptions-summary');
-            const summaryMessage = $$('#summary-message');
-            const summaryMessageEmpty = $$('#summary-message-empty');
+            const subscriptionsSummary = $('#subscriptions-summary');
+            const summaryMessage = $('#summary-message');
+            const summaryMessageEmpty = $('#summary-message-empty');
             subscriptionsSummary.html("");
             if(to_sub.length > 0) {
                 summaryMessage.show();
@@ -239,33 +256,34 @@ $code:
                 summaryMessageEmpty.show();
                 subscriptionsSummary.append("No changes have been done.");
             }
-            $$('#form-diff').val(JSON.stringify(subscriptions_diff));
+            $('#form-diff').val(JSON.stringify(subscriptions_diff));
         });
     });
 
     const subscriptions_diff = {};
 
-    const subscribed = $:json.dumps(subscribed);
+    const subscribed = {{ json.dumps(subscribed) |safe}};
 
-    const pluginChannels = $:json.dumps(plugin_channels_names);
+    const pluginChannels = {{ json.dumps(plugin_channels_names) |safe}};
 
-    const bundleChannels = $:json.dumps(bundle_channels_names);
+    const bundleChannels = {{ json.dumps(bundle_channels_names) |safe}};
 
     function fire_modal(modalSelector) {
-        const $$modal = $$(modalSelector);
-            $$modal.removeClass('fade');
-            $$modal.one('hidden.bs.modal', function () {
-                $$modal.find('.alert').detach();
-                $$modal.addClass('fade');
+        const $modal = $(modalSelector);
+            $modal.removeClass('fade');
+            $modal.one('hidden.bs.modal', function () {
+                $modal.find('.alert').detach();
+                $modal.addClass('fade');
             });
-            $$modal.modal('show')
+            $modal.modal('show')
         }
 </script>
 <script>
-     $$( function() {
-        $$( ".accordion" ).accordion({
+     $( function() {
+        $( ".accordion" ).accordion({
           collapsible: true,
           active:false
         });
       } );
 </script>
+{% endblock %}
