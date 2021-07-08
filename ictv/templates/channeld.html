@@ -47,7 +47,7 @@
             <div class="box">
                 <div class="box-body">
                     <h4>Description</h4>
-                    {% if channel.description is not None %}
+                    {% if channel.description %}
                         <div class="panel panel-default">
                             <div class="panel-body">
                                 {{channel.description}}
@@ -164,7 +164,7 @@
                         <div style="margin-top: 8px; display: inline-block;">
                         This channel is automatically updated every
                         {% if channel.cache_validity % 60 == 0 %}
-                            {{int(channel.cache_validity / 60)}} hour{{'s.' if channel.cache_validity / 60 > 1 else '.'}}
+                            {{(channel.cache_validity // 60)}} hour{{'s.' if channel.cache_validity / 60 > 1 else '.'}}
                         {% else %}
                             {{channel.cache_validity}} minutes{{'s.' if channel.cache_validity > 1 else '.'}}
                         {% endif %}
@@ -261,7 +261,7 @@
 
 <script>
     const $modal_bundles = $('#manage-bundles-modal');
-    const bundled_channels = {{ json.dumps([b.id for b in channel.bundles]) |safe}};
+    const bundled_channels = {{ channel.bundles|map(attribute="id")|list|tojson()|safe }};
     const diff = {};
 
     $.fn.dataTable.ext.order['dom-checkbox'] = function (settings, col) {

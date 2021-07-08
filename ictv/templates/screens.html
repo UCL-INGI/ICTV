@@ -121,11 +121,11 @@
                         <td>{{ (screen.orientation if screen.orientation else "") }}</td>
                         {% if UserPermissions.administrator in highest_permission_level %}
                             <td>{{ (screen.get_macs_string() if screen.macs else 'Not set') }}</td>
-                            <td>{{ (screen.last_access.strftime("%Y-%m-%d %H:%M:%S") if screen.last_access is not None else '~') }}</td>
-                            <td>{{ (screen.last_ip if screen.last_ip is not None else '~') }}</td>
+                            <td>{{ (screen.last_access.strftime("%Y-%m-%d %H:%M:%S") if screen.last_access else '~') }}</td>
+                            <td>{{ (screen.last_ip if screen.last_ip else '~') }}</td>
                         {% endif %}
                         <td>
-                                {% if screen.last_access is None or (screen_status_validity - screen.last_access) > max_inactivity_period %}
+                                {% if not screen.last_access or (screen_status_validity - screen.last_access) > max_inactivity_period %}
                                     <h6 class="label bg-black"><i class="fa fa-remove"></i>Not connected</h6>
                                 {% elif screen.last_access > screen_status_validity %}
                                     <h6 class="label label-success"><i class="fa fa-check"></i>Up</h6>

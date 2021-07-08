@@ -129,14 +129,15 @@
                                     {% endif %}
 
                                     {% set screens = (user.screens | list) %}
-                                    {% set tooltip_message = '%s is administrator of the following screens:\n' % (user.fullname if user.fullname else user.email) %}
+                                    {% set tooltip_message = ['%s is administrator of the following screens:\n' % (user.fullname if user.fullname else user.email)] %}
 
+                                    {# TODO seek a more elegant workaround #}
                                     {% for s in screens %}
-                                      {% set tooltip_message = tooltip_message + s.name +", ("+ s.building.name + ")\n" %}
+                                      <div style="display:none">{{ tooltip_message.append("%s, (%s)\n" | format(s.name, s.building.name)) }}</div>
                                     {% endfor %}
 
                                     {% if screens %}
-                                        <h6 class="label bg-olive" {{ make_tooltip(tooltip_message) | safe }}><i class="fa fa-user"></i>Screen administrator</h6>
+                                        <h6 class="label bg-olive" {{ make_tooltip(tooltip_message|join) | safe }}><i class="fa fa-user"></i>Screen administrator</h6>
                                     {% endif %}
                                     {% if not admin_channels and not contrib_channels and not screens and UserPermissions.administrator not in user.highest_permission_level %}
                                         <h6 class="label label-default"><i class="fa fa-circle-o"></i>None</h6>

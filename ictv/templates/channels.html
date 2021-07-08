@@ -45,7 +45,7 @@
     {% endmacro %}
     {% set types = [('create', 'fa-check'), ('edit', 'fa-pencil'), ('delete', 'fa-trash-o'), ('configure', 'fa-wrench')] %}
     {% set objects = ['channel', 'bundle'] %}
-    
+
 
     {% for object in objects %}
         {% for type, icon in types %}
@@ -111,7 +111,7 @@
             {% endmacro %}
             {% macro make_channel_common_actions(channel, active) %}
                 {% if UserPermissions.administrator in current_user.highest_permission_level %}
-                    <button class="btn btn-xs bg-maroon" data-toggle="modal" data-target="#manage-bundles-modal" onclick="data_bundles = {{ channel.bundles|map(attribute='id')|tojson() }}"><span class="glyphicon glyphicon-gift"></span>Add to bundles</button>
+                    <button class="btn btn-xs bg-maroon" data-toggle="modal" data-target="#manage-bundles-modal" onclick="data_bundles = {{ channel.bundles|map(attribute='id')|list|tojson() }}"><span class="glyphicon glyphicon-gift"></span>Add to bundles</button>
                     {% if hasattr(channel, 'bundled_channels') %}
                         <a class="btn btn-xs btn-info" href="/channels/{{channel.id}}/manage_bundle"><i class="fa fa-rss"></i>Manage bundle</a>
                     {% endif %}
@@ -122,7 +122,6 @@
                 {% if (channel.subscription_right in ['restricted', 'private'] and current_user not in channel.authorized_subscribers and current_user.owns_screen()) %}
                     <a class="btn btn-xs btn-success" href="/channels/{{channel.id}}/request/{{current_user.id}}"><i class="fa fa-envelope-o"></i>Request subscription</a>
                 {% endif %}
-
             {% endmacro %}
             <div id="plugin-channels" class="tab-pane">
                 <table class="table table-hover table-bordered" cellspacing="0" width="100%" data-page-length='25'>
@@ -170,7 +169,7 @@
                                 {% if channel.cache_activated %}
                                     Every
                                     {% if channel.cache_validity % 60 == 0 %}
-                                        {{int(channel.cache_validity / 60)}} hour{{'s' if channel.cache_validity / 60 > 1 else ''}}
+                                        {{(channel.cache_validity // 60)}} hour{{'s' if channel.cache_validity / 60 > 1 else ''}}
                                     {% else %}
                                         {{channel.cache_validity}} minute{{'s' if channel.cache_validity > 1 else ''}}
                                     {% endif %}
@@ -240,9 +239,10 @@
                     </tfoot>
                     <tbody>
                         {% for channel in bundles %}
-                            {% set popover_content = '' %}
+                            {% set popover_content = [''] %}
                             {% for c in channel.bundled_channels %}
-                                {% set popover_content = popover_content + '<a href="channel/%d">%s</a><br>' % (c.id, c.name) %}
+                                {# TODO seek better workaround #}
+                                <div style="display:none"> {{popover_content.append('<a href="channel/%d">%s</a><br>'|format(c.id, c.name))}}</div>
                             {% endfor %}
                             <tr data-channel-id="{{channel.id}}" data-channel-description="{{channel.description}}"
                                 data-channel-name="{{channel.name}}" data-channel-enabled="{{'yes' if channel.enabled else 'no'}}">
@@ -250,7 +250,7 @@
                                 <td>
                                     {{ channel.bundled_channels.count() }}
                                     <a href="#" class="btn btn-xs btn-default pull-right" style="margin-top: 5px;"
-                                       data-content="{{ popover_content }}"
+                                       data-content='{{ popover_content | join | safe }}'
                                        data-container="body" data-toggle="popover"
                                        data-placement="right" data-original-title="Channels contained in this bundle"
                                        data-html="true">
@@ -693,7 +693,7 @@
                                 {% for bundle in bundles %}
                                     <tr data-bundle-id="{{bundle.id}}">
                                         <td>
-                                            <a href="/channel/{{channel.id}}">{{bundle.name}}</a>
+                                            <a href="/channel/{{bundle.id}}">{{bundle.name}}</a>
                                             {% if bundle.description %}
                                                 <a type="button" class="btn btn-xs btn-default pull-right"
                                                    style="margin-top: 5px; "
@@ -723,7 +723,7 @@
                                             {% endif %}
                                         </td>
                                         <td>
-                                            <input type="checkbox" class="bundle-checkbox" {{'checked' if bundle in channel.bundles else '' }}>
+                                            <input type="checkbox" class="bundle-checkbox" {#'checked' if bundle in channel.bundles else '' #}>
                                         </td>
                                     </tr>
                                 {% endfor %}
@@ -881,7 +881,6 @@
                 </div>
             </div>
         </div>
-
     {% endif %}
 {% endif %}
 <script>
@@ -934,7 +933,7 @@
             {% endif %}
             {% if feedbacks.has_type('delete-channel') and not feedbacks.has('delete-channel', 'ok') %}
                 fire_modal('#delete-channel-modal');
-            
+
             {% endif %}
             {% if feedbacks.has_type('create-bundle') and not feedbacks.has('create-bundle', 'ok') %}
                 fire_modal('#create-bundle-modal');
