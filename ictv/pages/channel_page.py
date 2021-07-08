@@ -261,13 +261,15 @@ class ChannelPage(ICTVAuthPage):
                 writable_params.append((param_id, param_attrs))
         readable_params, writable_params = self.get_params(channel, current_user)
         is_admin = current_user.super_admin or channel.has_admin(self.session['user']['id'])
+        import re
         return self.renderer.channel(
             channel=channel,
             templates=templates,
             readable_params=readable_params,
             writable_params=writable_params,
             can_modify_cache=current_user.super_admin,
-            can_modify_capsule_filter=current_user.super_admin
+            can_modify_capsule_filter=current_user.super_admin,
+            pattern=re.compile(r"list\[.*\]")
         )
 
     @staticmethod

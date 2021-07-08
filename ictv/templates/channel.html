@@ -19,13 +19,14 @@
     along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
 #}
 
-{% set pattern = re.compile(r"list\[.*\]") %}
 {% set feedbacks = get_feedbacks() %}
 {% set form = pop_previous_form() %}
 
 
 {% macro make_list_string(values, add_text, disabled) %}
-    {% set make_field = lambda v : ('<input type="text" name="%s" class="form-control" placeholder="%s" value="' + escape(v) + '" required' + (' disabled>' if disabled else '>')) % (param_id, param_attrs['placeholder']) %}
+    {% macro make_field(v) %}
+      <input type="text" name="{{param_id}}" class="form-control" placeholder="{{param_attrs['placeholder']}}" value="{{escape(v)}}" required {{ 'disabled>' if disabled else '>'}}
+    {% endmacro %}
     {% for v in values %}
         {% if not loop.first %}
             <div class="input-group">
@@ -219,7 +220,7 @@
             <div class="box">
                 <div class="box-header">
                     <h3 class="box-title">Plugin configuration</h3>
-                    {% if len(writable_params) > 0 %}
+                    {% if (writable_params | length) > 0 %}
                         <button type="button" data-reset-all="true" class="btn btn-sm btn-info pull-right reset-button" data-toggle="modal" data-target="#reset-config-modal">
                             <span class="glyphicon glyphicon-repeat"></span>Reset configuration
                         </button>
@@ -369,7 +370,7 @@
         var btn = $(e.currentTarget);
         if(btn.attr("data-reset-all") == "true"){
             var params_ul = document.createElement('ul');
-            var unesc = $('<div />').html("{{ json.dumps([x[1]['name'] for x in writable_params]) }}").text();
+            var unesc = $('<div />').html("{{ writable_params | map(attribute="1") | selectattr("name") | list | tojson }}").text();
             var param_names = JSON.parse(unesc);
             for(var index in param_names) {
                 var param_li = document.createElement('li');
