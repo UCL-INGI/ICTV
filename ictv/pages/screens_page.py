@@ -78,6 +78,7 @@ class ScreensPage(ICTVAuthPage):
             screens=Screen.get_visible_screens_of(u),
             buildings=Building.select(),
             user=u,
+            highest_permission_level=u.highest_permission_level,
             users=User.select(),
             channels=Channel.get_screens_channels_from(user=u),
             subscriptions=u.get_subscriptions_of_owned_screens(),

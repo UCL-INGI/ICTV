@@ -1,37 +1,32 @@
-$def with (screens, buildings, user, users, channels, subscriptions, screen_status_validity, max_inactivity_period)
+{#
 
-$#    This file belongs to the ICTV project, written by Nicolas Detienne,
-$#    Francois Michel, Maxime Piraux, Pierre Reinbold and Ludovic Taffin
-$#    at Université catholique de Louvain.
-$#
-$#    Copyright (C) 2016-2018  Université catholique de Louvain (UCL, Belgium)
-$#
-$#    ICTV is free software: you can redistribute it and/or modify
-$#    it under the terms of the GNU Affero General Public License as published
-$#    by the Free Software Foundation, either version 3 of the License, or
-$#    (at your option) any later version.
-$#
-$#    ICTV is distributed in the hope that it will be useful,
-$#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-$#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-$#    GNU Affero General Public License for more details.
-$#
-$#    You should have received a copy of the GNU Affero General Public License
-$#    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
+    This file belongs to the ICTV project, written by Nicolas Detienne,
+    Francois Michel, Maxime Piraux, Pierre Reinbold and Ludovic Taffin
+    at Université catholique de Louvain.
 
-$code
-    def get_data_edit_object(screen):
-        object = screen.to_dictionary(['name', 'comment', 'location'])
-        object['screenid'] = screen.id
-        object['mac'] = screen.get_macs_string() if screen.macs is not None else ''
-        object['building-name'] = screen.building.name
-        return json.dumps(object)
+    Copyright (C) 2016-2018  Université catholique de Louvain (UCL, Belgium)
 
+    ICTV is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published
+    by the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
 
-$var active_element: Screens
-$code:
-    feedbacks = get_next_feedbacks()
-    form = pop_previous_form()
+    ICTV is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
+
+#}
+{% extends "%s" % base %}
+
+{% set active_element="Screens" %}
+{% set feedbacks = get_next_feedbacks() %}
+{% set form = pop_previous_form() %}
+
+{% block content %}
 <section class="content-header">
     <h1>
         Screens
@@ -39,117 +34,131 @@ $code:
     </h1>
 </section>
 <section class="content">
-    $def create_alert(title, message, icon):
+    {% macro create_alert(title, message, icon) -%}
         <div class="alert alert-success alert-dismissible">
             <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
-            <h4><i class="icon fa $icon"></i>$title</h4>
-            $message
+            <h4><i class="icon fa {{icon}}"></i>{{title}}</h4>
+            {{message}}
         </div>
+    {%- endmacro %}
 
-    $if feedbacks.has('create', 'ok'):
-        $:create_alert("Added", "This screen has been successfully added.", "fa-check")
+    {% if feedbacks.has('create', 'ok') %}
+        {{ create_alert("Added", "This screen has been successfully added.", "fa-check") | safe }}
+    {% endif %}
 
-    $if feedbacks.has('edit', 'ok'):
-        $:create_alert("Edited", "This screen has been successfully edited.", "fa-check")
+    {% if feedbacks.has('edit', 'ok') %}
+        {{ create_alert("Edited", "This screen has been successfully edited.", "fa-check") | safe }}
+    {% endif %}
 
-    $if feedbacks.has('delete', 'ok'):
-        $:create_alert("Deleted", "This screen has been successfully deleted.", "fa-trash")
+    {% if feedbacks.has('delete', 'ok') %}
+        {{ create_alert("Deleted", "This screen has been successfully deleted.", "fa-trash") | safe }}
+    {% endif %}
 
-    $if feedbacks.has('subscribe', 'ok'):
-        $:create_alert("Applied", "These changes have been successfully applied.", "fa-rss")
+    {% if feedbacks.has('subscribe', 'ok') %}
+        {{ create_alert("Applied", "These changes have been successfully applied.", "fa-rss") | safe }}
+    {% endif %}
 
-    $if feedbacks.has('chown', 'ok'):
-        $:create_alert("Applied", "These changes have been successfully applied.", "fa-user")
+    {% if feedbacks.has('chown', 'ok') %}
+        {{ create_alert("Applied", "These changes have been successfully applied.", "fa-user") | safe }}
+    {% endif %}
 
-    $if feedbacks.has('configure', 'ok'):
-        $:create_alert("Configured", "This screen has been successfully configured.", "fa-wrench")
-
+    {% if feedbacks.has('configure', 'ok') %}
+        {{ create_alert("Configured", "This screen has been successfully configured.", "fa-wrench") | safe }}
+    {% endif %}
     <div class="box">
         <div class="box-body">
             <table id="table" class="table table-hover table-bordered" cellspacing="0" width="100%" data-page-length='25'>
                 <thead>
                     <tr>
-                        <th $:make_tooltip(info['screen']['name'])>Name</th>
-                        <th $:make_tooltip(info['screen']['building'])>Building</th>
-                        <th $:make_tooltip(info['screen']['location'])>Location</th>
+                        <th {{make_tooltip(info['screen']['name']) | safe }}>Name</th>
+                        <th {{make_tooltip(info['screen']['building']) | safe }}>Building</th>
+                        <th {{make_tooltip(info['screen']['location']) | safe }}>Location</th>
                         <th>Orientation</th>
-                        $if UserPermissions.administrator in user.highest_permission_level:
+                        {% if UserPermissions.administrator in highest_permission_level %}
                             <th>MAC Address(es)</th>
                             <th>Last update</th>
                             <th>Last IP</th>
-                        <th $:make_tooltip(info['screen']['status'])>Status</th>
-                        <th $:make_tooltip(info['screen']['actions'])>Actions</th>
+                        {% endif %}
+                        <th {{make_tooltip(info['screen']['status']) | safe }}>Status</th>
+                        <th {{make_tooltip(info['screen']['actions']) | safe }}>Actions</th>
                     </tr>
                 </thead>
                 <tfoot>
                     <tr>
-                        <th $:make_tooltip(info['screen']['name'], placement='bottom')>Name</th>
-                        <th $:make_tooltip(info['screen']['building'], placement='bottom')>Building</th>
-                        <th $:make_tooltip(info['screen']['location'], placement='bottom')>Location</th>
+                        <th {{make_tooltip(info['screen']['name'], placement='bottom') | safe }}>Name</th>
+                        <th {{make_tooltip(info['screen']['building'], placement='bottom') | safe }}>Building</th>
+                        <th {{make_tooltip(info['screen']['location'], placement='bottom') | safe }}>Location</th>
                         <th>Orientation</th>
-                        $if UserPermissions.administrator in user.highest_permission_level:
+                        {% if UserPermissions.administrator in highest_permission_level %}
                             <th>MAC Address(es)</th>
                             <th>Last update</th>
                             <th>Last IP</th>
-                        <th $:make_tooltip(info['screen']['status'], placement='bottom')>Status</th>
-                        <th $:make_tooltip(info['screen']['actions'], placement='bottom')>Actions</th>
+                        {% endif %}
+                        <th {{make_tooltip(info['screen']['status'], placement='bottom') | safe }}>Status</th>
+                        <th {{make_tooltip(info['screen']['actions'], placement='bottom') | safe }}>Actions</th>
                     </tr>
                 </tfoot>
                 <tbody>
-                $for screen in screens:
-                    <tr data-screenid="$screen.id">
+                {% for screen in screens %}
+                    <tr data-screenid="{{ screen.id }}">
                         <td data-toggle="modal" data-target="#see-subs-modal">
-                            $if screen.comment:
-                                <a href ="../screens/$screen.id">$screen.name</a>
+                            {% if screen.comment %}
+                                <a href ="../screens/{{ screen.id }}">{{ screen.name }}</a>
                                 <a type="button" class="btn btn-xs btn-default pull-right" style="margin-top: 5px; "
                                         tabindex="0" role="button" data-trigger="focus"
                                         data-container="body" data-toggle="popover"
                                         data-placement="right"
                                         title="Screen comment"
-                                        data-content="$screen.comment">
+                                        data-content="{{ screen.comment }}">
                                     <i class="fa fa-info" style="margin-right: 0 !important;"></i>
                                 </a>
-                            $else:
-                                <a href ="../screens/$screen.id">$screen.name</a>
+                            {% else %}
+                                <a href ="../screens/{{ screen.id }}">{{ screen.name }}</a>
+                            {% endif %}
                         </td>
-                        <td>$screen.building.name</td>
-                        <td>$(screen.location if screen.location else '~')</td>
-                        <td>$(screen.orientation if screen.orientation else "")</td>
-                        $if UserPermissions.administrator in user.highest_permission_level:
-                            <td>$(screen.get_macs_string() if screen.macs else 'Not set')</td>
-                            <td>$(screen.last_access.strftime("%Y-%m-%d %H:%M:%S") if screen.last_access is not None else '~')</td>
-                            <td>$(screen.last_ip if screen.last_ip is not None else '~')</td>
+                        <td>{{ screen.building.name }}</td>
+                        <td>{{ (screen.location if screen.location else '~') }}</td>
+                        <td>{{ (screen.orientation if screen.orientation else "") }}</td>
+                        {% if UserPermissions.administrator in highest_permission_level %}
+                            <td>{{ (screen.get_macs_string() if screen.macs else 'Not set') }}</td>
+                            <td>{{ (screen.last_access.strftime("%Y-%m-%d %H:%M:%S") if screen.last_access is not None else '~') }}</td>
+                            <td>{{ (screen.last_ip if screen.last_ip is not None else '~') }}</td>
+                        {% endif %}
                         <td>
-                                $if screen.last_access is None or (screen_status_validity - screen.last_access) > max_inactivity_period:
+                                {% if screen.last_access is None or (screen_status_validity - screen.last_access) > max_inactivity_period %}
                                     <h6 class="label bg-black"><i class="fa fa-remove"></i>Not connected</h6>
-                                $elif screen.last_access > screen_status_validity:
+                                {% elif screen.last_access > screen_status_validity %}
                                     <h6 class="label label-success"><i class="fa fa-check"></i>Up</h6>
-                                $else:
+                                {% else %}
                                     <h6 class="label label-danger"><i class="fa fa-frown-o"></i>Down</h6>
+                                {% endif %}
                         </td>
                         <td>
-                            $if UserPermissions.administrator in user.highest_permission_level:
-                                <button type="button" class="btn btn-xs btn-primary" data-toggle="modal" onclick="data_edit = $get_data_edit_object(screen);" data-target="#edit-screen-modal"><i class="fa fa-pencil-square-o"></i>Edit</button>
+                            {% if UserPermissions.administrator in highest_permission_level %}
+                                <button type="button" class="btn btn-xs btn-primary" data-toggle="modal" onclick="data_edit = {{get_data_edit_object(screen)}};" data-target="#edit-screen-modal"><i class="fa fa-pencil-square-o"></i>Edit</button>
                                 <button class="btn btn-xs btn-warning" data-toggle="modal" data-target="#add-owner-screen-modal"><i class="fa fa-user-md"></i>Owners</button>
-                            $if user.super_admin:
-                                <button type="button" class="btn btn-xs btn-danger" data-toggle="modal" onclick="data_edit = $get_data_edit_object(screen);" data-target="#delete-screen-modal"><span class="glyphicon glyphicon-trash"></span>Delete</button>
-                            <a class="btn btn-xs btn-default" href="/screens/$(screen.id)/config"><span class="glyphicon glyphicon-wrench"></span>Configure</a>
-                            <a class="btn btn-xs btn-info" href="/screens/$(screen.id)/subscriptions"><span class="glyphicon glyphicon-film"></span>Subscriptions</a>
-                            <a class="btn btn-xs btn-success" href="$screen.get_client_link()"><i class="fa fa-eye"></i>Preview</a>
+                            {% endif %}
+                            {% if user.super_admin %}
+                                <button type="button" class="btn btn-xs btn-danger" data-toggle="modal" onclick="data_edit = {{get_data_edit_object(screen)}};" data-target="#delete-screen-modal"><span class="glyphicon glyphicon-trash"></span>Delete</button>
+                            {% endif %}
+                            <a class="btn btn-xs btn-default" href="/screens/{{(screen.id)}}/config"><span class="glyphicon glyphicon-wrench"></span>Configure</a>
+                            <a class="btn btn-xs btn-info" href="/screens/{{(screen.id)}}/subscriptions"><span class="glyphicon glyphicon-film"></span>Subscriptions</a>
+                            <a class="btn btn-xs btn-success" href="{{screen.get_client_link()}}"><i class="fa fa-eye"></i>Preview</a>
                         </td>
                     </tr>
-
+                {% endfor %}
                 </tbody>
             </table>
         </div>
     </div>
-    $if UserPermissions.administrator in user.highest_permission_level:
+    {% if UserPermissions.administrator in highest_permission_level %}
         <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#create-screen-modal">
             <i class="fa fa-plus"></i>Create a new screen
         </button>
+    {% endif %}
 </section>
 
-$if UserPermissions.administrator in user.highest_permission_level:
+{% if UserPermissions.administrator in highest_permission_level %}
     <div class="modal fade" id="create-screen-modal" tabindex="-1" role="dialog">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -160,47 +169,52 @@ $if UserPermissions.administrator in user.highest_permission_level:
                         <h4 class="modal-title">Create a screen</h4>
                     </div>
                     <div class="modal-body">
-                        $if feedbacks.has('create', 'empty_name'):
+                        {% if feedbacks.has('create', 'empty_name') %}
                             <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
                                 <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
                                 You must enter a name to create a new screen
                             </div>
-                        $if feedbacks.has('create', 'too_long_name'):
+                        {% endif %}
+                        {% if feedbacks.has('create', 'too_long_name') %}
                             <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
                                 <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
                                 You must enter a shorter name to create a new screen
                             </div>
-                        $if feedbacks.has('create', 'name_already_exists'):
+                        {% endif %}
+                        {% if feedbacks.has('create', 'name_already_exists') %}
                             <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
                                 <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
                                 A screen with this name in the same building already exists.
                             </div>
+                        {% endif %}
                         <div class="form-group">
                             <label for="name">Name</label>
-                            $:make_tooltip(info['screen']['name'], placement='left', icon=True)
+                            {{make_tooltip(info['screen']['name'], placement='left', icon=True) | safe }}
                             <input type="text" name="name" class="form-control" id="name" placeholder="Name"
-                                   value="$(form.get('name') if form.get('action') == 'create' else None)" required>
+                                   value="{{(form.get('name') if form.get('action') == 'create')}}" required>
                         </div>
 
-                        $if feedbacks.has('create', 'empty_building'):
+                        {% if feedbacks.has('create', 'empty_building') %}
                             <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
                                 <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
                                 You must enter a building to create a new screen
                             </div>
+                        {% endif %}
                         <div class="form-group">
                             <label for="buildingslist">Building</label>
-                            $:make_tooltip(info['screen']['building'], placement='left', icon=True)
+                            {{make_tooltip(info['screen']['building'], placement='left', icon=True) | safe }}
                             <select id="buildingslist" name="building" class="form-control c-select" required>
-                                $for building in buildings:
-                                    <option data-building-name="$building.name" value="$building.id" $('selected' if form.get('action') == 'create' and (form.building == building.id) else '')>$building.name</option>
+                                {% for building in buildings %}
+                                    <option data-building-name="{{building.name}}" value="{{building.id}}" {{('selected' if form.get('action') == 'create' and (form.building == building.id) else '')}}>{{building.name}}</option>
+                                {% endfor %}
                             </select>
                         </div>
 
                         <div class="form-group">
                             <label for="location">Location</label>
-                            $:make_tooltip(info['screen']['location'], placement='left', icon=True)
+                            {{make_tooltip(info['screen']['location'], placement='left', icon=True) | safe }}
                             <input type="text" name="location" class="form-control" id="location" placeholder="A more precise location"
-                                   value="$(form.get('location') if form.get('action') == 'create' else None)">
+                                   value="{{(form.get('location') if form.get('action') == 'create')}}">
                         </div>
                         <div class="form-group">
                             <label for="orientation">Orientation</label>
@@ -212,24 +226,26 @@ $if UserPermissions.administrator in user.highest_permission_level:
                         <div class="form-group">
                             <label for="location">Comment</label>
                             <input type="text" name="comment" class="form-control" id="comment" placeholder="Comment for the screen"
-                                   value="$(form.get('comment') if form.get('action') == 'create' else None)">
+                                   value="{{(form.get('comment') if form.get('action') == 'create')}}">
                         </div>
 
-                        $if feedbacks.has('create', 'mac_already_exists'):
+                        {% if feedbacks.has('create', 'mac_already_exists') %}
                             <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
                                 <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
                                 A screen with this mac already exists.
                             </div>
-                        $if feedbacks.has('create', 'invalid_mac_address'):
+                        {% endif %}
+                        {% if feedbacks.has('create', 'invalid_mac_address') %}
                             <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
                                 <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
                                 This mac address is invalid
                             </div>
+                        {% endif %}
                         <div class="form-group">
                             <label for="mac">MAC Address(es)</label>
                             <p class="help-block">A semi-colon-separated list of MAC addresses</p>
                             <input type="text" name="mac" class="form-control" id="mac" placeholder="E.g. 00:B1:6B:00:B5:00;00:B1:6B:00:B5:01"
-                                   value="$(form.get('mac') if form.get('action') == 'create' else None)">
+                                   value="{{ (form.get('mac') if form.get('action') == 'create') }}">
                         </div>
                         <div class="form-group">
                             <input type="hidden" value="create" name="action" class="form-control" id="editactioncreate" required>
@@ -255,105 +271,115 @@ $if UserPermissions.administrator in user.highest_permission_level:
                     </div>
                     <div class="modal-body">
                         <div class="form-group">
-                            $if feedbacks.has('edit', 'empty_name'):
+                            {% if feedbacks.has('edit', 'empty_name') %}
                                 <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
                                     <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
                                     You must enter a name to edit the screen
                                 </div>
+                            {% endif %}
 
-                            $if feedbacks.has('edit', 'too_long_name'):
+                            {% if feedbacks.has('edit', 'too_long_name') %}
                                 <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
                                     <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
                                     You must enter a shorter name to edit the screen
                                 </div>
+                            {% endif %}
 
-                            $if feedbacks.has('edit', 'invalid_id'):
+                            {% if feedbacks.has('edit', 'invalid_id') %}
                                 <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
                                     <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
                                     Oh-oh, you seem to edit a screen with an erroneous ID...
                                 </div>
+                            {% endif %}
 
-                            $if feedbacks.has('edit', 'no_id_matching'):
+                            {% if feedbacks.has('edit', 'no_id_matching') %}
                                 <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
                                     <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
                                     Oh-oh, you seem to edit a screen that doesn't exist...
                                 </div>
+                            {% endif %}
 
-                            $if feedbacks.has('edit', 'ok_edit'):
+                            {% if feedbacks.has('edit', 'ok_edit') %}
                                 <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
                                     <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
                                     <h4><i class="icon fa fa-check"></i>Edited.</h4>
                                     This screen has been successfully edited.
                                 </div>
+                            {% endif %}
 
-                            $if feedbacks.has('edit', 'name_already_exists'):
+                            {% if feedbacks.has('edit', 'name_already_exists') %}
                                 <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
                                     <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
                                     A screen with this name in this building already exists.
                                 </div>
+                            {% endif %}
 
                             <label for="nameedit">Name</label>
-                            $:make_tooltip(info['screen']['name'], placement='left', icon=True)
+                            {{make_tooltip(info['screen']['name'], placement='left', icon=True) | safe }}
                             <input type="text" name="name" class="form-control" id="nameedit" placeholder="Name"
-                                    value="$(form.get('name') if form.get('action') == 'edit' else None)" required>
+                                    value="{{(form.get('name') if form.get('action') == 'edit')}}" required>
                         </div>
                         <div class="form-group">
 
-                            $if feedbacks.has('edit', 'empty_building'):
+                            {% if feedbacks.has('edit', 'empty_building') %}
                                 <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
                                     <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
                                     You must enter a building to edit the screen
                                 </div>
+                            {% endif %}
 
-                            $if feedbacks.has('edit', 'invalid_building_id'):
+                            {% if feedbacks.has('edit', 'invalid_building_id') %}
                                 <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
                                     <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
                                     Oh-oh, you seem to edit a screen with an erroneous building ID...
                                 </div>
-
+                            {% endif %}
 
                             <label for="buildingslistedit">Building</label>
-                            $:make_tooltip(info['screen']['building'], placement='left', icon=True)
+                            {{make_tooltip(info['screen']['building'], placement='left', icon=True) | safe }}
                             <select id="buildingslistedit" name="building" class="form-control c-select" required>
-                                $for building in buildings:
-                                    <option data-building-name="$building.name" value="$building.id" $('selected' if form.get('action') == 'edit' and (form.building == building.id) else '')>$building.name</option>
+                                {% for building in buildings %}
+                                    <option data-building-name="{{building.name}}" value="{{building.id}}" {{('selected' if form.get('action') == 'edit' and (form.building == building.id) else '')}}>{{building.name}}</option>
+                                {% endfor %}
                             </select>
                         </div>
 
                         <div class="form-group">
                             <label for="locationedit">Location</label>
-                            $:make_tooltip(info['screen']['location'], placement='left', icon=True)
+                            {{make_tooltip(info['screen']['location'], placement='left', icon=True) | safe }}
                             <input type="text" name="location" class="form-control" id="locationedit" placeholder="A more precise location"
-                                   value="$(form.get('location') if form.get('action') == 'edit' else None)">
+                                   value="{{(form.get('location') if form.get('action') == 'edit')}}">
                         </div>
                         <div class="form-group">
                             <label for="orientationedit">Orientation</label>
                             <select id="orientationedit" name="orientation" class="form-control c-select" required>
-                                <option value="Landscape" $('selected' if form.get('action') == 'edit' and form.get('orientation') and (form.get('orientation') == 'Landscape') else '')>Landscape</option>
-                                <option value="Portrait"  $('selected' if form.get('action') == 'edit' and form.get('orientation') and (form.get('orientation') == 'Portrait') else '')>Portrait</option>
+                                <option value="Landscape" {{('selected' if form.get('action') == 'edit' and form.get('orientation') and (form.get('orientation') == 'Landscape') else '')}}>Landscape</option>
+                                <option value="Portrait"  {{('selected' if form.get('action') == 'edit' and form.get('orientation') and (form.get('orientation') == 'Portrait') else '')}}>Portrait</option>
                             </select>
                         </div>
                         <div class="form-group">
                             <label for="location">Comment</label>
                             <input type="text" name="comment" class="form-control" id="commentedit" placeholder="Comment for the screen"
-                                   value="$(form.get('comment') if form.get('action') == 'edit' else None)">
+                                   value="{{(form.get('comment') if form.get('action') == 'edit')}}">
                         </div>
 
-                        $if feedbacks.has('edit', 'mac_already_exists'):
+                        {% if feedbacks.has('edit', 'mac_already_exists') %}
                             <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
                                 <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
                                 A screen with this mac already exists.
                             </div>
-                        $if feedbacks.has('edit', 'invalid_mac_address'):
+                        {% endif %}
+                        {% if feedbacks.has('edit', 'invalid_mac_address') %}
                             <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
                                 <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
                                 This mac address is invalid
                             </div>
+                        {% endif %}
                         <div class="form-group">
                             <label for="macedit">MAC Address(es)</label>
                             <p class="help-block">A semi-colon-separated list of MAC addresses</p>
                             <input type="text" name="mac" class="form-control" id="macedit" placeholder="E.g. 00:B1:6B:00:B5:00;00:B1:6B:00:B5:01"
-                                   value="$(form.get('mac') if form.get('action') == 'edit' else None)">
+                                   value="{{form.get('mac') if form.get('action') == 'edit'}}">
                         </div>
 
                         <div class="form-group">
@@ -382,16 +408,18 @@ $if UserPermissions.administrator in user.highest_permission_level:
                         <h4 class="modal-title" id="modal-chown-title">Modify screen owners</h4>
                     </div>
                     <div class="modal-body">
-                        $if feedbacks.has('chown', 'inconsistent_diff'):
+                        {% if feedbacks.has('chown', 'inconsistent_diff') %}
                             <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
                                 <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
                                 You seem to want to apply invalid modifications.
                             </div>
-                        $if feedbacks.has('chown', 'nothing_changed'):
+                        {% endif %}
+                        {% if feedbacks.has('chown', 'nothing_changed') %}
                             <div class="alert alert-warning alter-dismissible" style="margin-top: 15px" role="alert">
                                 <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
                                 You made no changes.
                             </div>
+                        {% endif %}
                         <table id="table-owners" class="table table-hover table-bordered" cellspacing="0" width="100%">
                             <thead>
                             <tr>
@@ -408,18 +436,19 @@ $if UserPermissions.administrator in user.highest_permission_level:
                             </tr>
                             </tfoot>
                             <tbody>
-                                $for u in users:
+                                {% for u in users %}
                                 <tr>
                                     <td>
-                                        $u.fullname
+                                        {{u.fullname}}
                                     </td>
                                     <td>
-                                        $u.email
+                                        {{u.email}}
                                     </td>
                                     <td>
-                                        <input type="checkbox" class="admin-checkbox" data-user-id="$u.id" value="subs">
+                                        <input type="checkbox" class="admin-checkbox" data-user-id="{{u.id}}" value="subs">
                                     </td>
                                 </tr>
+                                {% endfor %}
                             </tbody>
                         </table>
                     </div>
@@ -440,7 +469,8 @@ $if UserPermissions.administrator in user.highest_permission_level:
             </div>
         </div>
     </div>
-$if user.super_admin:
+{% endif %}
+{% if user.super_admin %}
     <div class="modal fade" id="delete-screen-modal" tabindex="-1" role="dialog">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -452,12 +482,12 @@ $if user.super_admin:
                     </div>
 
                     <div class="modal-body">
-                        $if feedbacks.has('delete', 'no_id_matching'):
+                        {% if feedbacks.has('delete', 'no_id_matching') %}
                             <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
                                 <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
                                 Oh-oh, you want to delete a screen that doesn't exist...
                             </div>
-
+                        {% endif %}
 
                         <p class="text-red"><i style="padding-right: 5px;" class="icon fa fa-warning"></i>
                             Warning : this operation is not reversible.</p>
@@ -504,7 +534,7 @@ $if user.super_admin:
             </div>
         </div>
     </div>
-
+{% endif %}
 
 <div class="modal fade" id="subscription-modal" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-lg">
@@ -519,16 +549,18 @@ $if user.super_admin:
                 </div>
 
                 <div class="modal-body">
-                    $if feedbacks.has('subscribe', 'inconsistent_diff'):
+                    {% if feedbacks.has('subscribe', 'inconsistent_diff') %}
                         <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
                             <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
                             You seem to want to apply invalid modifications.
                         </div>
-                    $if feedbacks.has('subscribe', 'nothing_changed'):
+                    {% endif %}
+                    {% if feedbacks.has('subscribe', 'nothing_changed') %}
                         <div class="alert alert-warning alter-dismissible" style="margin-top: 15px" role="alert">
                             <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
                             You made no changes.
                         </div>
+                    {% endif %}
 
                     <table id="table-sub" class="table table-hover table-bordered" cellspacing="0" width="100%">
                         <thead>
@@ -548,29 +580,32 @@ $if user.super_admin:
                         </tr>
                         </tfoot>
                         <tbody>
-                            $for channel in channels:
-                                <tr data-channel-id="$channel.id" $:('data-channel-activated="{}"'.format(channel.plugin.activated) if hasattr(channel, 'plugin') else 'data-channel-activated="yes"')
-                                    $:('class="not-activated"' if hasattr(channel, 'plugin') and channel.plugin.activated != 'yes' else '')>
+                            {% for channel in channels %}
+                                <tr data-channel-id="{{channel.id}}" {{('data-channel-activated="{}"'.format(channel.plugin.activated) if hasattr(channel, 'plugin') else 'data-channel-activated="yes"') | safe }}
+                                    {{('class="not-activated"' if hasattr(channel, 'plugin') and channel.plugin.activated != 'yes' else '') | safe }}>
                                     <td>
-                                        $channel.name
-                                        $if not channel.enabled:
+                                        {{channel.name}}
+                                        {% if not channel.enabled %}
                                             <a type="button" class="btn btn-xs btn-warning pull-right" style="margin-top: 5px; margin-right: 5px">
-                                                $:make_tooltip(info['channel']['enabled']['channel_not_enabled'], icon=True, icon_class='fa-exclamation-triangle')
+                                                {{make_tooltip(info['channel']['enabled']['channel_not_enabled'], icon=True, icon_class='fa-exclamation-triangle') | safe }}
                                             </a>
+                                        {% endif %}
                                     </td>
-                                    <td>$channel.get_type_name()</td>
+                                    <td>{{channel.get_type_name()}}</td>
                                     <td>
                                         <input type="checkbox" class="admin-checkbox"
-                                               value="subs" $('disabled' if not channel.can_subscribe(user) else '')>
-                                        $if hasattr(channel, 'plugin') and channel.plugin.activated != 'yes':
+                                               value="subs" {{('disabled' if not channel.can_subscribe(user) else '')}}>
+                                        {% if hasattr(channel, 'plugin') and channel.plugin.activated != 'yes' %}
                                             <a type="button" class="btn btn-xs btn-warning pull-right" style="margin-top: 5px; ">
-                                                $:make_tooltip(info['screen']['misc']['not-activated-plugin'], icon=True, icon_class='fa-exclamation-triangle')
+                                                {{make_tooltip(info['screen']['misc']['not-activated-plugin'], icon=True, icon_class='fa-exclamation-triangle') | safe }}
                                             </a>
+                                        {% endif %}
                                     </td>
                                     <td class="text-last-action">
 
                                     </td>
                                 </tr>
+                            {% endfor %}
                         </tbody>
                     </table>
                 </div>
@@ -594,59 +629,59 @@ $if user.super_admin:
 
 <script src="/static/js/clipboard.min.js"></script>
 <script>
-    $$(document).ready(function () {
-        $$('#table').on('draw.dt', function() {
-            $$('[data-toggle="popover"]').popover();
+    $(document).ready(function () {
+        $('#table').on('draw.dt', function() {
+            $('[data-toggle="popover"]').popover();
         });
-        $$('#table').DataTable({stateSave: true});
+        $('#table').DataTable({stateSave: true});
 
         var clipboardButtons = new Clipboard('.copy-secret');
-        var $$prev_button = null;
+        var $prev_button = null;
         clipboardButtons.on('success', function(e){
-            if($$prev_button != null) {
-                $$prev_button.removeClass('btn-success').html('Copy to clipboard')
+            if($prev_button != null) {
+                $prev_button.removeClass('btn-success').html('Copy to clipboard')
             }
-            $$prev_button = $$(e.trigger).addClass('btn-success').html('Copied!');
+            $prev_button = $(e.trigger).addClass('btn-success').html('Copied!');
         });
 
-        var modaledit = $$('#edit-screen-modal');
+        var modaledit = $('#edit-screen-modal');
         modaledit.on('show.bs.modal', function(){
-            $$('#form-edit')[0].reset();
+            $('#form-edit')[0].reset();
             var screenid = data_edit['screenid'];
             var buildingName = data_edit['building-name'];
             var location = data_edit['location'];
             var comment = data_edit['comment'];
             var screenName = data_edit['name'];
             var screenMac = data_edit['mac'];
-            $$('#nameedit').val(screenName);
-            $$('#macedit').val(screenMac);
-            $$('#commentedit').val(comment);
-            $$('#form-screenid').val(screenid);
-            $$('#buildingslistedit').find('[data-building-name="'+buildingName+'"]').prop('selected', true);
-            $$('#locationedit').val(location);
+            $('#nameedit').val(screenName);
+            $('#macedit').val(screenMac);
+            $('#commentedit').val(comment);
+            $('#form-screenid').val(screenid);
+            $('#buildingslistedit').find('[data-building-name="'+buildingName+'"]').prop('selected', true);
+            $('#locationedit').val(location);
         });
 
 
-        var modaldelete = $$('#delete-screen-modal');
+        var modaldelete = $('#delete-screen-modal');
         modaldelete.on('show.bs.modal', function(e){
-            $$('#form-edit')[0].reset();
+            $('#form-edit')[0].reset();
             var screenid = data_edit['screenid'];
             var buildingName = data_edit['building-name'];
             var location = data_edit['location'];
             var comment = data_edit['comment'];
             var screenName = data_edit['name'];
             var screenMac = data_edit['mac'];
-            $$('#form-name-delete').val(screenName);
-            $$('#form-building-delete').val(buildingName);
-            $$('#form-location-delete').val(location);
-            $$('#form-comment-delete').val(comment);
-            $$('#form-mac-delete').val(screenMac);
-            $$('#form-screenid-delete').val(screenid);
+            $('#form-name-delete').val(screenName);
+            $('#form-building-delete').val(buildingName);
+            $('#form-location-delete').val(location);
+            $('#form-comment-delete').val(comment);
+            $('#form-mac-delete').val(screenMac);
+            $('#form-screenid-delete').val(screenid);
         });
 
-        $$.fn.dataTable.ext.order['dom-checkbox'] = function  ( settings, col ) {
+        $.fn.dataTable.ext.order['dom-checkbox'] = function  ( settings, col ) {
                return this.api().column( col, {order:'index'} ).nodes().map( function ( td, i ) {
-                   return $$('input', td).prop('checked') ? '1' : '0';
+                   return $('input', td).prop('checked') ? '1' : '0';
                } );
            };
 
@@ -654,23 +689,24 @@ $if user.super_admin:
 
         var prev_table = null;
 
-        $if UserPermissions.administrator in user.highest_permission_level:
-            var $$modalowners = $$('#add-owner-screen-modal');
-            $$modalowners.on('show.bs.modal', function(e){
+        {% if UserPermissions.administrator in highest_permission_level %}
+            var $modalowners = $('#add-owner-screen-modal');
+            $modalowners.on('show.bs.modal', function(e){
                 if(prev_table!=null) {
                     prev_table.destroy()
                 }
                 var owners = [];
-                $if feedbacks.has_type('chown') and not feedbacks.has('chown', 'ok'):
-                    var screenid = $form.screenid;
-                $else:
+                {% if feedbacks.has_type('chown') and not feedbacks.has('chown', 'ok') %}
+                    var screenid = {{form.screenid}};
+                {% else %}
                     var screenid = e.relatedTarget.parentElement.parentElement.getAttribute('data-screenid');
-                $$('#screenidown').val(screenid);
-                $$('#modal-chown-title').html('Manage <b>' + screenid_name[screenid] + "</b>'s owners");
+                {% endif %}
+                $('#screenidown').val(screenid);
+                $('#modal-chown-title').html('Manage <b>' + screenid_name[screenid] + "</b>'s owners");
                 var screen_owners = screen_owners_mapping[screenid];
 
-                $$('#table-owners').on('draw.dt', updateTableState());
-                prev_table = $$('#table-owners').DataTable({
+                $('#table-owners').on('draw.dt', updateTableState());
+                prev_table = $('#table-owners').DataTable({
                     "aoColumns": [
                         null,
                         null,
@@ -680,8 +716,8 @@ $if user.super_admin:
                 });
 
                 function updateTableState() {
-                    var $$checkboxes = $$modalowners.find('.admin-checkbox');
-                    $$checkboxes.each(function (i, e) {
+                    var $checkboxes = $modalowners.find('.admin-checkbox');
+                    $checkboxes.each(function (i, e) {
                         if (screen_owners.indexOf(e.getAttribute('data-user-id')) != -1) {
                             e.checked = true;
                         }
@@ -690,31 +726,33 @@ $if user.super_admin:
                         }
                     });
 
-                    $$checkboxes.off('change');
-                    $$checkboxes.change(function () {
+                    $checkboxes.off('change');
+                    $checkboxes.change(function () {
                         if (this.checked) {
                             diff[this.getAttribute('data-user-id')] = true;
                         }
                         else {
                             diff[this.getAttribute('data-user-id')] = false;
                         }
-                        $$('#diffown').val(JSON.stringify(diff));
+                        $('#diffown').val(JSON.stringify(diff));
                     });
                 }
             });
+        {% endif %}
 
-        var $$modalsubscription = $$('#subscription-modal');
-        $$modalsubscription.on('show.bs.modal', function(e){
+        var $modalsubscription = $('#subscription-modal');
+        $modalsubscription.on('show.bs.modal', function(e){
             if(prev_table!=null) {
                 prev_table.destroy()
             }
             var subscribed_channels = {};
-            $if feedbacks.has_type('subscribe') and not feedbacks.has('subscribe', 'ok'):
-                var screenid = $form.screenid;
-            $else:
+            {% if feedbacks.has_type('subscribe') and not feedbacks.has('subscribe', 'ok') %}
+                var screenid = {{form.screenid}};
+            {% else %}
                 var screenid = e.relatedTarget.parentElement.parentElement.getAttribute('data-screenid');
-            $$('#modal-sub-title').html('Manage <b>' + screenid_name[screenid] + "</b>'s subscriptions");
-            $$('#screenidsub').val(screenid);
+            {% endif %}
+            $('#modal-sub-title').html('Manage <b>' + screenid_name[screenid] + "</b>'s subscriptions");
+            $('#screenidsub').val(screenid);
 
             for(var i in subscriptions){
                 if(subscriptions[i][screenid] != undefined){
@@ -722,9 +760,9 @@ $if user.super_admin:
                 }
             }
 
-            $$('#table-sub').on('draw.dt', updateTableState());
+            $('#table-sub').on('draw.dt', updateTableState());
 
-            prev_table = $$('#table-sub').DataTable({
+            prev_table = $('#table-sub').DataTable({
                 "aoColumns": [
                     null,
                     null,
@@ -735,8 +773,8 @@ $if user.super_admin:
             });
 
             function updateTableState() {
-                var $$last_action_by = $$('.text-last-action');
-                $$last_action_by.each(function (i, e) {
+                var $last_action_by = $('.text-last-action');
+                $last_action_by.each(function (i, e) {
                     var cid = e.parentElement.getAttribute('data-channel-id');
                     if (subscribed_channels[cid] != undefined) {
                         e.innerHTML = subscribed_channels[cid];
@@ -745,77 +783,84 @@ $if user.super_admin:
                     }
                 });
 
-                var $$checkboxes = $$modalsubscription.find('.admin-checkbox');
-                $$checkboxes.each(function (i, e) {
+                var $checkboxes = $modalsubscription.find('.admin-checkbox');
+                $checkboxes.each(function (i, e) {
                     var cid = e.parentElement.parentElement.getAttribute('data-channel-id');
                     if (subscribed_channels[cid] != undefined) {
                         e.checked = true;
-                        $$e = $$(e);
-                        if ($$e.is(':disabled')) {
-                            $$e.parent().parent().show();
+                        $e = $(e);
+                        if ($e.is(':disabled')) {
+                            $e.parent().parent().show();
                         }
                     }
                     else {
                         e.checked = false;
-                        $$e = $$(e);
-                        if ($$e.is(':disabled') || $$e.parent().parent().attr('data-channel-activated') != 'yes') {
-                            $$e.parent().parent().hide();
+                        $e = $(e);
+                        if ($e.is(':disabled') || $e.parent().parent().attr('data-channel-activated') != 'yes') {
+                            $e.parent().parent().hide();
                         }
                     }
                 });
 
-                $$checkboxes.off('change');
-                $$checkboxes.change(function () {
+                $checkboxes.off('change');
+                $checkboxes.change(function () {
                     if (this.checked) {
                         diff[this.parentElement.parentElement.getAttribute('data-channel-id')] = true;
                     }
                     else {
                         diff[this.parentElement.parentElement.getAttribute('data-channel-id')] = false;
                     }
-                    $$('#diffsubs').val(JSON.stringify(diff));
+                    $('#diffsubs').val(JSON.stringify(diff));
                 });
             }
         });
 
-    $if feedbacks.has_type('create') and not feedbacks.has('create', 'ok'):
+    {% if feedbacks.has_type('create') and not feedbacks.has('create', 'ok') %}
         fire_modal('#create-screen-modal');
-    $elif feedbacks.has_type('edit') and not feedbacks.has('edit', 'ok'):
-        data_edit = {'name': '$(form.name)', 'building-name': '$(form.building_name)', 'screenid': '$(form.screenid)', 'mac': '$(form.mac)', 'location': '$(form.location)', 'comment': '$(form.comment)'};
+    {% elif feedbacks.has_type('edit') and not feedbacks.has('edit', 'ok') %}
+        data_edit = {'name': '{{(form.name)}}', 'building-name': '{{(form.building_name)}}', 'screenid': '{{(form.screenid)}}', 'mac': '{{(form.mac)}}', 'location': '{{(form.location)}}', 'comment': '{{(form.comment)}}'};
         fire_modal('#edit-screen-modal');
-    $elif feedbacks.has_type('delete') and not feedbacks.has('delete', 'ok'):
+    {% elif feedbacks.has_type('delete') and not feedbacks.has('delete', 'ok') %}
         fire_modal('#delete-screen-modal');
-    $elif feedbacks.has_type('chown') and not feedbacks.has('chown', 'ok'):
+    {% elif feedbacks.has_type('chown') and not feedbacks.has('chown', 'ok') %}
         fire_modal('#add-owner-screen-modal');
-    $elif feedbacks.has_type('subscribe') and not feedbacks.has('subscribe', 'ok'):
+    {% elif feedbacks.has_type('subscribe') and not feedbacks.has('subscribe', 'ok') %}
         fire_modal('#subscription-modal');
+    {% endif %}
     });
 
     var subscriptions = [
-            $for sub in subscriptions:
-                {'$sub.screen.id':{'channel':'$sub.channel.id', 'last_by':'$(sub.created_by.fullname if sub.created_by.fullname.strip() != '' else sub.created_by.username)'}},
-        ];
+            {% for sub in subscriptions %}
+                {'{{sub.screen.id}}':{'channel':'{{sub.channel.id}}', 'last_by':'{{(sub.created_by.fullname if sub.created_by.fullname.strip() != '' else sub.created_by.username)}}'}},
+            {% endfor %}
+    ];
 
-    $if UserPermissions.administrator in user.highest_permission_level:
+    {% if UserPermissions.administrator in highest_permission_level %}
         var screen_owners_mapping = {
-            $for screen in screens:
-                '$screen.id':[
-                                $for o in screen.owners:
-                                    '$o.id',
+            {% for screen in screens %}
+                '{{screen.id}}':[
+                                {% for o in screen.owners %}
+                                    '{{o.id}}',
+                                {% endfor %}
                              ],
+            {% endfor %}
         };
+    {%endif%}
 
     var screenid_name = {
-        $for screen in screens:
-            '$screen.id':'$screen.name',
+        {% for screen in screens %}
+            '{{screen.id}}':'{{screen.name}}',
+        {% endfor %}
     }
 
     function fire_modal(modalSelector) {
-            var $$modal = $$(modalSelector);
-            $$modal.removeClass('fade');
-            $$modal.one('hidden.bs.modal', function () {
-                $$modal.find('.alert').detach();
-                $$modal.addClass('fade');
+            var $modal = $(modalSelector);
+            $modal.removeClass('fade');
+            $modal.one('hidden.bs.modal', function () {
+                $modal.find('.alert').detach();
+                $modal.addClass('fade');
             });
-            $$modal.modal('show')
+            $modal.modal('show')
         }
 </script>
+{% endblock %}
