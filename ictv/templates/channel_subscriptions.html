@@ -21,15 +21,6 @@
 
 {% set feedbacks = get_feedbacks() %}
 {% set form = pop_previous_form() %}
-{% set last_by =   {sub.screen.id:
-                {
-                    'user': sub.created_by.readable_name,
-                    'channel_name': sub.channel.name,
-                    'plugin_channel': hasattr(sub.channel, 'plugin')
-                }
-                for sub in subscriptions if sub.channel.id == channel.id
-            } %}
-{% set screen_names = {s.id: s.name for s in possible_screens} %}
 {% set subscriptions = {} %}
 
 {% extends "%s" % base %}
