@@ -103,7 +103,24 @@ class SubscribeScreensPage(ICTVAuthPage):
         channel = Channel.get(channel_id)
         current_user = User.get(self.session['user']['id'])
         screens_of_current_user = Screen.get_visible_screens_of(current_user)
-        return self.renderer.channel_subscriptions(channel = channel, possible_screens= screens_of_current_user,user = current_user, subscriptions = current_user.get_subscriptions_of_owned_screens())
+        subscriptions = current_user.get_subscriptions_of_owned_screens()
+        last_by = {sub.screen.id:
+                {
+                    'user': sub.created_by.readable_name,
+                    'channel_name': sub.channel.name,
+                    'plugin_channel': hasattr(sub.channel, 'plugin')
+                }
+                for sub in subscriptions if sub.channel.id == channel.id
+            }
+        screen_names = {s.id: s.name for s in screens_of_current_user}
+        return self.renderer.channel_subscriptions(
+            channel = channel, 
+            possible_screens= screens_of_current_user,
+            user = current_user, 
+            subscriptions = subscriptions,
+            last_by = last_by,
+            screen_names = screen_names
+        )
 
     @PermissionGate.administrator
     def POST(self,channel_id):
