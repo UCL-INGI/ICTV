@@ -35,6 +35,9 @@ from ictv.libs.html import HTML
 from ictv.plugin_manager.plugin_capsule import PluginCapsule
 from ictv.plugin_manager.plugin_slide import PluginSlide
 
+from web.contrib.template import render_jinja
+
+
 
 class SlideRenderer(object):
     """ A parameterizable slide renderer. All classes that render slide should extend it. """
@@ -50,9 +53,22 @@ class SlideRenderer(object):
             Each function is responsible of rendering the corresponding field and will be called by the renderer when
             a corresponding function is parsed in a slide template.
         """
-        renderer_globals['get_template_id'] = lambda: utils.generate_secret(digits='')
-        self.slide_renderer = web.template.render(os.path.join(get_root_path(), 'renderer/templates/'), globals=renderer_globals)
-        self.preview_renderer = web.template.render(os.path.join(get_root_path(), 'renderer'), globals=renderer_globals)
+        self.renderer_globals = renderer_globals
+        self.renderer_globals['get_template_id'] = lambda: utils.generate_secret(digits='')
+
+        ### OLD ###
+        # self.slide_renderer = web.template.render(os.path.join(get_root_path(), 'renderer/templates/'), globals=renderer_globals)
+        # self.preview_renderer = web.template.render(os.path.join(get_root_path(), 'renderer'), globals=renderer_globals)
+        ###########
+
+        ### Jinja2 ###
+        self.slide_renderer = render_jinja(os.path.join(get_root_path(), 'renderer/templates/'))
+        self.slide_renderer._lookup.globals.update(base="base.html",**self.renderer_globals)
+
+        self.preview_renderer = render_jinja(os.path.join(get_root_path(), 'renderer/'))
+        self.preview_renderer._lookup.globals.update(base="base.html",**self.renderer_globals)
+        ###########
+
         self.app = app
         super(SlideRenderer, self).__init__()
 
@@ -149,6 +165,13 @@ class ICTVRenderer(SlideRenderer):
                             'logo': make_logo, 'text': make_text, 'background': make_background}
         super(ICTVRenderer, self).__init__(renderer_globals, app)
 
+def read_raw_template(template):
+    with open(os.path.join(get_root_path(), 'renderer/templates/'+template+".html")) as f:
+        content = f.read()
+    return content
+
+def get_var_template(raw_template, name):
+    return re.search(r"\{% *set "+name+r" *= *\"(.*)\" *%\}", raw_template).group(1)
 
 class TemplatesMeta(type):
     """ An utility class that constructs dynamically the Templates class. """
@@ -168,10 +191,10 @@ class TemplatesMeta(type):
             dummy_renderer = SlideRenderer({'title': f('title'), 'subtitle': f('subtitle'),
                             'img': f('image'),
                             'logo': f('logo'), 'text': f('text'), 'background': f('background')}, None)
-
-            template_rendered = getattr(dummy_renderer.slide_renderer, template)(slide=None)
-            templates[template]['name'] = template_rendered.get('name')
-            templates[template]['description'] = template_rendered.get('description')
+            
+            raw_template = read_raw_template(template)
+            templates[template]['name'] = get_var_template(raw_template, 'name')
+            templates[template]['description'] = get_var_template(raw_template, 'description')
 
         self._templates = templates
         super().__init__(self)

@@ -34,6 +34,9 @@ from sqlobject import SQLObjectNotFound, sqlhub
 from sqlobject.dberrors import DatabaseError
 from web.py3helpers import string_types
 
+# from flask import Flask, render_template
+# from flask.views import MethodView
+
 import ictv
 import ictv.common
 from ictv import database

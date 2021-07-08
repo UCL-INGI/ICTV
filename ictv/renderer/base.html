@@ -26,13 +26,13 @@
     <link rel="stylesheet" href="/static/css/reveal-base-theme.css">
     <link rel="stylesheet" href="/static/css/ictv-reveal.css">
     <style>
-        {{ upcontent.css |safe}}
+        {{ css |safe}}
     </style>
 </head>
 <body>
 <div class="reveal">
     <div class="slides">
-        {{ upcontent |safe}}
+        {% block content %}{% endblock %}
     </div>
 </div>
 <script src="/static/js/reveal.js"></script>
