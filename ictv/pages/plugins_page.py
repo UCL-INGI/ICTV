@@ -110,8 +110,8 @@ class PluginsPage(ICTVAuthPage):
 class PluginConfigPage(ICTVAuthPage):
     @PermissionGate.super_administrator
     def GET(self, plugin_id):
-        return self.render_page(Plugin.get(plugin_id))
+        return self.render_page(plugin = Plugin.get(plugin_id))
 
     @sidebar
     def render_page(self, plugin):
-        return self.renderer.plugin_config(plugin)
+        return self.renderer.plugin_config(plugin = plugin)

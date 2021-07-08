@@ -138,7 +138,7 @@
                                 <button type="button" class="btn btn-xs btn-primary" data-toggle="modal" onclick="data_edit = {{get_data_edit_object(screen)}};" data-target="#edit-screen-modal"><i class="fa fa-pencil-square-o"></i>Edit</button>
                                 <button class="btn btn-xs btn-warning" data-toggle="modal" data-target="#add-owner-screen-modal"><i class="fa fa-user-md"></i>Owners</button>
                             {% endif %}
-                            {% if user.super_admin %}
+                            {% if UserPermissions.super_administrator in highest_permission_level %}
                                 <button type="button" class="btn btn-xs btn-danger" data-toggle="modal" onclick="data_edit = {{get_data_edit_object(screen)}};" data-target="#delete-screen-modal"><span class="glyphicon glyphicon-trash"></span>Delete</button>
                             {% endif %}
                             <a class="btn btn-xs btn-default" href="/screens/{{(screen.id)}}/config"><span class="glyphicon glyphicon-wrench"></span>Configure</a>
