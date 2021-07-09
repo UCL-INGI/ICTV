@@ -68,7 +68,6 @@
                 </tr>
                 </tfoot>
                 <tbody>
-                {% if loggers_stats %}
                     {% for logger_name in loggers_stats.keys() %}
                         {% set logger_stats = loggers_stats[logger_name] %}
                         <tr>
@@ -85,7 +84,6 @@
                             {% endfor %}
                         </tr>
                     {% endfor %}
-                {% endif %}
                 </tbody>
             </table>
         </div>
