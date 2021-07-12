@@ -74,6 +74,15 @@ class ScreensPage(ICTVAuthPage):
     def render_page(self):
         u = User.get(self.session['user']['id'])
         screen_status_validity = datetime.now() - timedelta(hours=1)
+
+        def get_data_edit_object(screen):
+            object = screen.to_dictionary(['name', 'comment', 'location'])
+            object['screenid'] = screen.id
+            object['mac'] = screen.get_macs_string() if screen.macs is not None else ''
+            object['building-name'] = screen.building.name
+            return json.dumps(object)
+
+
         return self.renderer.screens(
             screens=Screen.get_visible_screens_of(u),
             buildings=Building.select(),
@@ -83,7 +92,8 @@ class ScreensPage(ICTVAuthPage):
             channels=Channel.get_screens_channels_from(user=u),
             subscriptions=u.get_subscriptions_of_owned_screens(),
             screen_status_validity=screen_status_validity,
-            max_inactivity_period=timedelta(weeks=4)
+            max_inactivity_period=timedelta(weeks=4),
+            get_data_edit_object=get_data_edit_object
         )
 
     @staticmethod
