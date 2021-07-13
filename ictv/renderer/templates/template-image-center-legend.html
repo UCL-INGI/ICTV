@@ -23,8 +23,6 @@
 {% set name = "Image centered + 3 fields" %}
 {% set description = "Image centered with title, subtitle and legend" %}
 
-{% extends "%s" % base %}
-
 {% block content %}
 <div class="logo logo-ucl">
     {{ logo(content=slide, number=1, editor_type="image", editor_placeholder="Choose a logo", editor_default="/static/plugins/editor/placeholders/270x350.png", editor_label="Logo", editor_order="6") |safe}}

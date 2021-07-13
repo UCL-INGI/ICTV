@@ -63,10 +63,10 @@ class SlideRenderer(object):
 
         ### Jinja2 ###
         self.slide_renderer = render_jinja(os.path.join(get_root_path(), 'renderer/templates/'))
-        self.slide_renderer._lookup.globals.update(base="base.html",**self.renderer_globals)
+        self.slide_renderer._lookup.globals.update(**self.renderer_globals)
 
         self.preview_renderer = render_jinja(os.path.join(get_root_path(), 'renderer/'))
-        self.preview_renderer._lookup.globals.update(base="base.html",**self.renderer_globals)
+        self.preview_renderer._lookup.globals.update(**self.renderer_globals)
         ###########
 
         self.app = app
@@ -77,7 +77,16 @@ class SlideRenderer(object):
         if slide_defaults is None:
             slide_defaults = {}
         deep_update(slide_defaults, slide.get_content())
-        return self.slide_renderer.base(
+
+        def get_bg(str):
+            """Workaround to allow defining background in sub-templates - matches the {% set bg = <bg> %} string"""
+            regex = r"{%\s+set\s+bg\s+=\s+(?P<bg>.+)\s+%}"
+            match = re.search(regex, str)
+            if(match):
+                return match.group("bg")
+            return ""
+
+        return self.slide_renderer.base(get_bg=get_bg,
             content=(self.slide_renderer.__getattr__(slide.get_template())(slide=slide_defaults)), slide=slide)
 
     def render_capsule(self, capsule):
@@ -191,7 +200,7 @@ class TemplatesMeta(type):
             dummy_renderer = SlideRenderer({'title': f('title'), 'subtitle': f('subtitle'),
                             'img': f('image'),
                             'logo': f('logo'), 'text': f('text'), 'background': f('background')}, None)
-            
+
             raw_template = read_raw_template(template)
             templates[template]['name'] = get_var_template(raw_template, 'name')
             templates[template]['description'] = get_var_template(raw_template, 'description')
