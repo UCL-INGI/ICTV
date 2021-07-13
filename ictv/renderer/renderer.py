@@ -36,6 +36,7 @@ from ictv.plugin_manager.plugin_capsule import PluginCapsule
 from ictv.plugin_manager.plugin_slide import PluginSlide
 
 from web.contrib.template import render_jinja
+from jinja2 import Environment, FileSystemLoader
 
 
 
@@ -78,16 +79,10 @@ class SlideRenderer(object):
             slide_defaults = {}
         deep_update(slide_defaults, slide.get_content())
 
-        def get_bg(str):
-            """Workaround to allow defining background in sub-templates - matches the {% set bg = <bg> %} string"""
-            regex = r"{%\s+set\s+bg\s+=\s+(?P<bg>.+)\s+%}"
-            match = re.search(regex, str)
-            if(match):
-                return match.group("bg")
-            return ""
+        return self.slide_renderer.__getattr__(slide.get_template())(slide=slide_defaults,slide_b=slide,base="base.html")
 
-        return self.slide_renderer.base(get_bg=get_bg,
-            content=(self.slide_renderer.__getattr__(slide.get_template())(slide=slide_defaults)), slide=slide)
+        #return self.slide_renderer.base(get_bg=get_bg,
+        #    content=(self.slide_renderer.__getattr__(slide.get_template())(slide=slide_defaults)), slide=slide)
 
     def render_capsule(self, capsule):
         """ Returns the complete HTML element representing the given capsule. """

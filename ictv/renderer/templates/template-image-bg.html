@@ -25,7 +25,7 @@
 {% set bg = background(content=slide, number=1, editor_default="/static/plugins/editor/images/beach.jpg") |safe %}
 
 {% set template_id = get_template_id() %}
-
+{% extends "%s" % base %}
 {% block content %}
 <div class="content"></div>
 {% endblock %}

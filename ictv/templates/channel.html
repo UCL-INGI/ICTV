@@ -22,25 +22,6 @@
 {% set feedbacks = get_feedbacks() %}
 {% set form = pop_previous_form() %}
 
-
-{% macro make_list_string(values, add_text, disabled) %}
-    {% macro make_field(v) %}
-      <input type="text" name="{{param_id}}" class="form-control" placeholder="{{param_attrs['placeholder']}}" value="{{escape(v)}}" required {{ 'disabled>' if disabled else '>'}}
-    {% endmacro %}
-    {% for v in values %}
-        {% if not loop.first %}
-            <div class="input-group">
-        {% endif %}
-        {{ make_field(v) |safe}}
-        {% if not loop.first %}
-            <span class="input-group-addon" {{ 'onclick="$(this).parent().remove()"' if not disabled else '' |safe}}><i class="fa fa-trash"></i></span>
-            </div>
-
-        {% endif %}
-    {% endfor %}
-    <button class="btn btn-default" type="button" style="margin-top: 2px;" onclick="addField(this, '{{make_field("")}}');" {{'disabled' if disabled else ''}}>{{add_text}}</button>
-
-{% endmacro %}
 {% macro make_param_button(all=False, param_id=None, param_name=None) %}
     {% set all = "true" if all else "false" %}
     <button type="button" class="btn btn-xs btn-default pull-right reset-button" data-toggle="modal" data-target="#reset-config-modal" data-param-id="{{param_id}}" data-reset-all="{{all}}" data-param-name="{{param_name}}">
@@ -49,6 +30,25 @@
 
 {% endmacro %}
 {% macro make_param(param_id, param_attrs, disabled) %}
+
+  {% macro make_list_string(values, add_text, disabled) %}
+      {% macro make_field(v) -%}
+        <input type="text" name="{{param_id}}" class="form-control" placeholder="{{param_attrs['placeholder']}}" value="{{escape(v)}}" required {{ 'disabled>' if disabled else '>'}}
+      {%- endmacro %}
+      {% for v in values %}
+          {% if not loop.first %}
+              <div class="input-group">
+          {% endif %}
+          {{ make_field(v) |safe}}
+          {% if not loop.first %}
+              <span class="input-group-addon" {{ 'onclick="$(this).parent().remove()"' if not disabled else '' |safe}}><i class="fa fa-trash"></i></span>
+              </div>
+
+          {% endif %}
+      {% endfor %}
+      <button class="btn btn-default" type="button" style="margin-top: 2px;" onclick="addField(this, '{{make_field("") | e}}');" {{'disabled' if disabled else ''}}>{{add_text}}</button>
+
+  {% endmacro %}
     <div class="form-group">
     {% if param_attrs['type'] == 'int' %}
         <label for="edit-{{param_id}}">{{param_attrs['name']}}</label>
@@ -370,7 +370,7 @@
         var btn = $(e.currentTarget);
         if(btn.attr("data-reset-all") == "true"){
             var params_ul = document.createElement('ul');
-            var unesc = $('<div />').html("{{ writable_params | map(attribute="1") | selectattr("name") | list | tojson }}").text();
+            var unesc = $('<div />').html('{{ writable_params | map(attribute="1") | selectattr("name") | list | tojson }}').text();
             var param_names = JSON.parse(unesc);
             for(var index in param_names) {
                 var param_li = document.createElement('li');
