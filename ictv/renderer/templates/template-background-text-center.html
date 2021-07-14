@@ -24,7 +24,7 @@
 {% set name = "Plain image + text centered" %}
 {% set description = "Plain image in background with text centered" %}
 {% set template_id = get_template_id() %}
-{% extends "%s" % base %}
+{%if base%}{% extends "%s" % base %}{%endif%}
 
 {% block content %}
 <style>

@@ -23,7 +23,7 @@
 {% set name = "Image on the left + 3 fields" %}
 {% set description = "Image on the left side followed by text with title and subtitle" %}
 {% set template_id = get_template_id() %}
-{% extends "%s" % base %}
+{%if base%}{% extends "%s" % base %}{%endif%}
 
 {% block content %}
 <style>
