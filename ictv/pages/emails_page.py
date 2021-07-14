@@ -43,7 +43,7 @@ class EmailPage(ICTVAuthPage):
     def GET(self):
         u = User.get(self.session['user']['id'])
         channels = Channel.select()
-        return self.renderer.emails(u, channels=channels)
+        return self.renderer.emails(user=u, channels=channels)
 
     def POST(self):
         form = web.input()

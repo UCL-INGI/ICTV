@@ -103,7 +103,24 @@ class SubscribeScreensPage(ICTVAuthPage):
         channel = Channel.get(channel_id)
         current_user = User.get(self.session['user']['id'])
         screens_of_current_user = Screen.get_visible_screens_of(current_user)
-        return self.renderer.channel_subscriptions(channel = channel, possible_screens= screens_of_current_user,user = current_user, subscriptions = current_user.get_subscriptions_of_owned_screens())
+        subscriptions = current_user.get_subscriptions_of_owned_screens()
+        last_by = {sub.screen.id:
+                {
+                    'user': sub.created_by.readable_name,
+                    'channel_name': sub.channel.name,
+                    'plugin_channel': hasattr(sub.channel, 'plugin')
+                }
+                for sub in subscriptions if sub.channel.id == channel.id
+            }
+        screen_names = {s.id: s.name for s in screens_of_current_user}
+        return self.renderer.channel_subscriptions(
+            channel = channel, 
+            possible_screens= screens_of_current_user,
+            user = current_user, 
+            subscriptions = subscriptions,
+            last_by = last_by,
+            screen_names = screen_names
+        )
 
     @PermissionGate.administrator
     def POST(self,channel_id):
@@ -261,13 +278,15 @@ class ChannelPage(ICTVAuthPage):
                 writable_params.append((param_id, param_attrs))
         readable_params, writable_params = self.get_params(channel, current_user)
         is_admin = current_user.super_admin or channel.has_admin(self.session['user']['id'])
+        import re
         return self.renderer.channel(
             channel=channel,
             templates=templates,
             readable_params=readable_params,
             writable_params=writable_params,
             can_modify_cache=current_user.super_admin,
-            can_modify_capsule_filter=current_user.super_admin
+            can_modify_capsule_filter=current_user.super_admin,
+            pattern=re.compile(r"list\[.*\]")
         )
 
     @staticmethod

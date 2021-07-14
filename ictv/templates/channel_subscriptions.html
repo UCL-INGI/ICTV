@@ -1,63 +1,61 @@
-$def with (channel,possible_screens,user,subscriptions)
+{#
+    This file belongs to the ICTV project, written by Nicolas Detienne,
+    Francois Michel, Maxime Piraux, Pierre Reinbold and Ludovic Taffin
+    at Université catholique de Louvain.
 
-$#    This file belongs to the ICTV project, written by Nicolas Detienne,
-$#    Francois Michel, Maxime Piraux, Pierre Reinbold and Ludovic Taffin
-$#    at Universite Catholique de Louvain.
-$#
-$#    Copyright (C) 2017  Universite Catholique de Louvain (UCL, Belgium)
-$#
-$#    This program is free software: you can redistribute it and/or modify
-$#    it under the terms of the GNU Affero General Public License as published
-$#    by the Free Software Foundation, either version 3 of the License, or
-$#    (at your option) any later version.
-$#
-$#    This program is distributed in the hope that it will be useful,
-$#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-$#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-$#    GNU Affero General Public License for more details.
-$#
-$#    You should have received a copy of the GNU Affero General Public License
-$#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+    Copyright (C) 2016-2018  Université catholique de Louvain (UCL, Belgium)
 
-$code:
-    feedbacks = get_feedbacks()
-    form = pop_previous_form()
-    last_by =   {sub.screen.id:
-                    {
-                        'user': sub.created_by.readable_name,
-                        'channel_name': sub.channel.name,
-                        'plugin_channel': hasattr(sub.channel, 'plugin')
-                    }
-                    for sub in subscriptions if sub.channel.id == channel.id
-                }
-    screen_names = {s.id: s.name for s in possible_screens}
-    subscriptions = {}
+    ICTV is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published
+    by the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    ICTV is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
+#}
+
+{% set feedbacks = get_feedbacks() %}
+{% set form = pop_previous_form() %}
+{% set subscriptions = {} %}
+
+{% extends "%s" % base %}
+
+{% block content %}
 <section class="content-header" style="margin-bottom: 5px">
     <h1>
-        Subscription to channel $channel.name
-        <small>List and update all subscriptions of $channel.name</small>
+        Subscription to channel {{channel.name}}
+        <small>List and update all subscriptions of {{channel.name}}</small>
         <button type="button" data-toggle="modal" data-target="#confirm-subs-modal" class="btn btn-success pull-right">
             <i class="fa fa-check" aria-hidden="true"></i> Update channel subscriptions
         </button>
     </h1>
 </section>
 <section class="content">
-    $def create_alert(title, message, icon, type="success"):
-        <div class="alert alert-$type alert-dismissible">
+    {% macro create_alert(title, message, icon, type="success") %}
+        <div class="alert alert-{{type}} alert-dismissible">
             <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
-            <h4><i class="icon fa $icon"></i>$title</h4>
-            $message
+            <h4><i class="icon fa {{icon}}"></i>{{title}}</h4>
+            {{message}}
         </div>
 
-    $if feedbacks.has('subscription', 'ok'):
-        $:create_alert("Applied", "These changes have been successfully applied.", "fa-rss")
+    {% endmacro %}
+    {% if feedbacks.has('subscription', 'ok') %}
+        {{ create_alert("Applied", "These changes have been successfully applied.", "fa-rss") |safe}}
 
-    $if feedbacks.has('subscription', 'nothing_changed'):
-        $:create_alert("Nothing changed", "The changes you submitted did not affect the screen's subscriptions", "fa-rss", "info")
+    {% endif %}
+    {% if feedbacks.has('subscription', 'nothing_changed') %}
+        {{ create_alert("Nothing changed", "The changes you submitted did not affect the screen's subscriptions", "fa-rss", "info") |safe}}
 
-    $if feedbacks.has('subscription', 'disabled_plugin'):
-        $:create_alert("Forbidden", "You cannot subscribe your screen to channels with disabled plugins", "fa-times", "error")
+    {% endif %}
+    {% if feedbacks.has('subscription', 'disabled_plugin') %}
+        {{ create_alert("Forbidden", "You cannot subscribe your screen to channels with disabled plugins", "fa-times", "error") |safe}}
 
+    {% endif %}
     <div class="row">
         <div class="col-md-6">
             <div class="box">
@@ -78,24 +76,26 @@ $code:
                         </tr>
                         </tfoot>
                         <tbody>
-                        $for screen in possible_screens:
-                            <tr data-screen-id="$screen.id">
+                        {% for screen in possible_screens %}
+                            <tr data-screen-id="{{screen.id}}">
                             <td>
-                                <a href="/screen/$screen.id">$screen.name</a>
+                                <a href="/screen/{{screen.id}}">{{screen.name}}</a>
                             </td>
                             <td>
-                                <input type="checkbox" class="screen-subscribe-checkbox" data-screen-id="$screen.id"
-                                       value="subs" $('disabled' if (not screen.is_subscribed_to(channel) and hasattr(channel, 'plugin') and channel.plugin.activated != 'yes') or not channel.can_subscribe(user) else '')
-                                       $("checked" if screen.is_subscribed_to(channel) else '')>
-                                $if hasattr(channel, 'plugin') and channel.plugin.activated != 'yes':
+                                <input type="checkbox" class="screen-subscribe-checkbox" data-screen-id="{{screen.id}}"
+                                       value="subs" {{ 'disabled' if (not screen.is_subscribed_to(channel) and hasattr(channel, 'plugin') and channel.plugin.activated != 'yes') or not channel.can_subscribe(user) else ''}}
+                                       {{ "checked" if screen.is_subscribed_to(channel) else '' }}>
+                                {% if hasattr(channel, 'plugin') and channel.plugin.activated != 'yes' %}
                                     <a type="button" class="btn btn-xs btn-warning pull-right" style="margin-top: 5px; ">
-                                        $:make_tooltip(info['screen']['misc']['not-activated-plugin'], icon=True, icon_class='fa-exclamation-triangle')
+                                        {{ make_tooltip(info['screen']['misc']['not-activated-plugin'], icon=True, icon_class='fa-exclamation-triangle') |safe}}
                                     </a>
+                                {% endif %}
                             </td>
                             <td class="text-last-action">
-                                $last_by.get(channel.id, {'user': '-'})['user']
+                                {{ last_by.get(channel.id, {'user': '-'})['user'] }}
                             </td>
                             </tr>
+                        {% endfor %}
                         </tbody>
                     </table>
                 </div>
@@ -136,14 +136,15 @@ $code:
 
 <script src="/static/js/clipboard.min.js"></script>
 <script>
-    $$(document).ready(function () {
-        const dataTable = $$('.subscriptions-table').DataTable();
+    $(document).ready(function () {
+        const dataTable = $('.subscriptions-table').DataTable();
 
-        $if feedbacks.has_type('subscribe') and not feedbacks.has('subscribe', 'ok'):
+        {% if feedbacks.has_type('subscribe') and not feedbacks.has('subscribe', 'ok') %}
             fire_modal('#subscription-modal');
 
-        $$('.screen-subscribe-checkbox').change(function(e){
-            const checkbox = $$(this);
+        {% endif %}
+        $('.screen-subscribe-checkbox').change(function(e){
+            const checkbox = $(this);
             const screen_id = checkbox.attr("data-screen-id");
             if(screen_id in lastBy) {  // in the original state, the screen is subscribed to this channel
                 if(checkbox.prop("checked") && screen_id in subscriptions_diff)   delete subscriptions_diff[screen_id];    // we return to the originan state
@@ -155,10 +156,10 @@ $code:
         });
 
         dataTable.on( 'draw.dt', function () {
-            let checkboxes = $$('.screen-subscribe-checkbox');
+            let checkboxes = $('.screen-subscribe-checkbox');
             checkboxes.off("change");
             checkboxes.change(function(e){
-                const checkbox = $$(this);
+                const checkbox = $(this);
                 const screen_id = checkbox.attr("data-screen-id");
 
                 if(screen_id in lastBy) {  // in the original state, the screen is subscribed to this channel
@@ -171,7 +172,7 @@ $code:
             });
         });
 
-        const modaledit = $$('#confirm-subs-modal');
+        const modaledit = $('#confirm-subs-modal');
         modaledit.on('show.bs.modal', function(){
             const to_sub = [];
             const to_unsub = [];
@@ -181,9 +182,9 @@ $code:
                 // record the action in the correct list
                 list.push(parseInt(screen_id))
             }
-            const subscriptionsSummary = $$('#subscriptions-summary');
-            const summaryMessage = $$('#summary-message');
-            const summaryMessageEmpty = $$('#summary-message-empty');
+            const subscriptionsSummary = $('#subscriptions-summary');
+            const summaryMessage = $('#summary-message');
+            const summaryMessageEmpty = $('#summary-message-empty');
             subscriptionsSummary.html("");
             if(to_sub.length > 0) {
                 summaryMessage.show();
@@ -214,23 +215,24 @@ $code:
                 summaryMessageEmpty.show();
                 subscriptionsSummary.append("No changes have been done.");
             }
-            $$('#form-diff').val(JSON.stringify(subscriptions_diff));
+            $('#form-diff').val(JSON.stringify(subscriptions_diff));
         });
     });
 
     const subscriptions_diff = {};
 
-    const lastBy = $:json.dumps(last_by);
+    const lastBy = {{ json.dumps(last_by) |safe }};
 
-    const screen_names = $:json.dumps(screen_names);
+    const screen_names = {{ json.dumps(screen_names) |safe }};
 
     function fire_modal(modalSelector) {
-        const $$modal = $$(modalSelector);
-            $$modal.removeClass('fade');
-            $$modal.one('hidden.bs.modal', function () {
-                $$modal.find('.alert').detach();
-                $$modal.addClass('fade');
+        const $modal = $(modalSelector);
+            $modal.removeClass('fade');
+            $modal.one('hidden.bs.modal', function () {
+                $modal.find('.alert').detach();
+                $modal.addClass('fade');
             });
-            $$modal.modal('show')
+            $modal.modal('show')
         }
 </script>
+{% endblock %}

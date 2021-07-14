@@ -1,26 +1,26 @@
-$def with (content)
+{#
+    This file belongs to the ICTV project, written by Nicolas Detienne,
+    Francois Michel, Maxime Piraux, Pierre Reinbold and Ludovic Taffin
+    at Université catholique de Louvain.
 
-$#    This file belongs to the ICTV project, written by Nicolas Detienne,
-$#    Francois Michel, Maxime Piraux, Pierre Reinbold and Ludovic Taffin
-$#    at Université catholique de Louvain.
-$#
-$#    Copyright (C) 2016-2018  Université catholique de Louvain (UCL, Belgium)
-$#
-$#    ICTV is free software: you can redistribute it and/or modify
-$#    it under the terms of the GNU Affero General Public License as published
-$#    by the Free Software Foundation, either version 3 of the License, or
-$#    (at your option) any later version.
-$#
-$#    ICTV is distributed in the hope that it will be useful,
-$#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-$#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-$#    GNU Affero General Public License for more details.
-$#
-$#    You should have received a copy of the GNU Affero General Public License
-$#    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
+    Copyright (C) 2016-2018  Université catholique de Louvain (UCL, Belgium)
 
-$ user = session['user']
-$ user_object = User.get(user['id'])
+    ICTV is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published
+    by the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    ICTV is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
+#}
+
+{% set user = session['user'] %}
+{% set user_object = User.get(user['id']) %}
 
 <!DOCTYPE html>
 <html>
@@ -122,7 +122,7 @@ $ user_object = User.get(user['id'])
          user experience. Slimscroll is required when using the
          fixed layout. -->
 </head>
-<body class="hold-transition sidebar-mini skin-blue $('sidebar-collapse' if sidebar_collapse else '')">
+<body class="hold-transition sidebar-mini skin-blue {{ ('sidebar-collapse' if sidebar_collapse else '') }}">
 <div class="wrapper">
 
     <header class="main-header">
@@ -130,19 +130,20 @@ $ user_object = User.get(user['id'])
             <span class="logo-mini"><b>IC</b>TV</span>
             <span class="logo-lg"><b>ICTV</b></span>
         </a>
-        $if show_header:
+        {% if show_header %}
             <nav class="navbar navbar-static-top" role="navigation">
                 <a href="#" class="sidebar-toggle" data-toggle="offcanvas" role="button">
                     <span class="sr-only">Toggle navigation</span>
                 </a>
                 <div class="navbar-custom-menu">
                     <ul class="nav navbar-nav">
-                        $if content.get('has_tour'):
-                            <li class="dropdown help-menu" onclick="$$('#tour-started').submit();">
+                        {% if has_tour %}
+                            <li class="dropdown help-menu" onclick="$('#tour-started').submit();">
                                 <a class="dropdown-toggle" data-toggle="dropdown">
                                     <i class="fa fa-2x fa-question-circle" style="max-height: 20px; position: relative; left: 3px; bottom: 4px;"></i>
                                 </a>
                             </li>
+                        {% endif %}
                         <!-- User Account Menu -->
                         <li class="dropdown user user-menu">
                             <!-- Menu Toggle Button -->
@@ -150,24 +151,25 @@ $ user_object = User.get(user['id'])
                                 <!-- The user image in the navbar-->
                                 <img src="/static/images/user-default.png" class="user-image" alt="User Image">
                                 <!-- hidden-xs hides the username on small devices so only the image appears. -->
-                                <span class="hidden-xs">$(user_object.readable_name)</span>
+                                <span class="hidden-xs">{{ user_object.readable_name }}</span>
                             </a>
                             <ul class="dropdown-menu">
                                 <!-- The user image in the menu -->
                                 <li class="user-header">
                                     <img src="/static/images/user-default.png" class="img-circle" alt="User Image">
-                                    <a href="/users/$user['id']">
+                                    <a href="/users/{{ user['id'] }}">
                                         <p style="color:white;">
-                                            $(user_object.readable_name)
+                                            {{ user_object.readable_name }}
                                         </p>
                                     </a>
                                 </li>
                                 <!-- Menu Footer-->
                                 <li class="user-footer">
-                                    $if show_reset_password:
+                                    {% if show_reset_password %}
                                         <div class="pull-left">
                                             <a href="/reset" class="btn btn-default btn-flat">Reset password</a>
                                         </div>
+                                    {% endif %}
                                     <div class="pull-right">
                                         <form action="/logout" method="post" style="margin: 0;">
                                             <button type="submit" class="btn btn-default btn-flat">Sign out</button>
@@ -179,6 +181,7 @@ $ user_object = User.get(user['id'])
                     </ul>
                 </div>
             </nav>
+        {% endif %}
     </header>
 
     <!-- Left side column. contains the logo and sidebar -->
@@ -193,15 +196,21 @@ $ user_object = User.get(user['id'])
                     <img src="/static/images/user-default.png" class="img-circle" alt="User Image">
                 </div>
                 <div class="pull-left info">
-                    <p>$(user_object.readable_name)</p>
+                    <p>{{ user_object.readable_name }}</p>
                 </div>
             </div>
 
             <!-- Sidebar Menu -->
             <ul class="sidebar-menu">
-                $if 'sidebar' in session:
-                    $for k, v in session.sidebar:
-                        <li class="$('active' if (k == content.active_element if 'active_element' in content else False) else '')"><a href="$v['url']"><i class="fa $v['icon']"></i><span>$k</span></a></li>
+                {% if 'sidebar' in session %}
+                    {% for k, v in session.sidebar %}
+                      {%  if (active_element) and (k == active_element)  %}
+                        <li class="active"><a href="{{ v['url'] }}"><i class="fa {{ v['icon'] }}"></i><span>{{ k }}</span></a></li>
+                      {% else %}
+                        <li><a href="{{ v['url'] }}"><i class="fa {{ v['icon'] }}"></i><span>{{ k }}</span></a></li>
+                      {% endif %}
+                    {% endfor %}
+                {% endif %}
             </ul>
             <!-- /.sidebar-menu -->
         </section>
@@ -209,12 +218,16 @@ $ user_object = User.get(user['id'])
     </aside>
 
     <div class="content-wrapper">
-        $if 'real_user' in session and session['real_user']['email'] != user['email']:
-            <div style="padding: 10px 25px; text-align: center; background: #14d1ff; z-index: 999999; font-size: 16px; color: white;">You are currently logged as <b>$user['email']</b>. Click <a style="color: white" href="/logas/nobody" style=""> <u>here</u> </a> to log out from $user['email']'s account</div>
-        $:content
+        {% if 'real_user' in session and session['real_user']['email'] != user['email'] %}
+            <div style="padding: 10px 25px; text-align: center; background: #14d1ff; z-index: 999999; font-size: 16px; color: white;">
+                You are currently logged as <b>{{user['email']}}</b>. Click <a style="color: white" href="/logas/nobody" style=""> <u>here</u> </a> to log out from {{user['email']}}'s account
+            </div>
+        {% endif %}
+
+        {% block content %}{% endblock %}
     </div>
 
-    $if show_footer:
+    {% if show_footer %}
         <!-- Main Footer -->
         <footer class="main-footer">
             <!-- To the right -->
@@ -222,20 +235,21 @@ $ user_object = User.get(user['id'])
                 ICTV is distributed under the AGPL license.
             </div>
             <!-- Default to the left -->
-            <strong>ICTV v$version() - Copyright &copy; 2016-2018 <a href="http://www.uclouvain.be/">Université catholique de Louvain</a>.</strong>
+            <strong>ICTV v{{ version() }} - Copyright &copy; 2016-2018 <a href="http://www.uclouvain.be/">Université catholique de Louvain</a>.</strong>
         </footer>
+    {% endif %}
 </div>
 <form id="tour-started" action="/tour/started" method="post" style="display: none"></form>
 <form id="tour-ended" action="/tour/ended" method="post" style="display: none"></form>
 <script>
     window.setTimeout(function() {
-        $$(".alert.alert-success.alert-dismissible").fadeTo(500, 0).slideUp(500, function(){
-            $$(this).remove();
+        $(".alert.alert-success.alert-dismissible").fadeTo(500, 0).slideUp(500, function(){
+            $(this).remove();
         });
     }, 3000);
-    $$(window).load(function () {
-        $$('div.modal').appendTo('body');
-        var has_toured = $:('true' if user_object.has_toured else 'false');
+    $(window).load(function () {
+        $('div.modal').appendTo('body');
+        var has_toured = {{ 'true' if user_object.has_toured else 'false'|safe }};
         if (window.intro !== undefined && !has_toured) {
             var steps_key = intro_id + '-steps';
             var is_touring = JSON.parse(localStorage.is_touring || !has_toured) || !has_toured;
@@ -259,11 +273,11 @@ $ user_object = User.get(user['id'])
             }
             intro.onexit(function() {
                 localStorage.is_touring = false;
-                $$('#tour-ended').submit();
+                $('#tour-ended').submit();
             });
             intro.oncomplete(function() {
                 localStorage.is_touring = false;
-                $$('#tour-ended').submit();
+                $('#tour-ended').submit();
             });
         }
     });

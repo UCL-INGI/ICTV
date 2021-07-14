@@ -1,28 +1,29 @@
-$def with (mode=None, saml2_display_name=None)
+{#
+    This file belongs to the ICTV project, written by Nicolas Detienne,
+    Francois Michel, Maxime Piraux, Pierre Reinbold and Ludovic Taffin
+    at Université catholique de Louvain.
 
-$#    This file belongs to the ICTV project, written by Nicolas Detienne,
-$#    Francois Michel, Maxime Piraux, Pierre Reinbold and Ludovic Taffin
-$#    at Université catholique de Louvain.
-$#
-$#    Copyright (C) 2016-2018  Université catholique de Louvain (UCL, Belgium)
-$#
-$#    ICTV is free software: you can redistribute it and/or modify
-$#    it under the terms of the GNU Affero General Public License as published
-$#    by the Free Software Foundation, either version 3 of the License, or
-$#    (at your option) any later version.
-$#
-$#    ICTV is distributed in the hope that it will be useful,
-$#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-$#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-$#    GNU Affero General Public License for more details.
-$#
-$#    You should have received a copy of the GNU Affero General Public License
-$#    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
+    Copyright (C) 2016-2018  Université catholique de Louvain (UCL, Belgium)
 
-$code:
-    feedbacks = get_next_feedbacks()
-    form = pop_previous_form()
-    other_feedbacks = get_feedbacks()
+    ICTV is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published
+    by the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    ICTV is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
+#}
+
+
+
+{% set feedbacks = get_next_feedbacks() }}
+{% set form = pop_previous_form() }}
+{% set other_feedbacks = get_feedbacks() }}
 
 <!DOCTYPE html>
 <html>
@@ -43,34 +44,37 @@ $code:
     </div>
     <div class="nav-tabs-custom">
         <ul class="nav nav-tabs" role="tablist">
-            $if 'saml2' in mode:
-                <li class="$('active' if not (feedbacks.has_type('login') or other_feedbacks.has_type('reset')) else '')"><a href="#saml2" data-toggle="tab">$saml2_display_name</a></li>
-            <li class="$('active' if feedbacks.has_type('login') or other_feedbacks.has_type('reset') else ('active' if 'saml2' not in mode else ''))"><a href="#local" data-toggle="tab">Local</a></li>
+            {% if 'saml2' in mode %}
+                <li class="{{'active' if not (feedbacks.has_type('login') or other_feedbacks.has_type('reset')) else ''}}"><a href="#saml2" data-toggle="tab">{{saml2_display_name}}</a></li>
+            {% endif %}
+            <li class="{{'active' if feedbacks.has_type('login') or other_feedbacks.has_type('reset') else ('active' if 'saml2' not in mode else '')}}"><a href="#local" data-toggle="tab">Local</a></li>
         </ul>
         <div class="tab-content">
-            <div id="local" class="login-box-body tab-pane $('active' if feedbacks.has_type('login') or other_feedbacks.has_type('reset') else ('active' if 'saml2' not in mode else ''))">
+            <div id="local" class="login-box-body tab-pane {{'active' if feedbacks.has_type('login') or other_feedbacks.has_type('reset') else ('active' if 'saml2' not in mode else '')}}">
                 <p class="login-box-msg">Sign in with your ICTV account</p>
-                $if other_feedbacks.has('reset', 'ok'):
+                {% if other_feedbacks.has('reset', 'ok') %}
                     <div class="alert alert-success alert-dismissible">
                         <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
                         Your password has been successfully updated.
                     </div>
+                {% endif %}
                 <form action="/login" method="post">
                     <div class="form-group has-feedback">
                         <input type="email" class="form-control" name="email" placeholder="Email"
-                               value="$form.get('email')">
+                               value="{{form.get('email')}}">
                         <span class="glyphicon glyphicon-envelope form-control-feedback"></span>
                     </div>
                     <div class="form-group has-feedback">
                         <input type="password" class="form-control" name="password" placeholder="Password">
                         <span class="glyphicon glyphicon-lock form-control-feedback"></span>
                     </div>
-                    $if feedbacks.has('login', 'invalid_credentials'):
+                    {% if feedbacks.has('login', 'invalid_credentials') %}
                         <div class="alert alert-danger alert-dismissible">
                             <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
                             The credentials you have entered are invalid.
                         </div>
 
+                    {% endif %}
                     <div class="row">
                         <div class="col-xs-8"></div>
                         <div class="col-xs-4">
@@ -79,16 +83,17 @@ $code:
                     </div>
                 </form>
             </div>
-            $if 'saml2' in mode:
-                <div id="saml2" class="login-box-body tab-pane $('active' if not (feedbacks.has_type('login') or other_feedbacks.has_type('reset')) else '')" style="margin-top:15px">
-                    <p class="login-box-msg">Sign in with $saml2_display_name login</p>
+            {% if 'saml2' in mode %}
+                <div id="saml2" class="login-box-body tab-pane {{'active' if not (feedbacks.has_type('login') or other_feedbacks.has_type('reset')) else ''}}" style="margin-top:15px">
+                    <p class="login-box-msg">Sign in with {{saml2_display_name}} login</p>
                     <div class="row">
                         <div class="col-xs-2"></div>
                         <div class="col-xs-8">
-                            <a href="/shibboleth?sso" class="btn btn-success btn-block btn-flat">Sign in with $saml2_display_name</a>
+                            <a href="/shibboleth?sso" class="btn btn-success btn-block btn-flat">Sign in with {{saml2_display_name}}</a>
                         </div>
                     </div>
                 </div>
+            {% endif %}
         </div>
     </div>
 </div>

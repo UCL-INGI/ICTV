@@ -48,6 +48,16 @@ class ScreenSubscriptionsPage(ICTVAuthPage):
             'vertical') and "Portrait" == screen.orientation) or (c.plugin.name == "editor" and not c.get_config_param(
             'vertical') and "Landscape" == screen.orientation) or (c.plugin.name != "editor")]
 
+        subscriptions=user.get_subscriptions_of_owned_screens()
+        last_by =   {sub.channel.id:
+                    {
+                        'user': sub.created_by.readable_name,
+                        'channel_name': sub.channel.name,
+                        'plugin_channel': hasattr(sub.channel, 'plugin')
+                    }
+                    for sub in subscriptions if sub.screen.id == screen.id
+                }
+
         return self.renderer.screen_subscriptions(
             screen=screen,
             user=user,
@@ -55,7 +65,10 @@ class ScreenSubscriptionsPage(ICTVAuthPage):
             screen_channels=Channel.get_screens_channels_from(user=user),
             plugin_channels=plugin_channels,
             bundle_channels=bundle_channels,
-            subscriptions=user.get_subscriptions_of_owned_screens()
+            subscriptions=subscriptions,
+            last_by = last_by,
+            plugin_channels_names = {c.id: c.name for c in plugin_channels},
+            bundle_channels_names = {c.id: c.name for c in bundle_channels}
         )
 
     @PermissionGate.screen_administrator

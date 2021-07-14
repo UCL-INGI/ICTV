@@ -1,26 +1,30 @@
-$def with (homepage_description, user_disabled)
+{#
+    This file belongs to the ICTV project, written by Nicolas Detienne,
+    Francois Michel, Maxime Piraux, Pierre Reinbold and Ludovic Taffin
+    at Université catholique de Louvain.
 
-$#    This file belongs to the ICTV project, written by Nicolas Detienne,
-$#    Francois Michel, Maxime Piraux, Pierre Reinbold and Ludovic Taffin
-$#    at Université catholique de Louvain.
-$#
-$#    Copyright (C) 2016-2018  Université catholique de Louvain (UCL, Belgium)
-$#
-$#    ICTV is free software: you can redistribute it and/or modify
-$#    it under the terms of the GNU Affero General Public License as published
-$#    by the Free Software Foundation, either version 3 of the License, or
-$#    (at your option) any later version.
-$#
-$#    ICTV is distributed in the hope that it will be useful,
-$#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-$#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-$#    GNU Affero General Public License for more details.
-$#
-$#    You should have received a copy of the GNU Affero General Public License
-$#    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
+    Copyright (C) 2016-2018  Université catholique de Louvain (UCL, Belgium)
 
-$ user = session['user']
-$var has_tour: True
+    ICTV is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published
+    by the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    ICTV is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
+#}
+
+{% set user = session['user'] %}
+{% set  has_tour =  True %}
+
+{% extends "%s" % base %}
+
+{% block content %}
 <style>
     .introjs-helperLayer {
         z-index: inherit !important;
@@ -28,8 +32,8 @@ $var has_tour: True
 </style>
 <section class="content-header">
     <h1>
-        Welcome $(user['fullname'] if user['fullname'] is not None else user.get('username'))
-        <small>ICTV v$version()</small>
+        Welcome {{ user['fullname'] if user['fullname'] else user.get('username') }} 
+        <small>ICTV v{{ version() }}</small>
     </h1>
 </section>
 <section class="content">
@@ -40,12 +44,12 @@ $var has_tour: True
                     <h3 class="box-title">Welcome to ICTV</h3>
                 </div>
                 <div class="box-body">
-                    $:homepage_description
+                    {{ homepage_description|safe }}
                 </div>
             </div>
         </div>
     </div>
-    $if user_disabled:
+    {% if user_disabled %}
         <div class="row">
             <div class="col-lg-6">
                 <div class="box box-warning">
@@ -58,16 +62,19 @@ $var has_tour: True
                 </div>
             </div>
         </div>
+    {% endif %}
 
     <div class="row">
         <div class="col-lg-8">
             <div class="box">
                 <div class="box-header with-border">
-                    <div class="box-title">If you want to find out more about ICTV, have a look at the presentation below.</div>
+                    <div class="box-title">If you want to find out more about ICTV, have a look at the presentation
+                        below.</div>
                 </div>
                 <div class="box-body">
                     <div class="embed-responsive embed-responsive-16by9">
-                        <iframe id="ictv-presentation" class="embed-response-item" frameborder="0" src="/static/ictv-presentation.html"></iframe>
+                        <iframe id="ictv-presentation" class="embed-response-item" frameborder="0"
+                            src="/static/ictv-presentation.html"></iframe>
                     </div>
                 </div>
             </div>
@@ -75,7 +82,7 @@ $var has_tour: True
     </div>
 </section>
 <script>
-    $$(document).ready(function () {
+    $(document).ready(function () {
         intro_id = 'home';
         intro = introJs();
         intro.setOptions({
@@ -98,9 +105,9 @@ $var has_tour: True
                 }
             ]
         });
-        $$('#ictv-presentation').load(function() {
-            this.contentWindow.Reveal.addEventListener('endOfSlideshow', function() {
-                setTimeout(function() {
+        $('#ictv-presentation').load(function () {
+            this.contentWindow.Reveal.addEventListener('endOfSlideshow', function () {
+                setTimeout(function () {
                     intro.nextStep();
                 }, 1000);
             });
@@ -108,7 +115,8 @@ $var has_tour: True
     });
 </script>
 <script>
-$$(document).ready(function(){
-    $$('[data-toggle="popover"]').popover();
-});
+    $(document).ready(function () {
+        $('[data-toggle="popover"]').popover();
+    });
 </script>
+{% endblock %}
