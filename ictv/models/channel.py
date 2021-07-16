@@ -47,7 +47,10 @@ class Channel(InheritableSQLObject):
 
     def can_subscribe(self, usr):
         """ Return whether this user has sufficient permission to be able to subscribe to this channel or not. """
-        user = User.get(usr["id"])
+        if isinstance(usr,dict):
+            user = User.get(usr["id"])
+        else:
+            user = usr
         return self.subscription_right == 'public' or UserPermissions.administrator in user.highest_permission_level or user in self.authorized_subscribers
 
     def safe_add_user(self, user):
