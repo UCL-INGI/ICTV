@@ -56,11 +56,6 @@ class SlideRenderer(object):
         self.renderer_globals = renderer_globals
         self.renderer_globals['get_template_id'] = lambda: utils.generate_secret(digits='')
 
-        ### OLD ###
-        # self.slide_renderer = web.template.render(os.path.join(get_root_path(), 'renderer/templates/'), globals=renderer_globals)
-        # self.preview_renderer = web.template.render(os.path.join(get_root_path(), 'renderer'), globals=renderer_globals)
-        ###########
-
         ### Jinja2 ###
         self.slide_renderer = render_jinja(os.path.join(get_root_path(), 'renderer/templates/'))
         self.slide_renderer._lookup.globals.update(base="base.html",**self.renderer_globals)
@@ -78,7 +73,9 @@ class SlideRenderer(object):
             slide_defaults = {}
         deep_update(slide_defaults, slide.get_content())
         return self.slide_renderer.base(
-            content=(self.slide_renderer.__getattr__(slide.get_template())(slide=slide_defaults)), slide=slide)
+            content = self.slide_renderer.__getattr__(slide.get_template())(slide=slide_defaults), 
+            slide = slide
+        )
 
     def render_capsule(self, capsule):
         """ Returns the complete HTML element representing the given capsule. """

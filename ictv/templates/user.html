@@ -62,7 +62,7 @@
                                                     {% set read, write = p_a_r.get_access_rights_for(role.permission_level) %}
                                                     {% if read %}
                                                         <li>
-                                                            Can <i><b>view</b></i>$:(' and <i><b>modify</b></i>' if write else '') parameter <b>{{p_a_r.name}}</b>
+                                                            Can <i><b>view</b></i>{{' and <i><b>modify</b></i>' if write else '' |safe}} parameter <b>{{p_a_r.name}}</b>
                                                         </li>
                                                     {% endif %}
                                                 {% endfor %}

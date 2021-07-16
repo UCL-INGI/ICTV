@@ -121,7 +121,7 @@
         $('#table').DataTable({stateSave: true});
         var myDoughnutChart = new Chart($('#assets-chart'), {
             type: 'doughnut',
-            data: $:chart_data,
+            data: {{ chart_data |safe}},
             options: {
                 title: {
                     display: true,
