@@ -22,8 +22,7 @@
 
 {% set name = "Text centered + 2 fields" %}
 {% set description = "Text centered with title and subtitle" %}
-
-{% extends "%s" % base %}
+{%if base%}{% extends "%s" % base %}{%endif%}
 
 {% block content %}
 <div class="logo logo-ucl">

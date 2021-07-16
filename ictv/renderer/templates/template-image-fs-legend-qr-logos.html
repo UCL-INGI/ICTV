@@ -25,8 +25,7 @@
 {% set description = "Plain image in background with QR Code and legend and two top logos" %}
 
 {% set template_id = get_template_id() %}
-
-{% extends "%s" % base %}
+{%if base%}{% extends "%s" % base %}{%endif%}
 
 {% block content %}
 <style>
@@ -56,4 +55,3 @@
 
 </div>
 {% endblock %}
-

@@ -19,6 +19,6 @@
     along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
 #}
 
-<section data-autoslide="{{slide.get_duration() if slide else '' }}" {{ bg if bg else '' |safe}}>
-    {% block content %}{% endblock %}
+<section data-autoslide="{{slide_b.get_duration() if slide_b else '' }}" {{ bg if bg | safe}}>
+    {%block content%}{% endblock %}
 </section>
