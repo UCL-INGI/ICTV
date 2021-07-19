@@ -21,9 +21,9 @@
 
 
 
-{% set feedbacks = get_next_feedbacks() }}
-{% set form = pop_previous_form() }}
-{% set other_feedbacks = get_feedbacks() }}
+{% set feedbacks = get_next_feedbacks() %}
+{% set form = pop_previous_form() %}
+{% set other_feedbacks = get_feedbacks() %}
 
 <!DOCTYPE html>
 <html>
@@ -61,7 +61,7 @@
                 <form action="/login" method="post">
                     <div class="form-group has-feedback">
                         <input type="email" class="form-control" name="email" placeholder="Email"
-                               value="{{form.get('email')}}">
+                               value="{{form.get('email') if form.get('email')}}">
                         <span class="glyphicon glyphicon-envelope form-control-feedback"></span>
                     </div>
                     <div class="form-group has-feedback">
