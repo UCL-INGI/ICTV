@@ -54,6 +54,7 @@ class SlideRenderer(object):
             Each function is responsible of rendering the corresponding field and will be called by the renderer when
             a corresponding function is parsed in a slide template.
         """
+        renderer_globals['base']="base.html"
         self.renderer_globals = renderer_globals
         self.renderer_globals['get_template_id'] = lambda: utils.generate_secret(digits='')
 
@@ -116,9 +117,10 @@ class SlideRenderer(object):
             :param theme_name: The name of the theme.
         """
         rendered_content = self.slide_renderer.__getattr__(template_name)(slide=content)
-        bg = rendered_content.bg if 'bg' in rendered_content else ''
-        themes = Themes.prepare_for_css_inclusion([theme_name])
-        return '<section class="%s" %s>%s</section>' % (' '.join(themes), bg, str(rendered_content))
+        #bg = rendered_content.bg if 'bg' in rendered_content else ''
+
+        #Jinja doesn't allow access to template variables outside of scope
+        return '%s' % rendered_content
 
     def preview_slide(self, slide, theme=None, small_size=False):
         """ Returns a full HTML page representing a preview of the given slide. """
@@ -129,7 +131,7 @@ class SlideRenderer(object):
             themes = Themes.prepare_for_css_inclusion([theme])
             slide_defaults = Themes.get_slide_defaults(theme)
         slide_html = str(self.render_slide(slide, slide_defaults=slide_defaults))
-        capsule = '<section class="%s">%s</section>' % (' '.join(themes), str(slide_html))
+        capsule = slide_html
         return self.preview_renderer.preview(content=capsule, themes=themes, controls=False, small_size=small_size)
 
     def preview_capsules(self, capsules, context=None, auto_slide=False):
@@ -441,7 +443,7 @@ def make_text(**kwargs):
 
 
 def make_background(**kwargs):
-    if 'content' in kwargs and 'number' in kwargs:
+    if 'content' in kwargs and 'number' in kwargs and kwargs['content']:
         id = 'background-' + str(kwargs['number'])
         if 'src' in kwargs['content'].get(id, {}):
             src = kwargs['content'][id]['src']
@@ -455,6 +457,8 @@ def make_background(**kwargs):
         else:
             return ''
         return attrs
+    else:
+        return ""
 
 
 def get_no_content_capsule(app, theme, context):
