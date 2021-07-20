@@ -131,7 +131,6 @@
                                     {% set screens = (user.screens | list) %}
                                     {% set tooltip_message = namespace(content=('%s is administrator of the following screens:\n' % (user.fullname if user.fullname else user.email))) %}
 
-                                    {# TODO seek a more elegant workaround #}
                                     {% for s in screens %}
                                       {% set tooltip_message.content = tooltip_message.content+("%s, (%s)\n" | format(s.name, s.building.name)) %}
                                     {% endfor %}
