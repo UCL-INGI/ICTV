@@ -54,7 +54,7 @@ class LoginPage(ICTVPage):
         return web.seeother('/')
 
     def render_page(self):
-        return self.standalone_renderer.login(self.config['authentication'], self.config['saml2']['display_name'])
+        return self.standalone_renderer.login(mode=self.config['authentication'], saml2_display_name=self.config['saml2']['display_name'])
 
 
 class GetResetLink(ICTVAuthPage):
