@@ -22,6 +22,7 @@
 # Import smtplib for the actual sending function
 import json
 import smtplib
+import re
 # Import the email modules we'll need
 from email.mime.text import MIMEText
 
@@ -114,9 +115,9 @@ class SubscribeScreensPage(ICTVAuthPage):
             }
         screen_names = {s.id: s.name for s in screens_of_current_user}
         return self.renderer.channel_subscriptions(
-            channel = channel, 
+            channel = channel,
             possible_screens= screens_of_current_user,
-            user = current_user, 
+            user = current_user,
             subscriptions = subscriptions,
             last_by = last_by,
             screen_names = screen_names
@@ -278,7 +279,6 @@ class ChannelPage(ICTVAuthPage):
                 writable_params.append((param_id, param_attrs))
         readable_params, writable_params = self.get_params(channel, current_user)
         is_admin = current_user.super_admin or channel.has_admin(self.session['user']['id'])
-        import re
         return self.renderer.channel(
             channel=channel,
             templates=templates,

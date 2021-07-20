@@ -34,9 +34,6 @@ from sqlobject import SQLObjectNotFound, sqlhub
 from sqlobject.dberrors import DatabaseError
 from web.py3helpers import string_types
 
-# from flask import Flask, render_template
-# from flask.views import MethodView
-
 import ictv
 import ictv.common
 from ictv import database
@@ -444,13 +441,6 @@ def get_app(config_path, sessions_path=""):
     template_kwargs = {'loc': os.path.join(get_root_path(), 'templates/'),
                        'cache': not app.config['debug']['debug_on_error'],
                        'globals': template_globals}
-
-    ### OLD ###
-    # app.renderer = web.template.render(base='base', **template_kwargs)
-
-    # # Init a second web.py renderer without any base template
-    # app.standalone_renderer = web.template.render(**template_kwargs)
-    ###########
 
     ### Jinja2 ###
     app.renderer = render_jinja(os.path.join(get_root_path(), 'templates/'))

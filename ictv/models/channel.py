@@ -48,6 +48,7 @@ class Channel(InheritableSQLObject):
     def can_subscribe(self, usr):
         """ Return whether this user has sufficient permission to be able to subscribe to this channel or not. """
         if isinstance(usr,dict):
+            # Retreive User instance when called from template
             user = User.get(usr["id"])
         else:
             user = usr

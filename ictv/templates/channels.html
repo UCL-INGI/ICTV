@@ -239,10 +239,9 @@
                     </tfoot>
                     <tbody>
                         {% for channel in bundles %}
-                            {% set popover_content = [''] %}
+                            {% set popover_content = namespace(content='') %}
                             {% for c in channel.bundled_channels %}
-                                {# TODO seek better workaround #}
-                                <div style="display:none"> {{popover_content.append('<a href="channel/%d">%s</a><br>'|format(c.id, c.name))}}</div>
+                                {% set popover_content.content=popover_content.content+('<a href="channel/%d">%s</a><br>'|format(c.id, c.name)) %}
                             {% endfor %}
                             <tr data-channel-id="{{channel.id}}" data-channel-description="{{channel.description}}"
                                 data-channel-name="{{channel.name}}" data-channel-enabled="{{'yes' if channel.enabled else 'no'}}">
@@ -250,7 +249,7 @@
                                 <td>
                                     {{ channel.bundled_channels.count() }}
                                     <a href="#" class="btn btn-xs btn-default pull-right" style="margin-top: 5px;"
-                                       data-content='{{ popover_content | join | safe }}'
+                                       data-content='{{ popover_content.content | safe }}'
                                        data-container="body" data-toggle="popover"
                                        data-placement="right" data-original-title="Channels contained in this bundle"
                                        data-html="true">
