@@ -124,8 +124,8 @@
                                 <tbody>
                                 {% for sub in channel.authorized_subscribers %}
                                     <tr>
-                                        <td>{{sub.fullname if sub.fullname is not None else sub.username}}</td>
-                                        <td>{{sub.email if sub.email is not None else "-"}}</td>
+                                        <td>{{sub.fullname if sub.fullname else sub.username}}</td>
+                                        <td>{{sub.email if sub.email else "-"}}</td>
                                     </tr>
 
                                 {% endfor %}
