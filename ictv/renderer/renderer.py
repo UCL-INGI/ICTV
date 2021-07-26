@@ -36,7 +36,7 @@ from ictv.plugin_manager.plugin_capsule import PluginCapsule
 from ictv.plugin_manager.plugin_slide import PluginSlide
 
 from web.contrib.template import render_jinja
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Environment, FileSystemLoader, nodes
 
 
 
@@ -166,13 +166,20 @@ class ICTVRenderer(SlideRenderer):
                             'logo': make_logo, 'text': make_text, 'background': make_background}
         super(ICTVRenderer, self).__init__(renderer_globals, app)
 
-def read_raw_template(template):
-    with open(os.path.join(get_root_path(), 'renderer/templates/'+template+".html")) as f:
-        content = f.read()
-    return content
 
-def get_var_template(raw_template, name):
-    return re.search(r"\{% *set "+name+r" *= *\"(.*)\" *%\}", raw_template).group(1)
+def get_const_in_template(template_name):
+    """ Function to retrieve the constant variables declared inside a jinja template. """
+    
+    env = Environment(loader=FileSystemLoader('ictv/renderer/templates/'))
+    template_source = env.loader.get_source(env, template_name+".html")[0]
+    parsed_content = env.parse(template_source)
+
+    variables = {}
+    for element in parsed_content.body:
+        if type(element) is nodes.Assign and type(element.node) is nodes.Const:
+            variables[element.target.name] = element.node.value
+
+    return variables
 
 class TemplatesMeta(type):
     """ An utility class that constructs dynamically the Templates class. """
@@ -183,19 +190,9 @@ class TemplatesMeta(type):
                 templates[os.path.splitext(template)[0]] = {}
 
         for template in templates:
-            def f(type):
-                def g(*args, **kwargs):
-                    id = type + '-' + str(kwargs['number'])
-                    templates[template][id] = {'max_chars': kwargs['max_chars']} if 'max_chars' in kwargs else {}
-                return g
-
-            dummy_renderer = SlideRenderer({'title': f('title'), 'subtitle': f('subtitle'),
-                            'img': f('image'),
-                            'logo': f('logo'), 'text': f('text'), 'background': f('background')}, None)
-
-            raw_template = read_raw_template(template)
-            templates[template]['name'] = get_var_template(raw_template, 'name')
-            templates[template]['description'] = get_var_template(raw_template, 'description')
+            variables = get_const_in_template(template)
+            templates[template]['name'] = variables['name']
+            templates[template]['description'] = variables['description']
 
         self._templates = templates
         super().__init__(self)
