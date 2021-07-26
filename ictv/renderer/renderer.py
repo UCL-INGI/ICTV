@@ -167,12 +167,17 @@ class ICTVRenderer(SlideRenderer):
         super(ICTVRenderer, self).__init__(renderer_globals, app)
 
 
+
+def read_raw_template(template):
+    with open(os.path.join(get_root_path(), 'renderer/templates/'+template+".html")) as f:
+        content = f.read()
+    return content
+
 def get_const_in_template(template_name):
     """ Function to retrieve the constant variables declared inside a jinja template. """
     
-    env = Environment(loader=FileSystemLoader('ictv/renderer/templates/'))
-    template_source = env.loader.get_source(env, template_name+".html")[0]
-    parsed_content = env.parse(template_source)
+    env = Environment()
+    parsed_content = env.parse(read_raw_template(template_name))
 
     variables = {}
     for element in parsed_content.body:
