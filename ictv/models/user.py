@@ -46,14 +46,17 @@ class User(ICTVObject):
         kwargs['reset_secret'] = utils.generate_secret()
         super().__init__(**kwargs)
 
+    # WARN: user.log_name cannot longer be used in templates since the __getattr__ will not be triggered in jinja
     def _get_log_name(self):
         """ Returns a log friendly and unique name for this user. """
         return "%s (%d)" % (self.fullname if self.fullname else self.email, self.id)
 
+    # WARN: user.readable_name cannot longer be used in templates since the __getattr__ will not be triggered in jinja
     def _get_readable_name(self):
         """ Returns a user friendly and unique name for this user. """
         return self.fullname if self.fullname is not None else self.username if self.username is not None else self.email
 
+    # WARN: user.highest_permission_level cannot longer be used in templates since the __getattr__ will not be triggered in jinja
     def _get_highest_permission_level(self):
         """ Return the highest permission level of this user. """
         if self.super_admin:

@@ -38,7 +38,7 @@ class LogsPage(ICTVAuthPage):
             except FileNotFoundError:
                 size = 0
             loggers_stats[name]["size"] = pretty_print_size(size)
-        return self.renderer.logs(loggers_stats, time_since=timesince)
+        return self.renderer.logs(loggers_stats=loggers_stats, time_since=timesince)
 
 
 class ServeLog(ICTVAuthPage):

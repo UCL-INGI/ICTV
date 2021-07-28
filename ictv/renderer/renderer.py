@@ -35,6 +35,10 @@ from ictv.libs.html import HTML
 from ictv.plugin_manager.plugin_capsule import PluginCapsule
 from ictv.plugin_manager.plugin_slide import PluginSlide
 
+from web.contrib.template import render_jinja
+from jinja2 import Environment, FileSystemLoader, nodes
+
+
 
 class SlideRenderer(object):
     """ A parameterizable slide renderer. All classes that render slide should extend it. """
@@ -50,9 +54,18 @@ class SlideRenderer(object):
             Each function is responsible of rendering the corresponding field and will be called by the renderer when
             a corresponding function is parsed in a slide template.
         """
-        renderer_globals['get_template_id'] = lambda: utils.generate_secret(digits='')
-        self.slide_renderer = web.template.render(os.path.join(get_root_path(), 'renderer/templates/'), globals=renderer_globals)
-        self.preview_renderer = web.template.render(os.path.join(get_root_path(), 'renderer'), globals=renderer_globals)
+        renderer_globals['base']="base.html"
+        self.renderer_globals = renderer_globals
+        self.renderer_globals['get_template_id'] = lambda: utils.generate_secret(digits='')
+
+        ### Jinja2 ###
+        self.slide_renderer = render_jinja(os.path.join(get_root_path(), 'renderer/templates/'))
+        self.slide_renderer._lookup.globals.update(**self.renderer_globals)
+
+        self.preview_renderer = render_jinja(os.path.join(get_root_path(), 'renderer/'))
+        self.preview_renderer._lookup.globals.update(**self.renderer_globals)
+        ###########
+
         self.app = app
         super(SlideRenderer, self).__init__()
 
@@ -61,8 +74,11 @@ class SlideRenderer(object):
         if slide_defaults is None:
             slide_defaults = {}
         deep_update(slide_defaults, slide.get_content())
-        return self.slide_renderer.base(
-            content=(self.slide_renderer.__getattr__(slide.get_template())(slide=slide_defaults)), slide=slide)
+
+        return self.slide_renderer.__getattr__(slide.get_template())(slide=slide_defaults,slide_b=slide,base="base.html")
+
+        #return self.slide_renderer.base(get_bg=get_bg,
+        #    content=(self.slide_renderer.__getattr__(slide.get_template())(slide=slide_defaults)), slide=slide)
 
     def render_capsule(self, capsule):
         """ Returns the complete HTML element representing the given capsule. """
@@ -101,9 +117,10 @@ class SlideRenderer(object):
             :param theme_name: The name of the theme.
         """
         rendered_content = self.slide_renderer.__getattr__(template_name)(slide=content)
-        bg = rendered_content.bg if 'bg' in rendered_content else ''
-        themes = Themes.prepare_for_css_inclusion([theme_name])
-        return '<section class="%s" %s>%s</section>' % (' '.join(themes), bg, str(rendered_content))
+        #bg = rendered_content.bg if 'bg' in rendered_content else ''
+
+        #Jinja doesn't allow access to template variables outside of scope
+        return '%s' % rendered_content
 
     def preview_slide(self, slide, theme=None, small_size=False):
         """ Returns a full HTML page representing a preview of the given slide. """
@@ -114,7 +131,7 @@ class SlideRenderer(object):
             themes = Themes.prepare_for_css_inclusion([theme])
             slide_defaults = Themes.get_slide_defaults(theme)
         slide_html = str(self.render_slide(slide, slide_defaults=slide_defaults))
-        capsule = '<section class="%s">%s</section>' % (' '.join(themes), str(slide_html))
+        capsule = slide_html
         return self.preview_renderer.preview(content=capsule, themes=themes, controls=False, small_size=small_size)
 
     def preview_capsules(self, capsules, context=None, auto_slide=False):
@@ -150,6 +167,25 @@ class ICTVRenderer(SlideRenderer):
         super(ICTVRenderer, self).__init__(renderer_globals, app)
 
 
+
+def read_raw_template(template):
+    with open(os.path.join(get_root_path(), 'renderer/templates/'+template+".html")) as f:
+        content = f.read()
+    return content
+
+def get_const_in_template(template_name):
+    """ Function to retrieve the constant variables declared inside a jinja template. """
+    
+    env = Environment()
+    parsed_content = env.parse(read_raw_template(template_name))
+
+    variables = {}
+    for element in parsed_content.body:
+        if type(element) is nodes.Assign and type(element.node) is nodes.Const:
+            variables[element.target.name] = element.node.value
+
+    return variables
+
 class TemplatesMeta(type):
     """ An utility class that constructs dynamically the Templates class. """
     def __init__(self, *args, **kwargs):
@@ -159,19 +195,9 @@ class TemplatesMeta(type):
                 templates[os.path.splitext(template)[0]] = {}
 
         for template in templates:
-            def f(type):
-                def g(*args, **kwargs):
-                    id = type + '-' + str(kwargs['number'])
-                    templates[template][id] = {'max_chars': kwargs['max_chars']} if 'max_chars' in kwargs else {}
-                return g
-
-            dummy_renderer = SlideRenderer({'title': f('title'), 'subtitle': f('subtitle'),
-                            'img': f('image'),
-                            'logo': f('logo'), 'text': f('text'), 'background': f('background')}, None)
-
-            template_rendered = getattr(dummy_renderer.slide_renderer, template)(slide=None)
-            templates[template]['name'] = template_rendered.get('name')
-            templates[template]['description'] = template_rendered.get('description')
+            variables = get_const_in_template(template)
+            templates[template]['name'] = variables['name']
+            templates[template]['description'] = variables['description']
 
         self._templates = templates
         super().__init__(self)
@@ -419,7 +445,7 @@ def make_text(**kwargs):
 
 
 def make_background(**kwargs):
-    if 'content' in kwargs and 'number' in kwargs:
+    if 'content' in kwargs and 'number' in kwargs and kwargs['content']:
         id = 'background-' + str(kwargs['number'])
         if 'src' in kwargs['content'].get(id, {}):
             src = kwargs['content'][id]['src']
@@ -433,6 +459,8 @@ def make_background(**kwargs):
         else:
             return ''
         return attrs
+    else:
+        return ""
 
 
 def get_no_content_capsule(app, theme, context):

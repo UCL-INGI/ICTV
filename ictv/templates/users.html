@@ -1,28 +1,33 @@
-$def with (users, current_user, show_reset_button)
+{#
 
-$#    This file belongs to the ICTV project, written by Nicolas Detienne,
-$#    Francois Michel, Maxime Piraux, Pierre Reinbold and Ludovic Taffin
-$#    at Université catholique de Louvain.
-$#
-$#    Copyright (C) 2016-2018  Université catholique de Louvain (UCL, Belgium)
-$#
-$#    ICTV is free software: you can redistribute it and/or modify
-$#    it under the terms of the GNU Affero General Public License as published
-$#    by the Free Software Foundation, either version 3 of the License, or
-$#    (at your option) any later version.
-$#
-$#    ICTV is distributed in the hope that it will be useful,
-$#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-$#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-$#    GNU Affero General Public License for more details.
-$#
-$#    You should have received a copy of the GNU Affero General Public License
-$#    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
+    This file belongs to the ICTV project, written by Nicolas Detienne,
+    Francois Michel, Maxime Piraux, Pierre Reinbold and Ludovic Taffin
+    at Université catholique de Louvain.
 
-$var active_element: Users
-$code:
-    feedbacks = get_feedbacks()
-    form = pop_previous_form()
+    Copyright (C) 2016-2018  Université catholique de Louvain (UCL, Belgium)
+
+    ICTV is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published
+    by the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    ICTV is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
+
+#}
+
+{% extends "%s" % base %}
+
+{% set active_element='Users' %}
+{% set feedbacks = get_feedbacks() %}
+{% set form = pop_previous_form() %}
+
+{% block content %}
 <style>
     .tooltip-inner {
         white-space:pre-wrap !important;
@@ -35,24 +40,30 @@ $code:
     </h1>
 </section>
 <section class="content">
-    $def general_feedback(icon, action):
+    {% macro general_feedback(icon, action) -%}
         <div class="alert alert-success alert-dismissible">
         <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
-        <h4><i class="icon fa $icon"></i>$action.title()</h4>
-        The user <strong><i>$form.email.strip()</i></strong> has been successfully $action.
+        <h4><i class="icon fa {{ icon }}"></i>{{ action.title() }}</h4>
+        The user <strong><i>{{ form.email.strip() }}</i></strong> has been successfully {{ action }}.
         </div>
+    {%- endmacro %}
 
-    $if feedbacks.has('create', 'ok'):
-        $:general_feedback('fa-check', 'added')
+    {% if feedbacks.has('create', 'ok') %}
+        {{ general_feedback('fa-check', 'added') | safe }}
+    {% endif %}
 
-    $if feedbacks.has('edit', 'ok'):
-        $:general_feedback('fa-pencil', 'edited')
+    {% if feedbacks.has('edit', 'ok') %}
+        {{ general_feedback('fa-pencil', 'edited') | safe }}
+    {% endif %}
 
-    $if feedbacks.has('toggle-activation', 'ok'):
-        $if feedbacks.has('toggle-activation', 'activated'):
-            $:general_feedback('fa-thumbs-up', 'activated')
-        $if feedbacks.has('toggle-activation', 'deactivated'):
-            $:general_feedback('fa-thumbs-down', 'deactivated')
+    {% if feedbacks.has('toggle-activation', 'ok') %}
+        {% if feedbacks.has('toggle-activation', 'activated') %}
+            {{ general_feedback('fa-thumbs-up', 'activated') | safe }}
+        {% endif %}
+        {% if feedbacks.has('toggle-activation', 'deactivated') %}
+            {{ general_feedback('fa-thumbs-down', 'deactivated') | safe }}
+        {% endif %}
+    {% endif %}
 
     <div class="nav-tabs-custom">
         <ul class="nav nav-tabs" role="tablist">
@@ -64,12 +75,9 @@ $code:
             </li>
         </ul>
         <div class="tab-content" style="padding-top: 15px">
-            $code:
-                users_activated = [user for user in users if not user.disabled]
-                users_deactivated = [user for user in users if user.disabled]
-            $for users in [users_activated, users_deactivated]:
-                <div id="table-pane$(loop.index)" class="tab-pane $('active' if loop.index == 1 else '')">
-                    <table id="table$(loop.index)" class="table table-hover table-bordered" cellspacing="0" width="100%" data-page-length='25'>
+            {% for users in [(users | rejectattr("disabled")), (users | selectattr("disabled"))] %}
+                <div id="table-pane{{loop.index}}" class="tab-pane {{'active' if loop.index == 1 else ''}}">
+                    <table id="table{{loop.index}}" class="table table-hover table-bordered" cellspacing="0" width="100%" data-page-length='25'>
                         <thead>
                         <tr>
                             <th>Username</th>
@@ -91,69 +99,80 @@ $code:
                         </tr>
                         </tfoot>
                         <tbody>
-                        $for user in users:
-                            <tr data-user-id="$user.id">
-                                <td><a href="/users/$user.id">$user.username</a></td>
-                                <td>$user.fullname</td>
-                                <td><a href="mailto:$user.email">$user.email</a></td>
-                                <td data-permission="$user.highest_permission_level.value">
-                                    $if user.super_admin:
+                        {% for user in users %}
+                            <tr data-user-id="{{user.id}}">
+                                <td><a href="/users/{{user.id}}">{{user.username}}</a></td>
+                                <td>{{user.fullname}}</td>
+                                <td><a href="mailto:{{user.email}}">{{user.email}}</a></td>
+                                <td data-permission="{{user.highest_permission_level.value}}">
+                                    {% if user.super_admin %}
                                         <h6 class="label label-danger"><i class="fa fa-user-md"></i>Super Administrator</h6>
-
-                                    $if user.admin:
+                                    {% endif %}
+                                    {% if user.admin %}
                                         <h6 class="label label-warning"><i class="fa fa-user-md"></i>Administrator</h6>
+                                    {% endif %}
 
-                                    $code:
-                                        admin_channels = list(user.get_channels_with_permission_level(UserPermissions.channel_administrator))
-                                        channel_names = '\n'.join([c.name for c in admin_channels])
-                                        tooltip_message = '%s is administrator of the following channels:\n%s' % (user.fullname if user.fullname else user.email, channel_names)
+                                    {% set admin_channels = (user.get_channels_with_permission_level(UserPermissions.channel_administrator) | list) %}
+                                    {% set channel_names = (admin_channels | join('\n',attribute="name")) %}
+                                    {% set tooltip_message = '%s is administrator of the following channels:\n%s' % (user.fullname if user.fullname else user.email, channel_names) %}
 
-                                    $if admin_channels:
-                                        <h6 class="label bg-purple" $:make_tooltip(tooltip_message)><i class="fa fa-user"></i>Channel administrator</h6>
+                                    {% if admin_channels %}
+                                        <h6 class="label bg-purple" {{ make_tooltip(tooltip_message) | safe}}><i class="fa fa-user"></i>Channel administrator</h6>
+                                    {% endif %}
 
-                                    $code:
-                                        contrib_channels = list(user.get_channels_with_permission_level(UserPermissions.channel_contributor))
-                                        channel_names = '\n'.join([c.name for c in contrib_channels])
-                                        tooltip_message = '%s is contributor of the following channels:\n%s' % (user.fullname if user.fullname else user.email, channel_names)
+                                    {% set contrib_channels = (user.get_channels_with_permission_level(UserPermissions.channel_contributor) | list) %}
+                                    {% set channel_names = (contrib_channels | join('\n',attribute="name")) %}
+                                    {% set tooltip_message = '%s is contributor of the following channels:\n%s' % (user.fullname if user.fullname else user.email, channel_names) %}
 
-                                    $if contrib_channels:
-                                        <h6 class="label label-info" $:make_tooltip(tooltip_message)><i class="fa fa-user"></i>Channel contributor</h6>
+                                    {% if contrib_channels %}
+                                        <h6 class="label label-info" {{ make_tooltip(tooltip_message) | safe }}><i class="fa fa-user"></i>Channel contributor</h6>
+                                    {% endif %}
 
-                                    $code:
-                                        screens = list(user.screens)
-                                        screen_names = '\n'.join(['%s, (%s)' % (s.name, s.building.name) for s in screens])
-                                        tooltip_message = '%s is administrator of the following screens:\n%s' % (user.fullname if user.fullname else user.email, screen_names)
+                                    {% set screens = (user.screens | list) %}
+                                    {% set tooltip_message = namespace(content=('%s is administrator of the following screens:\n' % (user.fullname if user.fullname else user.email))) %}
 
-                                    $if screens:
-                                        <h6 class="label bg-olive" $:make_tooltip(tooltip_message)><i class="fa fa-user"></i>Screen administrator</h6>
+                                    {% for s in screens %}
+                                      {% set tooltip_message.content = tooltip_message.content+("%s, (%s)\n" | format(s.name, s.building.name)) %}
+                                    {% endfor %}
 
-                                    $if not admin_channels and not contrib_channels and not screens and UserPermissions.administrator not in user.highest_permission_level:
+                                    {% if screens %}
+                                        <h6 class="label bg-olive" {{ make_tooltip(tooltip_message.content) | safe }}><i class="fa fa-user"></i>Screen administrator</h6>
+                                    {% endif %}
+                                    {% if not admin_channels and not contrib_channels and not screens and UserPermissions.administrator not in user.highest_permission_level %}
                                         <h6 class="label label-default"><i class="fa fa-circle-o"></i>None</h6>
+                                    {% endif %}
                                 </td>
-                                <td data-disable="$user.disabled">
-                                    $('Deactivated' if user.disabled else 'Activated')
+                                <td data-disable="{{user.disabled}}">
+                                    {{ 'Deactivated' if user.disabled else 'Activated' }}
                                 </td>
                                 <td>
-                                    $if 'real_user' not in session or session['real_user']['email'] != user.email:
+                                    {% if 'real_user' not in session or session['real_user']['email'] != user.email %}
                                         <button class="btn btn-xs btn-primary" data-toggle="modal" data-target="#edit-user-modal"><i class="fa fa-pencil-square-o"></i>Edit</button>
+                                    {% endif %}
 
-                                    $if user.email != session['user']['email']:
-                                        $if current_user.super_admin and ('real_user' not in session or session['real_user']['email'] != user.email):
-                                            <button class="btn btn-xs btn-$('danger' if not user.disabled else 'warning')" data-toggle="modal" data-target="#toggle-activation-user-modal">
-                                                <i class="fa fa-thumbs-$('up' if user.disabled else 'down')"></i>$('Activate' if user.disabled else 'Deactivate')
+                                    {% if user.email != session['user']['email'] %}
+                                        {% if current_user.super_admin and ('real_user' not in session or session['real_user']['email'] != user.email) %}
+                                            <button class="btn btn-xs btn-{{'danger' if not user.disabled else 'warning'}}" data-toggle="modal" data-target="#toggle-activation-user-modal">
+                                                <i class="fa fa-thumbs-{{'up' if user.disabled else 'down'}}"></i>{{ 'Activate' if user.disabled else 'Deactivate' }}
                                             </button>
-                                        $if user.highest_permission_level in current_user.highest_permission_level:
-                                            <a href="/logas/$user.email" class="btn btn-xs btn-success"><i class="fa fa-user-secret"></i>Log as</a>
+                                        {% endif %}
+                                        {% if user.highest_permission_level in current_user.highest_permission_level %}
+                                            <a href="/logas/{{user.email}}" class="btn btn-xs btn-success"><i class="fa fa-user-secret"></i>Log as</a>
+                                        {% endif %}
+                                    {% endif %}
 
-                                    $if show_reset_button and UserPermissions.administrator in current_user.highest_permission_level:
-                                        <button class="btn btn-xs copy-secret pull-right" data-clipboard-text="$homedomain()/reset/$:user.reset_secret">
+                                    {% if show_reset_button and UserPermissions.administrator in current_user.highest_permission_level %}
+                                        <button class="btn btn-xs copy-secret pull-right" data-clipboard-text="{{homedomain()}}/reset/{{user.reset_secret | safe}}">
                                             Copy password reset link
                                         </button>
+                                    {% endif %}
                                 </td>
                             </tr>
+                        {% endfor %}
                         </tbody>
                     </table>
                 </div>
+            {% endfor %}
         </div>
     </div>
 
@@ -176,21 +195,21 @@ $code:
                     <div class="form-group">
                         <label for="username">Username</label>
                         <input type="text" name="username" class="form-control" id="username" placeholder="Username"
-                               value="$(form.get('username') if form.get('action') == 'create' else None)">
+                               value="{{form.get('username') if form.get('action') == 'create'}}">
                     </div>
 
-                    $if feedbacks.has('create', 'invalid_username'):
+                    {% if feedbacks.has('create', 'invalid_username') %}
                         <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
                             <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
                             This username is not valid. Please enter a username longer than 2 characters without any whitespaces.
                         </div>
 
-                    $elif feedbacks.has('create', 'username_already_exists'):
+                    {% elif feedbacks.has('create', 'username_already_exists') %}
                         <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
                             <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
                             An user with this username already exists.
                         </div>
-
+                    {% endif %}
 
                     <div class="form-group">
                         <label for="edit-fullname">Full name</label>
@@ -201,41 +220,46 @@ $code:
                     <div class="form-group">
                         <label for="email">Email</label>
                         <input type="email" name="email" class="form-control" id="email" placeholder="Email address"
-                               value="$(form.get('email') if form.get('action') == 'create' else None)" required>
+                               value="{{ form.get('email') if form.get('action') == 'create'  }}" required>
                     </div>
 
-                    $if feedbacks.has('create', 'invalid_email'):
+                    {% if feedbacks.has('create', 'invalid_email') %}
                         <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
                             <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
                             This email address is non-conforming.
                         </div>
-                    $if feedbacks.has('create', 'too_long_email'):
+                    {% endif %}
+
+                    {% if feedbacks.has('create', 'too_long_email') %}
                         <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
                             <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
                             This email address is too long.
                         </div>
-                    $if feedbacks.has('create', 'too_long_username'):
+                    {% endif %}
+
+                    {% if feedbacks.has('create', 'too_long_username') %}
                         <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
                             <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
                             This username is too long.
                         </div>
 
-                    $elif feedbacks.has('create', 'email_already_exists'):
+                    {% elif feedbacks.has('create', 'email_already_exists') %}
                         <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
                             <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
                             An user with this email address already exists.
                         </div>
+                    {% endif %}
 
                     <div class="checkbox">
                         <label class="text-danger">
                             <input type="checkbox" name="super_admin" id="super_admin"
-                                   onclick="$$('#admin').attr('checked', function(_, attr){ return !attr});$$('#admin').attr('disabled', function(_, attr){ return !attr});"
-                                   $('checked' if form.get('action') == 'create' and 'super_admin' in form else None)>
+                                   onclick="$('#admin').attr('checked', function(_, attr){ return !attr});$('#admin').attr('disabled', function(_, attr){ return !attr});"
+                                   {{'checked' if form.get('action') == 'create' and 'super_admin' in form }}>
                             <span class="glyphicon glyphicon-alert"></span>Super Admin
                         </label>
                     </div>
                     <div class="checkbox">
-                        <label class="text-danger"><input type="checkbox" name="admin" id="admin" $('checked' if form.get('action') == 'create' and 'admin' in form else None)>
+                        <label class="text-danger"><input type="checkbox" name="admin" id="admin" {{'checked' if form.get('action') == 'create' and 'admin' in form }}>
                             <span class="glyphicon glyphicon-alert"></span>Admin
                         </label>
                     </div>
@@ -260,53 +284,56 @@ $code:
                 </div>
                 <div class="modal-body">
                     <input type="hidden" name="action" value="edit">
-                    <input type="hidden" id="edit-id" name="id" value="$(form.get('id') if form.get('action') == 'edit' else None)">
+                    <input type="hidden" id="edit-id" name="id" value="{{ form.get('id') if form.get('action') == 'edit'  }}">
                     <div class="form-group">
                         <label for="edit-username">Username</label>
                         <input type="text" class="form-control" id="edit-username" name="username" placeholder="Username" disabled
-                               value="$(form.get('username') if form.get('action') == 'edit' else None)">
+                               value="{{form.get('username') if form.get('action') == 'edit'}}">
 
                     </div>
                     <div class="form-group">
                         <label for="edit-fullname">Full name</label>
                         <input type="text" class="form-control" id="edit-fullname" name="fullname" placeholder="Full name" disabled
-                               value="$(form.get('fullname') if form.get('action') == 'edit' else None)">
+                               value="{{form.get('fullname') if form.get('action') == 'edit'}}">
                     </div>
                     <div class="form-group">
                         <label for="edit-email">Email</label>
                         <input type="email" class="form-control" id="edit-email" name="email" placeholder="Email address"
-                               value="$(form.get('email') if form.get('action') == 'edit' else None)">
+                               value="{{form.get('email') if form.get('action') == 'edit'}}">
                     </div>
 
-                    $if feedbacks.has('edit', 'invalid_email'):
+                    {% if feedbacks.has('edit', 'invalid_email') %}
                         <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
                             <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
                             This email address is non-conforming.
                         </div>
+                    {% endif %}
 
-                    $if feedbacks.has('create', 'too_long_email'):
+                    {% if feedbacks.has('create', 'too_long_email') %}
                         <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
                             <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
                             This email address is too long.
                         </div>
 
-                    $elif feedbacks.has('edit', 'email_already_exists'):
+
+                    {% elif feedbacks.has('edit', 'email_already_exists') %}
                         <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
                             <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
                             An user with this email address already exists.
                         </div>
+                    {% endif %}
 
                     <div class="checkbox">
                         <label class="text-danger">
                             <input type="checkbox" name="super_admin" id="edit-super_admin"
-                                   onclick="$$('#edit-admin').attr('checked', function(_, attr){ return !attr});$$('#edit-admin').attr('disabled', function(_, attr){ return !attr});"
-                                   $('checked' if form.get('action') == 'edit' and 'super_admin' in form else None)>
+                                   onclick="$('#edit-admin').attr('checked', function(_, attr){ return !attr});$('#edit-admin').attr('disabled', function(_, attr){ return !attr});"
+                                   {{'checked' if form.get('action') == 'edit' and 'super_admin' in form }}>
                             <span class="glyphicon glyphicon-alert"></span>Super Admin
                         </label>
                     </div>
                     <div class="checkbox">
                         <label class="text-danger">
-                            <input type="checkbox" name="admin" id="edit-admin" $('checked' if form.get('action') == 'edit' and 'admin' in form else None)>
+                            <input type="checkbox" name="admin" id="edit-admin" {{'checked' if form.get('action') == 'edit' and 'admin' in form }}>
                             <span class="glyphicon glyphicon-alert"></span>Admin
                         </label>
                     </div>
@@ -319,7 +346,7 @@ $code:
         </div>
     </div>
 </div>
-$if UserPermissions.administrator in current_user.highest_permission_level:
+{% if UserPermissions.administrator in current_user.highest_permission_level %}
     <div class="modal fade" id="toggle-activation-user-modal" tabindex="-1" role="dialog">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -365,79 +392,84 @@ $if UserPermissions.administrator in current_user.highest_permission_level:
         </div>
     </div>
     </div>
+{% endif %}
 
 <script src="/static/js/clipboard.min.js"></script>
 <script>
-    $$(document).ready(function () {
+    $(document).ready(function () {
         var clipboardButtons = new Clipboard('.copy-secret');
-        var $$prev_button = null;
+        var $prev_button = null;
         clipboardButtons.on('success', function(e){
-            if($$prev_button != null) {
-                $$prev_button.removeClass('btn-success').html('Copy password reset link');
+            if($prev_button != null) {
+                $prev_button.removeClass('btn-success').html('Copy password reset link');
             }
-            $$prev_button = $$(e.trigger).addClass('btn-success').html('Copied!');
+            $prev_button = $(e.trigger).addClass('btn-success').html('Copied!');
         });
 
-        $$('#table1').DataTable({stateSave: true});
-        $$('#table2').DataTable({stateSave: true});
+        $('#table1').DataTable({stateSave: true});
+        $('#table2').DataTable({stateSave: true});
 
-        $if feedbacks.has_type('create') and not feedbacks.has('create', 'ok'):
+        {% if feedbacks.has_type('create') and not feedbacks.has('create', 'ok') %}
             fire_modal('#create-user-modal');
-        $if feedbacks.has_type('edit') and not feedbacks.has('edit', 'ok'):
+        {% endif %}
+        {% if feedbacks.has_type('edit') and not feedbacks.has('edit', 'ok') %}
             fire_modal('#edit-user-modal');
+        {% endif %}
 
         load_modal('#edit-user-modal', 'edit-');
         load_modal('#toggle-activation-user-modal', 'activation-');
 
-        $if feedbacks.has('create', 'ok'):
-            $$('#create-user-modal').find('form')[0].reset();
+        {% if feedbacks.has('create', 'ok') %}
+            $('#create-user-modal').find('form')[0].reset();
+        {% endif %}
 
         function fire_modal(modalSelector) {
-            var $$modal = $$(modalSelector);
-            $$modal.removeClass('fade');
-            $$modal.one('hidden.bs.modal', function () {
-                $$modal.find('.alert').detach();
-                $$modal.addClass('fade');
-                $$modal.find('form')[0].reset();
+            var $modal = $(modalSelector);
+            $modal.removeClass('fade');
+            $modal.one('hidden.bs.modal', function () {
+                $modal.find('.alert').detach();
+                $modal.addClass('fade');
+                $modal.find('form')[0].reset();
             });
-            $$modal.modal('show')
+            $modal.modal('show')
         }
 
         function load_modal(modalSelector, prefix) {
-            var $$modal = $$(modalSelector);
-            $$modal.on('show.bs.modal', function(e) {
-                $$td = $$(e.relatedTarget.parentElement).prev();
-                $$td = $$td.prev();
-                const is_current_user_admin = $('true' if current_user.admin else 'false');
+            var $modal = $(modalSelector);
+            $modal.on('show.bs.modal', function(e) {
+                $td = $(e.relatedTarget.parentElement).prev();
+                $td = $td.prev();
+                const is_current_user_admin = {{ 'true' if current_user.admin else 'false'}};
 
-                const super_admin = $$td.attr('data-permission') == $UserPermissions.super_administrator.value;
-                const admin = $$td.attr('data-permission') == $UserPermissions.administrator.value;
-                $$modal.find('#'+prefix+'super_admin').prop('checked', super_admin);
-                $$modal.find('#'+prefix+'admin').prop('checked', admin);
+                const super_admin = $td.attr('data-permission') == {{ UserPermissions.super_administrator.value}};
+                const admin = $td.attr('data-permission') == {{UserPermissions.administrator.value}};
+                $modal.find('#'+prefix+'super_admin').prop('checked', super_admin);
+                $modal.find('#'+prefix+'admin').prop('checked', admin);
 
                 if(modalSelector == "#toggle-activation-user-modal") {
-                    $$modal.find('#' + prefix + 'super_admin').prop('disabled', true);
-                    $$modal.find('#' + prefix + 'admin').prop('disabled', true);
+                    $modal.find('#' + prefix + 'super_admin').prop('disabled', true);
+                    $modal.find('#' + prefix + 'admin').prop('disabled', true);
                 } else {
-                    $$modal.find('#' + prefix + 'super_admin').prop('disabled', is_current_user_admin || $session['user']['id'] == $$td.parent().attr('data-user-id'));
-                    $$modal.find('#' + prefix + 'admin').prop('disabled', is_current_user_admin || super_admin || $session['user']['id'] == $$td.parent().attr('data-user-id'));
+                    $modal.find('#' + prefix + 'super_admin').prop('disabled', is_current_user_admin || {{ session['user']['id'] }} == $td.parent().attr('data-user-id'));
+                    $modal.find('#' + prefix + 'admin').prop('disabled', is_current_user_admin || super_admin || {{ session['user']['id'] }} == $td.parent().attr('data-user-id'));
                 }
 
-                $$td = $$td.prev();
-                $$modal.find('#'+prefix+'email').val($$td.children().html());
-                $$td = $$td.prev();
-                $$modal.find('#'+prefix+'fullname').val($$td.html());
-                $$td = $$td.prev();
-                $$modal.find('#'+prefix+'username').val($$td[0].innerText);
-                $$modal.find('#'+prefix+'id').val($$td.parent().attr('data-user-id'));
+                $td = $td.prev();
+                $modal.find('#'+prefix+'email').val($td.children().html());
+                $td = $td.prev();
+                $modal.find('#'+prefix+'fullname').val($td.html());
+                $td = $td.prev();
+                $modal.find('#'+prefix+'username').val($td[0].innerText);
+                $modal.find('#'+prefix+'id').val($td.parent().attr('data-user-id'));
             });
         }
-        var $$modal = $$('#toggle-activation-user-modal');
-        $$modal.on('show.bs.modal', function(e) {
-            $$td = $$(e.relatedTarget.parentElement).prev();
-            const disabled = $$td.attr('data-disable') == 'True';
-            $$modal.find('.modal-title').html((disabled ? 'Activate' : 'Deactivate') + ' this user account')
-            $$modal.find('button[type="submit"]').html('<span class="glyphicon glyphicon-alert"></span>' + (disabled ? 'Activate' : 'Deactivate'))
+        var $modal = $('#toggle-activation-user-modal');
+        $modal.on('show.bs.modal', function(e) {
+            $td = $(e.relatedTarget.parentElement).prev();
+            const disabled = $td.attr('data-disable') == 'True';
+            $modal.find('.modal-title').html((disabled ? 'Activate' : 'Deactivate') + ' this user account')
+            $modal.find('button[type="submit"]').html('<span class="glyphicon glyphicon-alert"></span>' + (disabled ? 'Activate' : 'Deactivate'))
         });
     });
 </script>
+{% endblock %}

@@ -1,257 +1,293 @@
-$def with (channel, templates, readable_params, writable_params, can_modify_cache, can_modify_capsule_filter)
+{#
+    This file belongs to the ICTV project, written by Nicolas Detienne,
+    Francois Michel, Maxime Piraux, Pierre Reinbold and Ludovic Taffin
+    at Université catholique de Louvain.
 
-$#    This file belongs to the ICTV project, written by Nicolas Detienne,
-$#    Francois Michel, Maxime Piraux, Pierre Reinbold and Ludovic Taffin
-$#    at Université catholique de Louvain.
-$#
-$#    Copyright (C) 2016-2018  Université catholique de Louvain (UCL, Belgium)
-$#
-$#    ICTV is free software: you can redistribute it and/or modify
-$#    it under the terms of the GNU Affero General Public License as published
-$#    by the Free Software Foundation, either version 3 of the License, or
-$#    (at your option) any later version.
-$#
-$#    ICTV is distributed in the hope that it will be useful,
-$#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-$#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-$#    GNU Affero General Public License for more details.
-$#
-$#    You should have received a copy of the GNU Affero General Public License
-$#    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
+    Copyright (C) 2016-2018  Université catholique de Louvain (UCL, Belgium)
 
-$ pattern = re.compile(r"list\[.*\]")
-$code:
-    feedbacks = get_feedbacks()
-    form = pop_previous_form()
+    ICTV is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published
+    by the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
 
+    ICTV is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
 
-$def make_list_string(values, add_text, disabled):
-    $ make_field = lambda v : ('<input type="text" name="%s" class="form-control" placeholder="%s" value="' + escape(v) + '" required' + (' disabled>' if disabled else '>')) % (param_id, param_attrs['placeholder'])
-    $for v in values:
-        $if not loop.first:
-            <div class="input-group">
-        $:make_field(v)
-        $if not loop.first:
-            <span class="input-group-addon" $:('onclick="$(this).parent().remove()"' if not disabled else '')><i class="fa fa-trash"></i></span>
-            </div>
+    You should have received a copy of the GNU Affero General Public License
+    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
+#}
 
-    <button class="btn btn-default" type="button" style="margin-top: 2px;" onclick="addField(this, '$make_field("")');" $('disabled' if disabled else '')>$add_text</button>
+{% set feedbacks = get_feedbacks() %}
+{% set form = pop_previous_form() %}
 
-$def make_param_button(all=False, param_id=None, param_name=None):
-    $code:
-        all = "true" if all else "false"
-    <button type="button" class="btn btn-xs btn-default pull-right reset-button" data-toggle="modal" data-target="#reset-config-modal" data-param-id="$param_id" data-reset-all="$all" data-param-name="$param_name">
+{% macro make_param_button(all=False, param_id=None, param_name=None) %}
+    {% set all = "true" if all else "false" %}
+    <button type="button" class="btn btn-xs btn-default pull-right reset-button" data-toggle="modal" data-target="#reset-config-modal" data-param-id="{{param_id}}" data-reset-all="{{all}}" data-param-name="{{param_name}}">
         <span class="glyphicon glyphicon-repeat"></span>Reset
     </button>
 
-$def make_param(param_id, param_attrs, disabled):
-    <div class="form-group">
-    $if param_attrs['type'] == 'int':
-        <label for="edit-$param_id">$param_attrs['name']</label>
-        $if not disabled:
-            $:make_param_button(param_id=param_id, param_name=param_attrs['name'])
-        <input type="number" name="$param_id"
-               class="form-control" id="$('edit-' + param_id)"
-               placeholder="$(param_attrs['placeholder'] + ', defaults to ' + str(param_attrs['default']))"
-               value="$(str(channel.plugin_config[param_id]) if param_id in channel.plugin_config else str(param_attrs['default']))"
-               min="$(param_attrs.get('min'))"
-               max="$(param_attrs.get('max'))"
-               required $('disabled' if disabled else '')>
-    $elif param_attrs['type'] == 'float':
-        <label for="edit-$param_id">$param_attrs['name']</label>
-        $if not disabled:
-            $:make_param_button(param_id=param_id, param_name=param_attrs['name'])
-        <input type="number" name="$param_id"
-               class="form-control" id="$('edit-' + param_id)"
-               placeholder="$(param_attrs['placeholder'] + ', defaults to ' + str(param_attrs['default']))"
-               value="$(str(channel.plugin_config[param_id]) if param_id in channel.plugin_config else str(param_attrs['default']))"
-               required step="any" $('disabled' if disabled else '')>
-    $elif param_attrs['type'] == 'bool':
-        <label><input type="checkbox"
-                      name="$param_id"
-                      $('checked' if channel.plugin_config.get(param_id, param_attrs['default']) else '')
-                      $('disabled' if disabled else '')>$param_attrs['name']
-        </label>
-        $if not disabled:
-            $:make_param_button(param_id=param_id, param_name=param_attrs['name'])
-    $elif param_attrs['type'] == 'select':
-         <label for="edit-$param_id">$param_attrs['name']</label>
-        $if not disabled:
-            $:make_param_button(param_id=param_id, param_name=param_attrs['name'])
-        <br>
-        $for elem in param_attrs['values']:
-            <div class="radio"><label>
-            $if 'type' in channel.plugin_config:
-                <input type="radio"
-                       name="$param_id" value="$elem"
-                       $('checked' if (channel.plugin_config['type']==elem) else 'checked' if channel.plugin_config['type']=='' and param_attrs['default']==elem else '')
-                       $('disabled' if disabled else '')>$elem
+{% endmacro %}
+{% macro make_param(param_id, param_attrs, disabled) %}
 
-            $else:
+  {% macro make_list_string(values, add_text, disabled) %}
+      {% macro make_field(v) -%}
+        <input type="text" name="{{param_id}}" class="form-control" placeholder="{{param_attrs['placeholder']}}" value="{{escape(v)}}" required {{ 'disabled>' if disabled else '>'}}
+      {%- endmacro %}
+      {% for v in values %}
+          {% if not loop.first %}
+              <div class="input-group">
+          {% endif %}
+          {{ make_field(v) |safe}}
+          {% if not loop.first %}
+              <span class="input-group-addon" {{ 'onclick="$(this).parent().remove()"' if not disabled else '' |safe}}><i class="fa fa-trash"></i></span>
+              </div>
+
+          {% endif %}
+      {% endfor %}
+      <button class="btn btn-default" type="button" style="margin-top: 2px;" onclick="addField(this, '{{make_field("") | e}}');" {{'disabled' if disabled else ''}}>{{add_text}}</button>
+
+  {% endmacro %}
+    <div class="form-group">
+    {% if param_attrs['type'] == 'int' %}
+        <label for="edit-{{param_id}}">{{param_attrs['name']}}</label>
+        {% if not disabled %}
+            {{ make_param_button(param_id=param_id, param_name=param_attrs['name']) |safe}}
+        {% endif %}
+        <input type="number" name="{{param_id}}"
+               class="form-control" id="{{ 'edit-' + param_id }}"
+               placeholder="{{ param_attrs['placeholder'] + ', defaults to ' + str(param_attrs['default']) }}"
+               value="{{ str(channel.plugin_config[param_id]) if param_id in channel.plugin_config else str(param_attrs['default']) }}"
+               min="{{param_attrs.get('min')}}"
+               max="{{param_attrs.get('max')}}"
+               required {{'disabled' if disabled else ''}}>
+    {% elif param_attrs['type'] == 'float' %}
+        <label for="edit-{{param_id}}">{{param_attrs['name']}}</label>
+        {% if not disabled %}
+            {{ make_param_button(param_id=param_id, param_name=param_attrs['name']) |safe}}
+        {% endif %}
+        <input type="number" name="{{param_id}}"
+               class="form-control" id="{{ 'edit-' + param_id }}"
+               placeholder="{{ param_attrs['placeholder'] + ', defaults to ' + str(param_attrs['default']) }}"
+               value="{{ str(channel.plugin_config[param_id]) if param_id in channel.plugin_config else str(param_attrs['default']) }}"
+               required step="any" {{'disabled' if disabled else ''}}>
+    {% elif param_attrs['type'] == 'bool' %}
+        <label><input type="checkbox"
+                      name="{{param_id}}"
+                      {{ 'checked' if channel.plugin_config.get(param_id, param_attrs['default']) else '' }}
+                      {{'disabled' if disabled else ''}}>{{param_attrs['name']}}
+        </label>
+        {% if not disabled %}
+            {{ make_param_button(param_id=param_id, param_name=param_attrs['name']) |safe}}
+        {% endif %}
+    {% elif param_attrs['type'] == 'select' %}
+         <label for="edit-{{param_id}}">{{param_attrs['name']}}</label>
+        {% if not disabled %}
+            {{ make_param_button(param_id=param_id, param_name=param_attrs['name']) |safe}}
+        {% endif %}
+        <br>
+        {% for elem in param_attrs['values'] %}
+            <div class="radio"><label>
+            {% if 'type' in channel.plugin_config %}
                 <input type="radio"
-                       name="$param_id" value="$elem"
-                       $('checked' if (channel.plugin.channels_params['type']['default']==elem) else 'checked' if channel.plugin.channels_params['type']['default']=='' and param_attrs['default']==elem else '')
-                       $('disabled' if disabled else '')>$elem
+                       name="{{param_id}}" value="{{elem}}"
+                       {{ 'checked' if (channel.plugin_config['type']==elem) else 'checked' if channel.plugin_config['type']=='' and param_attrs['default']==elem else '' }}
+                       {{'disabled' if disabled else ''}}>{{elem}}
+
+            {% else %}
+                <input type="radio"
+                       name="{{param_id}}" value="{{elem}}"
+                       {{ 'checked' if (channel.plugin.channels_params['type']['default']==elem) else 'checked' if channel.plugin.channels_params['type']['default']=='' and param_attrs['default']==elem else '' }}
+                       {{'disabled' if disabled else ''}}>{{elem}}
+            {% endif %}
             </label></div>
 
-    $elif param_attrs['type'] == 'string':
-        <label for="edit-$param_id">$param_attrs['name']</label>
-        $if not disabled:
-            $:make_param_button(param_id=param_id, param_name=param_attrs['name'])
+        {% endfor %}
+    {% elif param_attrs['type'] == 'string' %}
+        <label for="edit-{{param_id}}">{{param_attrs['name']}}</label>
+        {% if not disabled %}
+            {{ make_param_button(param_id=param_id, param_name=param_attrs['name']) |safe}}
+        {% endif %}
         <br>
-        <input type="text" name="$param_id"
-               class="form-control" id="$('edit-' + param_id)"
-               placeholder="$(param_attrs['placeholder'] + ', defaults to ' + str(param_attrs['default']))"
-               value="$(str(channel.plugin_config[param_id]) if param_id in channel.plugin_config else str(param_attrs['default']))"
-               required $('disabled' if disabled else '')>
-    $elif param_attrs['type'] == 'template':
-        <label for="edit-$param_id">$param_attrs['name']</label>
-        $if not disabled:
-            $:make_param_button(param_id=param_id, param_name=param_attrs['name'])
+        <input type="text" name="{{param_id}}"
+               class="form-control" id="{{ 'edit-' + param_id }}"
+               placeholder="{{ param_attrs['placeholder'] + ', defaults to ' + str(param_attrs['default']) }}"
+               value="{{ str(channel.plugin_config[param_id]) if param_id in channel.plugin_config else str(param_attrs['default']) }}"
+               required {{'disabled' if disabled else ''}}>
+    {% elif param_attrs['type'] == 'template' %}
+        <label for="edit-{{param_id}}">{{param_attrs['name']}}</label>
+        {% if not disabled %}
+            {{ make_param_button(param_id=param_id, param_name=param_attrs['name']) |safe}}
+        {% endif %}
         <br>
-        <select id="edit-$param_id" name="$param_id" class="form-control" $('disabled' if disabled else '')>
-        $code:
-            current_template_id = channel.get_config_param(param_id)
-        $if not current_template_id:
-            <option value="$current_template_id" selected>
+        <select id="edit-{{param_id}}" name="{{param_id}}" class="form-control" {{'disabled' if disabled else ''}}>
+        {%set current_template_id = channel.get_config_param(param_id) %}
+        {% if not current_template_id %}
+            <option value="{{current_template_id}}" selected>
                 No template selected
             </option>
-        $for template_id, template_name in templates:
-            <option value="$template_id" $('selected' if template_id == current_template_id else '')>
-                $template_name
+        {% endif %}
+        {% for template_id, template_name in templates %}
+            <option value="{{template_id}}" {{'selected' if template_id == current_template_id else ''}}>
+                {{template_name}}
             </option>
+        {% endfor %}
         </select>
-    $elif pattern.match(param_attrs['type']):
-        <label>$param_attrs['name']</label>
-        $if not disabled:
-            $:make_param_button(param_id=param_id, param_name=param_attrs['name'])
-        $ inner_type = param_attrs['type'][5:-1]
-        $ values = (channel.plugin_config[param_id] if param_id in channel.plugin_config else param_attrs['default'])
-        $if inner_type == 'string':
-            $:make_list_string(values, param_attrs['add'], disabled)
-        $elif pattern.match(inner_type):
-            $ inner_inner_type = inner_type[5:-1]
-            $if inner_inner_type == 'string':
-                $ delimiter = generate_secret()
-                <input type="hidden" name="$(param_id)-delimiter" value="$delimiter">
-                <div id="$(param_id)-copy-group" class="copy-group" style="display: none">
+    {% elif pattern.match(param_attrs['type']) %}
+        <label>{{param_attrs['name']}}</label>
+        {% if not disabled %}
+            {{ make_param_button(param_id=param_id, param_name=param_attrs['name']) |safe}}
+        {% endif %}
+        {% set inner_type = param_attrs['type'][5:-1] %}
+        {% set values = (channel.plugin_config[param_id] if param_id in channel.plugin_config else param_attrs['default']) %}
+        {% if inner_type == 'string' %}
+            {{ make_list_string(values, param_attrs['add'], disabled) |safe}}
+        {% elif pattern.match(inner_type) %}
+            {% set inner_inner_type = inner_type[5:-1] %}
+            {% if inner_inner_type == 'string' %}
+                {% set delimiter = generate_secret() %}
+                <input type="hidden" name="{{param_id}}-delimiter" value="{{delimiter}}">
+                <div id="{{param_id}}-copy-group" class="copy-group" style="display: none">
                     <div class="panel panel-default">
                         <div class="panel-body">
-                            $:make_list_string([''], param_attrs['add'][1], disabled)
-                            <input type="hidden" name="$param_id" value="$delimiter">
-                            <button class="btn btn-default pull-right" type="button" style="margin-top: 2px; padding-right: 6px;" $:('onclick="$(this).parent().parent().remove()"' if not disabled else '')><i class="fa fa-trash"></i></button>
+                            {{ make_list_string([''], param_attrs['add'][1], disabled) |safe}}
+                            <input type="hidden" name="{{param_id}}" value="{{delimiter}}">
+                            <button class="btn btn-default pull-right" type="button" style="margin-top: 2px; padding-right: 6px;" {{ 'onclick="$(this).parent().parent().remove()"' if not disabled else '' |safe}}><i class="fa fa-trash"></i></button>
                         </div>
                     </div>
                 </div>
-                $for list in values:
+                {% for list in values %}
                     <div class="panel panel-default">
                         <div class="panel-body">
-                            $:make_list_string(list, param_attrs['add'][1], disabled)
-                            <input type="hidden" name="$param_id" value="$delimiter">
-                            <button class="btn btn-default pull-right" type="button" style="margin-top: 2px; padding-right: 6px;" $:('onclick="$(this).parent().parent().remove()"' if not disabled else '')><i class="fa fa-trash"></i></button>
+                            {{ make_list_string(list, param_attrs['add'][1], disabled) |safe}}
+                            <input type="hidden" name="{{param_id}}" value="{{delimiter}}">
+                            <button class="btn btn-default pull-right" type="button" style="margin-top: 2px; padding-right: 6px;" {{ 'onclick="$(this).parent().parent().remove()"' if not disabled else '' |safe}}><i class="fa fa-trash"></i></button>
                         </div>
                     </div>
-                <button class="btn btn-default" type="button" style="margin-top: 2px;" onclick="addFieldGroup(this, '$param_id');" $('disabled' if disabled else '')>$param_attrs['add'][0]</button>
+                {% endfor %}
+                <button class="btn btn-default" type="button" style="margin-top: 2px;" onclick="addFieldGroup(this, '{{param_id}}');" {{'disabled' if disabled else ''}}>{{param_attrs['add'][0]}}</button>
 
+            {% endif %}
+        {% endif %}
+    {% endif %}
     </div>
 
-    $if feedbacks.has('configure', param_id):
-        $ param_id, value, message = feedbacks.feedback_value()
+    {% if feedbacks.has('configure', param_id) %}
+        {% set param_id, value, message = feedbacks.feedback_value() %}
         <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
             <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
-            The value <strong>$value</strong> is faulty. $message
+            The value <strong>{{value}}</strong> is faulty. {{message}}
         </div>
+    {% endif %}
+{% endmacro %}
+
+{% extends "%s" % base %}
+
+{% block content %}
 <section class="content-header">
     <h1>
-        $channel.name
+        {{channel.name}}
         <small>Channel configuration</small>
     </h1>
 </section>
 <section class="content">
-    $if feedbacks.has('reset-cache-config', 'ok'):
+    {% if feedbacks.has('reset-cache-config', 'ok') %}
         <div class="alert alert-success alert-dismissible">
             <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
             <h4><i class="icon fa fa-pencil"></i>Updated</h4>
             The cache configuration of this channel has been successfully reset.
         </div>
 
-    $if feedbacks.has('reset-config', 'ok'):
+    {% endif %}
+    {% if feedbacks.has('reset-config', 'ok') %}
         <div class="alert alert-success alert-dismissible">
             <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
             <h4><i class="icon fa fa-pencil"></i>Updated</h4>
             The plugin configuration of this channel has been successfully reset.
         </div>
 
-    $if feedbacks.has('reset-filtering-config', 'ok'):
+    {% endif %}
+    {% if feedbacks.has('reset-filtering-config', 'ok') %}
         <div class="alert alert-success alert-dismissible">
             <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
             <h4><i class="icon fa fa-pencil"></i>Updated</h4>
             The plugin filtering configuration of this channel has been successfully reset.
         </div>
+    {% endif %}
     <div class="row">
         <div class="col-lg-6">
             <div class="box">
                 <div class="box-header">
                     <h3 class="box-title">Plugin configuration</h3>
-                    $if len(writable_params) > 0:
+                    {% if (writable_params | length) > 0 %}
                         <button type="button" data-reset-all="true" class="btn btn-sm btn-info pull-right reset-button" data-toggle="modal" data-target="#reset-config-modal">
                             <span class="glyphicon glyphicon-repeat"></span>Reset configuration
                         </button>
+                    {% endif %}
                 </div>
                 <form action="/channels" method="post">
                     <div class="box-body">
-                        $if feedbacks.has('configure', 'general_error'):
+                        {% if feedbacks.has('configure', 'general_error') %}
                             <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
                                 <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
                                 An error occured with this set of parameters, but its underlying cause could not be determined.
-                                The technical exception was: <i>$feedbacks.feedback_value()</i>
+                                The technical exception was: <i>{{feedbacks.feedback_value()}}</i>
                             </div>
 
-                        <input type="hidden" name="id" value="$channel.id">
+                        {% endif %}
+                        <input type="hidden" name="id" value="{{channel.id}}">
                         <input type="hidden" name="action" value="configure">
-                        $if writable_params:
-                            $for param_id, param_attrs in writable_params:
-                                $:make_param(param_id, param_attrs, False)
+                        {% if writable_params %}
+                            {% for param_id, param_attrs in writable_params %}
+                                {{ make_param(param_id, param_attrs, False) |safe}}
+                            {% endfor %}
                             <hr />
-                        $if readable_params:
+                        {% endif %}
+                        {% if readable_params %}
                             <h5><i>You do not have sufficient rights to modify the parameters below.</i></h5>
-                            $for param_id, param_attrs in readable_params:
-                                $:make_param(param_id, param_attrs, True)
-                        $if can_modify_cache and readable_params:
+                            {% for param_id, param_attrs in readable_params %}
+                                {{ make_param(param_id, param_attrs, True) |safe}}
+                            {% endfor %}
+                        {% endif %}
+                        {% if can_modify_cache and readable_params %}
                             <hr />
-                        $if can_modify_cache:
+                        {% endif %}
+                        {% if can_modify_cache %}
                             <h4>Cache configuration
                                 <button type="button" class="btn btn-xs btn-info reset-others-button pull-right" data-reset-what="cache" data-toggle="modal" data-target="#reset-cache-and-filter-modal"><span class="glyphicon glyphicon-repeat"></span>Reset cache configuration</button>
                             </h4>
                             <div class="form-group">
                                 <label><input type="checkbox"
-                                              onclick="$$('#edit-cache-validity').attr('disabled', function(_, attr){ return !attr});"
+                                              onclick="$('#edit-cache-validity').attr('disabled', function(_, attr){ return !attr});"
                                               name="cache-activated"
-                                              $('checked' if channel.cache_activated else '')>Activate caching</label>
+                                              {{'checked' if channel.cache_activated else ''}}>Activate caching</label>
                             </div>
                             <div class="form-group">
                                 <label for="edit-cache-validity">Cache validity (minutes)</label>
-                                <input type="number" id="edit-cache-validity" name="cache-validity" class="form-control" min="1" step="1" value="$channel.cache_validity" required $('disabled' if not channel.cache_activated else '')>
+                                <input type="number" id="edit-cache-validity" name="cache-validity" class="form-control" min="1" step="1" value="{{channel.cache_validity}}" required {{'disabled' if not channel.cache_activated else ''}}>
                             </div>
-                        $if can_modify_capsule_filter:
+                        {% endif %}
+                        {% if can_modify_capsule_filter %}
                             <h4>Non-complying capsules filtering configuration
                                 <button type="button" class="btn btn-xs btn-info reset-others-button pull-right" data-reset-what="filtering" data-toggle="modal" data-target="#reset-cache-and-filter-modal">
                                     <span class="glyphicon glyphicon-repeat"></span>Reset filter configuration
                                 </button>
                             </h4>
                             <div class="form-group">
-                                $:make_tooltip(info['channel']['misc']['keep_noncomplying_capsules'], placement='left', icon=True)
+                                {{ make_tooltip(info['channel']['misc']['keep_noncomplying_capsules'], placement='left', icon=True) |safe}}
                                 <label><input type="checkbox" name="keep-capsules"
-                                              $('checked' if channel.keep_noncomplying_capsules else '')>Keep capsule with non-complying slides</label>
+                                              {{'checked' if channel.keep_noncomplying_capsules else ''}}>Keep capsule with non-complying slides</label>
                                 <p><i>Check this box if you would like to keep all capsules even if some may have slides that are missing due to being filtered out.</i></p>
                             </div>
                             <h4>Drop silently non-complying slides</h4>
                             <div class="form-group">
-                                $:make_tooltip(info['channel']['misc']['drop_silently_non_complying_slides'], placement='left', icon=True)
+                                {{ make_tooltip(info['channel']['misc']['drop_silently_non_complying_slides'], placement='left', icon=True) |safe}}
                                 <label><input type="checkbox" name="drop_silently_non_complying_slides"
-                                              $('checked' if channel.drop_silently_non_complying_slides else '')>Drop silently non-complying slides</label>
+                                              {{'checked' if channel.drop_silently_non_complying_slides else ''}}>Drop silently non-complying slides</label>
                                 <p><i>Check this box if you would like to deactivate notification regarding templates limits for this channel</i></p>
                             </div>
+                        {% endif %}
                     </div>
                     <div class="box-footer">
                         <a href="/channels" class="btn btn-default">Cancel</a>
@@ -277,10 +313,10 @@ $def make_param(param_id, param_attrs, disabled):
                     <input type="hidden" name="action" value="reset-config">
                     <input type="hidden" id="reset-all" name="all" value=true>
                     <input type="hidden" id="reset-param-id" name="reset-param-id" value="">
-                    <input type="hidden" id="reset-id" name="id" value="$channel.id">
+                    <input type="hidden" id="reset-id" name="id" value="{{channel.id}}">
                     <div class="form-group">
                         <label for="reset-name">Channel name</label>
-                        <input type="text" class="form-control" id="reset-name" value="$(channel.name)" disabled>
+                        <input type="text" class="form-control" id="reset-name" value="{{channel.name}}" disabled>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -303,10 +339,10 @@ $def make_param(param_id, param_attrs, disabled):
                 <div class="modal-body">
                     Are you sure you want to reset this channel <span class="cache-or-filtering"></span> parameters ?
                     <input type="hidden" id="reset-what-config-action" name="action" value="reset-cache-config">
-                    <input type="hidden" id="reset-cache-id" name="id" value="$channel.id">
+                    <input type="hidden" id="reset-cache-id" name="id" value="{{channel.id}}">
                     <div class="form-group">
                         <label for="reset-cache-name">Channel name</label>
-                        <input type="text" class="form-control" id="reset-cache-name" value="$channel.name" disabled>
+                        <input type="text" class="form-control" id="reset-cache-name" value="{{channel.name}}" disabled>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -319,30 +355,30 @@ $def make_param(param_id, param_attrs, disabled):
 </div>
 <script>
     function addField(self, field) {
-        var div = '<div class="input-group">' + field + '<span class="input-group-addon" onclick="$$(this).parent().remove()"><i class="fa fa-trash"></i></span></div>';
-        $$(self).before(div);
+        var div = '<div class="input-group">' + field + '<span class="input-group-addon" onclick="$(this).parent().remove()"><i class="fa fa-trash"></i></span></div>';
+        $(self).before(div);
     }
 
     function addFieldGroup(self, param_id) {
-        const group = $$('#' + param_id + '-copy-group');
+        const group = $('#' + param_id + '-copy-group');
         group.find('input').prop('disabled', false);
-        $$(self).before(group.html());
+        $(self).before(group.html());
         group.find('input').prop('disabled', true);
     }
 
-    $$('.reset-button').click(function(e) {
-        var btn = $$(e.currentTarget);
+    $('.reset-button').click(function(e) {
+        var btn = $(e.currentTarget);
         if(btn.attr("data-reset-all") == "true"){
             var params_ul = document.createElement('ul');
-            var unesc = $$('<div />').html("$(json.dumps([x[1]['name'] for x in writable_params]))").text();
+            var unesc = $('<div />').html('{{ writable_params | map(attribute="1") | selectattr("name") | list | tojson }}').text();
             var param_names = JSON.parse(unesc);
             for(var index in param_names) {
                 var param_li = document.createElement('li');
                 params_ul.appendChild(param_li);
                 param_li.innerHTML = param_names[index];
             }
-            $$('#reset-params').html(params_ul);
-            $$('#reset-all').val(true);
+            $('#reset-params').html(params_ul);
+            $('#reset-all').val(true);
         }
         else {
             var param_name = btn.attr("data-param-name");
@@ -351,19 +387,20 @@ $def make_param(param_id, param_attrs, disabled):
             var param_li = document.createElement('li');
             param_ul.appendChild(param_li);
             param_li.innerHTML = param_name;
-            $$('#reset-params').html(param_ul);
-            $$('#reset-all').val(false);
-            $$("#reset-param-id").val(param_id);
+            $('#reset-params').html(param_ul);
+            $('#reset-all').val(false);
+            $("#reset-param-id").val(param_id);
         }
     });
 
-    $$('.reset-others-button').click(function(e) {
-        var btn = $$(e.currentTarget);
+    $('.reset-others-button').click(function(e) {
+        var btn = $(e.currentTarget);
         var to_reset = btn.attr("data-reset-what");
-        $$('.cache-or-filtering').text(to_reset);
-        $$('#reset-what-config-action').attr("value", "reset-"+to_reset+"-config");
+        $('.cache-or-filtering').text(to_reset);
+        $('#reset-what-config-action').attr("value", "reset-"+to_reset+"-config");
     });
-    $$(document).ready(function() {
-        $$('.copy-group').find('input').prop('disabled', true);
+    $(document).ready(function() {
+        $('.copy-group').find('input').prop('disabled', true);
     })
 </script>
+{% endblock %}

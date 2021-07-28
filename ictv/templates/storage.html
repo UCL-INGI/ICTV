@@ -1,25 +1,31 @@
-$def with (channels)
+{#
 
-$#    This file belongs to the ICTV project, written by Nicolas Detienne,
-$#    Francois Michel, Maxime Piraux, Pierre Reinbold and Ludovic Taffin
-$#    at Université catholique de Louvain.
-$#
-$#    Copyright (C) 2016-2018  Université catholique de Louvain (UCL, Belgium)
-$#
-$#    ICTV is free software: you can redistribute it and/or modify
-$#    it under the terms of the GNU Affero General Public License as published
-$#    by the Free Software Foundation, either version 3 of the License, or
-$#    (at your option) any later version.
-$#
-$#    ICTV is distributed in the hope that it will be useful,
-$#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-$#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-$#    GNU Affero General Public License for more details.
-$#
-$#    You should have received a copy of the GNU Affero General Public License
-$#    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
+    This file belongs to the ICTV project, written by Nicolas Detienne,
+    Francois Michel, Maxime Piraux, Pierre Reinbold and Ludovic Taffin
+    at Université catholique de Louvain.
 
-$var active_element: Storage
+    Copyright (C) 2016-2018  Université catholique de Louvain (UCL, Belgium)
+
+    ICTV is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published
+    by the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    ICTV is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
+
+#}
+
+{% set active_element = "Storage" %}
+
+{% extends "%s" % base %}
+
+{% block content %}
 <style>
     td div.progress {
         margin-top: 2px !important;
@@ -87,54 +93,55 @@ $var active_element: Storage
                     </th>
                 </tr>
                 <tr>
-                    $code:
-                        total_assets_count = 0
-                        total_assets_size = 0
-                        total_cache_size = 0
-                        for channel in channels:
-                            total_assets_count += channel['assets_count']
-                            total_assets_size += channel['assets_size']
-                            total_cache_size += int(channel['cache_percentage']*channel['assets_size'])
-                        total_asset_pc = ((total_assets_size - total_cache_size)*100/total_assets_size) if total_assets_size else 0
-                        total_cache_pc = (total_cache_size*100/total_assets_size) if total_assets_size else 0
+                        {% set total_assets_count = namespace(value=0) %}
+                        {% set total_assets_size = namespace(value=0) %}
+                        {% set total_cache_size = namespace(value=0) %}
+                        {% for channel in channels %}
+                            {% set total_assets_count.value = total_assets_count.value + channel['assets_count'] %}
+                            {% set total_assets_size.value = total_assets_size.value + channel['assets_size'] %}
+                            {% set total_cache_size.value = total_cache_size.value + (channel['cache_percentage']*channel['assets_size'] | int) %}
+                        {% endfor %}
+                        {% set total_asset_pc = ((total_assets_size.value - total_cache_size.value)*100/total_assets_size.value) if total_assets_size.value else 0 %}
+                        {% set total_cache_pc = (total_cache_size.value*100/total_assets_size.value) if total_assets_size.value else 0 %}
                     <th></th>
                     <th>Grand total</th>
-                    <th>$total_assets_count</th>
-                    <th>$pretty_print_size(total_assets_size)</th>
+                    <th>{{total_assets_count.value}}</th>
+                    <th>{{pretty_print_size(total_assets_size.value)}}</th>
                     <th><div class="progress">
-                        <div class="progress-bar progress-bar-primary" role="progressbar" style="width: $(total_asset_pc)%; min-width: 3em">
-                            $("%.1f" % total_asset_pc)%
+                        <div class="progress-bar progress-bar-primary" role="progressbar" style="width: {{total_asset_pc}}%; min-width: 3em">
+                            {{"%.1f" % total_asset_pc}}
                         </div>
                     </div></th>
                     <th><div class="progress">
-                        <div class="progress-bar progress-bar-info" role="progressbar" style="width: $(total_cache_pc)%; min-width: 3em">
-                            $("%.1f" % total_cache_pc)%
+                        <div class="progress-bar progress-bar-info" role="progressbar" style="width: {{total_cache_pc}}%; min-width: 3em">
+                            {{"%.1f" % total_cache_pc}}
                         </div>
                     </div></th>
                 </tr>
                 </tfoot>
                 <tbody>
-                $for channel in channels:
-                    <tr data-href="/storage/$(channel['id'])">
-                        <td>$channel['name']</td>
-                        <td>$channel['plugin']</td>
-                        <td>$channel['assets_count']</td>
-                        <td>$pretty_print_size(channel['assets_size'])</td>
+                {% for channel in channels %}
+                    <tr data-href="/storage/{{(channel['id'])}}">
+                        <td>{{channel['name']}}</td>
+                        <td>{{channel['plugin']}}</td>
+                        <td>{{channel['assets_count']}}</td>
+                        <td>{{pretty_print_size(channel['assets_size'])}}</td>
                         <td>
                             <div class="progress">
-                                <div class="progress-bar progress-bar-primary" role="progressbar" style="width: $(channel['percentage']*100)%; min-width: 3em">
-                                    $("%.1f" % (channel['percentage']*100))%
+                                <div class="progress-bar progress-bar-primary" role="progressbar" style="width: {{(channel['percentage']*100)}}%; min-width: 3em">
+                                    {{"%.1f" % (channel['percentage']*100)}}%
                                 </div>
                             </div>
                         </td>
                         <td>
                             <div class="progress">
-                                <div class="progress-bar progress-bar-info" role="progressbar" style="width: $(channel['cache_percentage']*100)%; min-width: 2em">
-                                    $("%.f" % (channel['cache_percentage']*100))%
+                                <div class="progress-bar progress-bar-info" role="progressbar" style="width: {{(channel['cache_percentage']*100)}}%; min-width: 2em">
+                                    {{("%.f" % (channel['cache_percentage']*100))}}%
                                 </div>
                             </div>
                         </td>
                     </tr>
+                {% endfor %}
                 </tbody>
             </table>
         </div>
@@ -142,10 +149,11 @@ $var active_element: Storage
     </div></div>
 </section>
 <script>
-    $$(document).ready(function () {
-        $$('#table').DataTable({stateSave: true});
+    $(document).ready(function () {
+        $('#table').DataTable({stateSave: true});
     });
-    $$('tr[data-href]').on("click", function() {
-        document.location = $$(this).data('href');
+    $('tr[data-href]').on("click", function() {
+        document.location = $(this).data('href');
     });
 </script>
+{% endblock %}

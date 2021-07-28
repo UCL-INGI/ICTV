@@ -54,6 +54,9 @@ from ictv.storage.cache_manager import CleanupScheduler
 from ictv.storage.download_manager import DownloadManager
 from ictv.storage.transcoding_queue import TranscodingQueue
 
+
+from web.contrib.template import render_jinja
+
 urls = (
     '/', 'ictv.app.IndexPage',
     '/users', 'ictv.pages.users_page.UsersPage',
@@ -144,7 +147,6 @@ def sidebar(f):
         return f(*args, **kwargs)
 
     return decorated_function
-
 
 class IndexPage(ICTVAuthPage):
     @sidebar
@@ -372,7 +374,6 @@ def get_config(config_path):
 
     return load_default_slides(config)
 
-
 def get_app(config_path, sessions_path=""):
     """
         Returns the web.py main application of ICTV.
@@ -423,6 +424,7 @@ def get_app(config_path, sessions_path=""):
 
     # Create a persistent HTTP session storage for the app
     app.session = web.session.Session(app, OptimisticThreadSafeDisktore(os.path.join(sessions_path, 'sessions')))
+
     # Populate the web.py templates globals
     template_globals = {'session': app.session,
                         'get_feedbacks': get_feedbacks, 'get_next_feedbacks': get_next_feedbacks,
@@ -439,10 +441,14 @@ def get_app(config_path, sessions_path=""):
     template_kwargs = {'loc': os.path.join(get_root_path(), 'templates/'),
                        'cache': not app.config['debug']['debug_on_error'],
                        'globals': template_globals}
-    app.renderer = web.template.render(base='base', **template_kwargs)
 
-    # Init a second web.py renderer without any base template
-    app.standalone_renderer = web.template.render(**template_kwargs)
+    ### Jinja2 ###
+    app.renderer = render_jinja(os.path.join(get_root_path(), 'templates/'))
+    app.renderer._lookup.globals.update(base='base.html', **template_globals)
+
+    app.standalone_renderer = render_jinja(os.path.join(get_root_path(), 'templates/'))
+    app.standalone_renderer._lookup.globals.update(**template_globals)
+    ###########
 
     # Init loggers
     load_loggers_stats()

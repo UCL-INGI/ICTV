@@ -1,24 +1,28 @@
-$def with (user, channels)
+{#
+    This file belongs to the ICTV project, written by Nicolas Detienne,
+    Francois Michel, Maxime Piraux, Pierre Reinbold and Ludovic Taffin
+    at Université catholique de Louvain.
 
-$#    This file belongs to the ICTV project, written by Nicolas Detienne,
-$#    Francois Michel, Maxime Piraux, Pierre Reinbold and Ludovic Taffin
-$#    at Université catholique de Louvain.
-$#
-$#    Copyright (C) 2016-2018  Université catholique de Louvain (UCL, Belgium)
-$#
-$#    ICTV is free software: you can redistribute it and/or modify
-$#    it under the terms of the GNU Affero General Public License as published
-$#    by the Free Software Foundation, either version 3 of the License, or
-$#    (at your option) any later version.
-$#
-$#    ICTV is distributed in the hope that it will be useful,
-$#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-$#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-$#    GNU Affero General Public License for more details.
-$#
-$#    You should have received a copy of the GNU Affero General Public License
-$#    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
+    Copyright (C) 2016-2018  Université catholique de Louvain (UCL, Belgium)
 
+    ICTV is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published
+    by the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    ICTV is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
+#}
+
+
+{% extends "%s" % base %}
+{% set active_element = "Emails" %}
+{% block content %}
 <section class="content-header">
     <h1>
         Send an email
@@ -61,8 +65,9 @@ $#    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
                         <div class="form-group" id="hide_and_show_channels">
                           <label for="select_channel">Select a channel</label>
                           <select class="form-control" id="select_channel" name="select_channel">
-                            $for elem in channels:
-                              <option value="$elem.id">$elem.name</option>
+                            {% for elem in channels %}
+                              <option value="{{elem.id}}">{{elem.name}}</option>
+                            {% endfor %}
                           </select>
                         </div>
 
@@ -77,14 +82,15 @@ $#    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
     </div>
 </section>
 <script>
-    $$(document).ready(function() {
-        $$('#hide_and_show_channels').hide();
+    $(document).ready(function() {
+        $('#hide_and_show_channels').hide();
     });
-    $$('.rad').click(function(){
-        if ($$('#choose-to-contrib').is(':checked')) {
-            $$('#hide_and_show_channels').show();
+    $('.rad').click(function(){
+        if ($('#choose-to-contrib').is(':checked')) {
+            $('#hide_and_show_channels').show();
         }else{
-            $$('#hide_and_show_channels').hide();
+            $('#hide_and_show_channels').hide();
         }
     });
 </script>
+{% endblock %}
