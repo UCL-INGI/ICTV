@@ -19,19 +19,22 @@
 #    You should have received a copy of the GNU Affero General Public License
 #    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
 
-import web
 from onelogin.saml2.auth import OneLogin_Saml2_Auth
 from onelogin.saml2.utils import OneLogin_Saml2_Utils
 
 from ictv.models.user import User
 from ictv.pages.utils import ICTVPage
 
+import ictv.flask.response as resp
+import ictv.flask.migration_adapter as Storage
+
+import flask
 
 def build_settings(settings):
     """
         Build the SAML2 configuration from the app config.
 
-        Note for later : 
+        Note for later :
             The best would be to include this directly into the ICTVPage class?
             That would allow to call this method only once at boot time.
             Maybe there should be a mechanism that allowed this kind of
@@ -62,22 +65,22 @@ def init_saml_auth(req, settings):
 
 def prepare_request():
     # If server is behind proxys or balancers use the HTTP_X_FORWARDED fields
-    data = web.input()
+    data = Storage(flask.request.form)
     return {
-        'https': 'on' if web.ctx.protocol == 'https' else 'off',
-        'http_host': web.ctx.environ["SERVER_NAME"],
-        'server_port': web.ctx.environ["SERVER_PORT"],
-        'script_name': web.ctx.homepath,
+        'https': 'on' if flask.g.protocol == 'https' else 'off',
+        'http_host': flask.request.environ["SERVER_NAME"],
+        'server_port': flask.request.environ["SERVER_PORT"],
+        'script_name': flask.g.homepath,
         'get_data': data.copy(),
         'post_data': data.copy(),
         # Uncomment if using ADFS as IdP, https://github.com/onelogin/python-saml/pull/144
         # 'lowercase_urlencoding': True,
-        'query_string': web.ctx.query
+        'query_string': flask.g.query
     }
 
 
 class MetadataPage(ICTVPage):
-    def GET(self):
+    def get(self):
         req = prepare_request()
         settings = build_settings(self.config['saml2'])
         auth = init_saml_auth(req, settings)
@@ -86,15 +89,15 @@ class MetadataPage(ICTVPage):
         errors = settings.validate_metadata(metadata)
 
         if len(errors) == 0:
-            web.header('Content-Type', 'text/xml')
-            return metadata
+            response = flask.Response(metadata)
+            response.headers['Content-Type'] = 'text/xml'
+            return response
         else:
-            web.ctx.status = '500 Internal Server Error'
-            return ', '.join(errors)
+            resp.internalerror(', '.join(errors))
 
 
 class Shibboleth(ICTVPage):
-    def GET(self):
+    def get(self):
         req = prepare_request()
         settings = build_settings(self.config['saml2'])
         auth = init_saml_auth(req, settings)
@@ -102,14 +105,14 @@ class Shibboleth(ICTVPage):
         not_auth_warn = False
         success_slo = False
 
-        input_data = web.input()
+        input_data = self.form
 
         if 'sso' in input_data:
-            raise web.seeother(auth.login())
+            resp.seeother(auth.login())
 
-        raise web.seeother('/')
+        resp.seeother('/')
 
-    def POST(self):
+    def post(self):
         """
             Receive the POST binding request from IDP.
 
@@ -129,7 +132,7 @@ class Shibboleth(ICTVPage):
         not_auth_warn = False
         success_slo = False
 
-        input_data = web.input()
+        input_data = self.form
 
         if 'acs' in input_data:
             auth.process_response()  # decrypt and extract informations
@@ -158,6 +161,6 @@ class Shibboleth(ICTVPage):
 
                 self_url = OneLogin_Saml2_Utils.get_self_url(req)
                 if 'RelayState' in input_data and self_url != input_data['RelayState']:
-                    raise web.seeother(auth.redirect_to(input_data['RelayState']))
+                    resp.seeother(auth.redirect_to(input_data['RelayState']))
 
-        raise web.seeother('/')
+        resp.seeother('/')

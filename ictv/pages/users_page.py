@@ -21,27 +21,29 @@
 
 import re
 
-import web
+import flask
 from sqlobject import SQLObjectNotFound
 from sqlobject.dberrors import DuplicateEntryError
 
 from ictv.models.role import UserPermissions
 from ictv.models.user import User
-from ictv.app import sidebar
+from ictv.common.utils import sidebar
 from ictv.common.feedbacks import add_feedback, ImmediateFeedback, store_form
 from ictv.pages.utils import ICTVAuthPage, PermissionGate
 
+import ictv.flask.response as resp
+
 
 class UserDetailPage(ICTVAuthPage):
-    def GET(self, id):
+    def get(self, id):
         try:
             id = int(id)
             u = User.get(id)
             if id != self.session['user']['id'] and UserPermissions.administrator not in User.get(self.session['user']['id']).highest_permission_level:
-                raise web.forbidden()
+                resp.forbidden()
             return self.render_page(u)
         except (SQLObjectNotFound, ValueError):
-            raise web.seeother('/users')
+            resp.seeother('/users')
 
     @sidebar
     def render_page(self, user):
@@ -52,13 +54,13 @@ class UsersPage(ICTVAuthPage):
     pattern = re.compile(r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+(\.[a-zA-Z0-9-.]+$)?)")
 
     @PermissionGate.administrator
-    def GET(self):
+    def get(self):
         return self.render_page()
 
     @PermissionGate.administrator
-    def POST(self):
+    def post(self):
         """ Handles user creation, editing and deletion. """
-        form = web.input()
+        form = self.form
         super_admin = form.get('super_admin', False) == 'on'
         admin = form.get('admin', False) == 'on'
         if super_admin:
@@ -113,7 +115,7 @@ class UsersPage(ICTVAuthPage):
                         raise ImmediateFeedback(form.action, 'too_long_email')
                     if not current_user.super_admin:
                         if u.super_admin:
-                            raise web.forbidden()
+                            resp.forbidden()
                     else:
                         if self.session['user']['id'] != form.id:
                             u.set(super_admin=super_admin, admin=admin)
@@ -121,7 +123,7 @@ class UsersPage(ICTVAuthPage):
                     raise ImmediateFeedback(form.action, 'invalid_id')
             elif form.action == 'toggle-activation':
                 if not current_user.super_admin:
-                    raise web.forbidden()
+                    resp.forbidden()
                 try:
                     form.id = int(form.id)
                     u = User.get(form.id)
@@ -134,7 +136,7 @@ class UsersPage(ICTVAuthPage):
         except ImmediateFeedback:
             pass
         store_form(form)
-        raise web.seeother('/users')
+        return self.render_page()
 
     @sidebar
     def render_page(self):

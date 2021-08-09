@@ -23,8 +23,10 @@ import re
 from functools import wraps
 from logging import getLogger
 
-import web
+import flask
+from flask.views import MethodView
 
+from ictv.flask.migration_adapter import Storage
 from ictv.models.role import UserPermissions
 from ictv.models.user import User
 from ictv.plugin_manager.plugin_manager import PluginManager
@@ -34,8 +36,10 @@ from ictv.storage.cache_manager import CleanupScheduler
 from ictv.storage.download_manager import DownloadManager
 from ictv.storage.transcoding_queue import TranscodingQueue
 
+import ictv.flask.response as resp
 
-class ICTVPage(object):
+
+class ICTVPage(MethodView):
     """
         A base for all the pages of the ICTV webapp.
         Contains references to the PluginManager, web.py renderer & session, ICTVRenderer,
@@ -45,7 +49,7 @@ class ICTVPage(object):
     @property
     def app(self):
         """ Returns the web.py application singleton of ICTV Core. """
-        return web.ctx.app_stack[0]
+        return flask.current_app
 
     @property
     def plugin_manager(self) -> PluginManager:
@@ -58,9 +62,9 @@ class ICTVPage(object):
         return self.app.ictv_renderer
 
     @property
-    def session(self) -> web.session.Session:
+    def session(self) -> flask.session:
         """ Returns the webapp session. """
-        return self.app.session
+        return flask.session
 
     @property
     def renderer(self):
@@ -97,6 +101,43 @@ class ICTVPage(object):
         """ Returns the ICTV version. """
         return self.app.version
 
+    @property
+    def form(self) -> Storage:
+        """ Returns the request form. """
+
+        # ImmutableMultiDict.to_dict() is not sufficient as it
+        # as it ignores multiple keys (form arrays)
+        # Manually adding the lists as lists int the Storage object
+        form_aslists = flask.request.form.lists()
+        finaldict = flask.request.form.to_dict()
+        for key,value in form_aslists:
+            if len(value)>1:
+                finaldict[key]=value
+        finaldict.update(flask.request.files)
+        return Storage(finaldict)
+
+    def input(self, **defaults) -> Storage:
+        """ Returns the request form. """
+        original_form = defaults.copy()
+
+        form_aslists = flask.request.form.lists()
+        finaldict = flask.request.form.to_dict()
+        for key,value in form_aslists:
+            if len(value)>1:
+                finaldict[key]=value
+
+        original_form.update(finaldict)
+
+        # Replicating the web.input() strange behaviour
+        # when called with an expectation of multiple arguments
+        # see https://webpy.org/cookbook/input
+        for key,value in defaults.items():
+            if type(value)==type([]) and type(original_form[key])!=type([]):
+                original_form[key]=[original_form[key]]
+
+
+        return Storage(original_form)
+
     def url_for(self, page_class, *args):
         """ Returns an URL filled with the given arguments to the given page. """
         page_path = page_class.__module__ + '.' + page_class.__qualname__
@@ -116,24 +157,25 @@ class ICTVPage(object):
         return page_url
 
 
+
 class ICTVAuthPage(ICTVPage):
     """ A simple subclass to indicate that a subclassing page cannot be accessed without being authenticated. """
     pass
 
 
 class DummyLogin(ICTVPage):
-    def GET(self, email):
+    def get(self, email):
         u = User.selectBy(email=email).getOne(None)
         if u is not None:
             self.session['user'] = u.to_dictionary(['id', 'fullname', 'email'])
             if 'sidebar' in self.session:
                 self.session.pop('sidebar')
-        raise web.seeother('/')
+        resp.seeother('/')
 
 
 class DummyRenderer(ICTVAuthPage):
     @ChannelGate.contributor
-    def GET(self, channelid, channel):
+    def get(self, channelid, channel):
         return self.ictv_renderer.preview_capsules(self.plugin_manager.get_plugin_content(channel))
 
 
@@ -144,7 +186,7 @@ class LogAs(ICTVAuthPage):
     """
     logger = getLogger('pages')
 
-    def GET(self, target_user):
+    def get(self, target_user):
         @PermissionGate.administrator
         def log_as():
             u = User.selectBy(email=target_user).getOne()
@@ -156,15 +198,15 @@ class LogAs(ICTVAuthPage):
                     self.session['user'] = u.to_dictionary(['id', 'fullname', 'email'])
                     self.logger.info('the super_administrator %s has been logged as %s',
                                      real_user.log_name, u.log_name)
-                    raise web.seeother('/')
+                    resp.seeother('/')
                 else:
-                    raise web.forbidden()
+                    resp.forbidden()
 
         if target_user == 'nobody':
             if 'real_user' in self.session:
                 self.session['user'] = self.session['real_user']
                 self.session.pop('real_user')
-            raise web.seeother('/')
+            resp.seeother('/')
         log_as()
 
         return "the user " + target_user + " does not exist"
@@ -172,7 +214,7 @@ class LogAs(ICTVAuthPage):
 
 class DummyCapsuleRenderer(ICTVAuthPage):  # TODO: Move this to editor/app.py
     @ChannelGate.contributor
-    def GET(self, channelid, capsuleid, channel):
+    def get(self, channelid, capsuleid, channel):
         plugin = self.plugin_manager.get_plugin(channel.plugin.name)
         capsules = plugin.get_content(channelid=int(channelid), capsuleid=int(capsuleid))
         PluginManager.dereference_assets(capsules)
@@ -180,15 +222,15 @@ class DummyCapsuleRenderer(ICTVAuthPage):  # TODO: Move this to editor/app.py
 
 
 class LogoutPage(ICTVAuthPage):
-    def POST(self):
-        self.session.kill()
-        return web.seeother('/')
+    def post(self):
+        self.session.clear()
+        resp.seeother('/')
 
 
 class TourPage(ICTVAuthPage):
-    def POST(self, status):
+    def post(self, status):
         User.get(self.session['user']['id']).has_toured = status == 'ended'
-        raise web.seeother(web.ctx.env.get('HTTP_REFERER', '/'))
+        resp.seeother(flask.request.environ.get('HTTP_REFERER', '/'))
 
 
 class PermissionGateMeta(type):
@@ -211,17 +253,17 @@ class PermissionGateMeta(type):
         def decorator(cls, f):
             @wraps(f)
             def decorated_function(*args, **kwargs):
-                app = web.ctx.app_stack[0]
+                app = flask.current_app
                 if 'user' in app.session:
                     u = User.get(app.session['user']['id'])
                     if 'real_user' in app.session:
                         real_user = User.get(app.session['real_user']['id'])
                         # if the real user has at least the same right as the "logged as" user
                         if u.highest_permission_level not in real_user.highest_permission_level:
-                            raise web.seeother('/logas/nobody')
+                            resp.seeother('/logas/nobody')
                     if permission_level in u.highest_permission_level:
                         return f(*args, **kwargs)
-                    raise web.forbidden()
+                    resp.forbidden()
 
             return decorated_function
 
@@ -231,3 +273,9 @@ class PermissionGateMeta(type):
 class PermissionGate(object, metaclass=PermissionGateMeta):
     """ Utility class automatically filled by PermissionGateMeta. """
     pass
+
+class DebugEnv(ICTVAuthPage):
+    @PermissionGate.super_administrator
+    def get(self):
+        from pprint import pformat
+        return pformat(flask.request.__dict__) + '\n' + pformat(self.config)

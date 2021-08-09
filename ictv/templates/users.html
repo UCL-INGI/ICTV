@@ -24,7 +24,7 @@
 {% extends "%s" % base %}
 
 {% set active_element='Users' %}
-{% set feedbacks = get_feedbacks() %}
+{% set feedbacks = get_next_feedbacks() %}
 {% set form = pop_previous_form() %}
 
 {% block content %}

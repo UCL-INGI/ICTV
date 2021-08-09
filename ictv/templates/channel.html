@@ -33,7 +33,7 @@
 
   {% macro make_list_string(values, add_text, disabled) %}
       {% macro make_field(v) -%}
-        <input type="text" name="{{param_id}}" class="form-control" placeholder="{{param_attrs['placeholder']}}" value="{{escape(v)}}" required {{ 'disabled>' if disabled else '>'}}
+        <input type="text" name="{{param_id}}" class="form-control" placeholder="{{param_attrs['placeholder']}}" value="{{v}}" required {{ 'disabled>' if disabled else '>'}}
       {%- endmacro %}
       {% for v in values %}
           {% if not loop.first %}

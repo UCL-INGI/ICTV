@@ -224,7 +224,7 @@
                             <ul>
                                 {% for id, name, enabled in channels %}
                                     <li>
-                                        <a href="/channels/{{id}}">{{name}}</a> (<i>{{'enabled' if enabled else 'disabled'}}</i>)
+                                        <a href="/channels/config/{{id}}">{{name}}</a> (<i>{{'enabled' if enabled else 'disabled'}}</i>)
                                     </li>
                                 {% endfor %}
                             </ul>

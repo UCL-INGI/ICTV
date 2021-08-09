@@ -28,6 +28,107 @@ import string
 
 import qrcode
 import qrcode.image.svg
+from functools import wraps
+
+import flask
+from sqlobject.main import SQLObjectNotFound
+from ictv.models.role import UserPermissions
+from ictv.models.user import User
+
+import ictv.flask.response as resp
+
+
+
+urls = (
+    '/', 'ictv.app.IndexPage',
+    '/users', 'ictv.pages.users_page.UsersPage',
+    '/users/(\d+)','ictv.pages.users_page.UserDetailPage',
+    '/screens', 'ictv.pages.screens_page.ScreensPage',
+    '/screens/(\d+)', 'ictv.pages.screens_page.DetailPage',
+    '/screens/(\d+)/config', 'ictv.pages.screens_page.ScreenConfigPage',
+    '/screens/(\d+)/view/(.+)', 'ictv.pages.screen_renderer.ScreenRenderer',
+    '/screens/(\d+)/client/(.+)', 'ictv.pages.screen_client.ScreenClient',
+    '/screens/(\d+)/subscriptions', 'ictv.pages.screen_subscriptions_page.ScreenSubscriptionsPage',
+    '/screens/redirect/(.+)', 'ictv.pages.screen_router.ScreenRouter',
+    '/buildings', 'ictv.pages.buildings_page.BuildingsPage',
+    '/channels', 'ictv.pages.channels_page.ChannelsPage',
+    '/channels/(\d+)', 'ictv.pages.channel_page.ChannelPage',
+    '/channels/(\d+)/request/(\d+)', 'ictv.pages.channel_page.RequestPage',
+    '/channels/(\d+)/manage_bundle', 'ictv.pages.manage_bundle_page.ManageBundlePage',
+    '/channels/(\d+)/subscriptions', 'ictv.pages.channel_page.SubscribeScreensPage',
+    '/channel/(\d+)','ictv.pages.channel_page.DetailPage',
+    '/channel/(\d+)/force_update','ictv.pages.channel_page.ForceUpdateChannelPage',
+    '/plugins', 'ictv.pages.plugins_page.PluginsPage',
+    '/plugins/(\d+)/config', 'ictv.pages.plugins_page.PluginConfigPage',
+    '/preview/channels/(\d+)/(.+)', 'ictv.pages.channel_renderer.ChannelRenderer',
+    '/renderer/(\d+)', 'ictv.pages.utils.DummyRenderer',
+    '/renderer/(\d+)/capsule/(\d+)', 'ictv.pages.utils.DummyCapsuleRenderer',
+    '/cache/(\d+)', 'ictv.storage.cache_page.CachePage',
+    '/storage', 'ictv.pages.storage_page.StoragePage',
+    '/storage/(\d+)', 'ictv.pages.storage_page.StorageChannel',
+    '/logs', 'ictv.pages.logs_page.LogsPage',
+    '/logs/(.+)', 'ictv.pages.logs_page.ServeLog',
+    '/logas/(.+)', 'ictv.pages.utils.LogAs',
+    '/tour/(started|ended)', 'ictv.pages.utils.TourPage',
+    '/client/ks/(.+)', 'ictv.client.pages.client_pages.Kickstart',
+    '/emails', 'ictv.pages.emails_page.EmailPage',
+    '/transcoding/(.+)/progress', 'ictv.storage.transcoding_page.ProgressPage'
+)
+
+sidebar_elements = {
+    'ictv.pages.plugins_page.PluginsPage': {'name': 'Plugins', 'icon': 'fa-plug',
+                                           'rights': UserPermissions.administrator},
+    'ictv.pages.users_page.UsersPage': {'name': 'Users', 'icon': 'fa-users',
+                                       'rights': UserPermissions.administrator},
+    'ictv.pages.buildings_page.BuildingsPage': {'name': 'Buildings', 'icon': 'fa-building-o',
+                                         'rights': UserPermissions.administrator},
+    'ictv.pages.channels_page.ChannelsPage': {'name': 'Channels', 'icon': 'fa-picture-o',
+                                             'rights': UserPermissions.no_permission},
+    'ictv.pages.screens_page.ScreensPage': {'name': 'Screens', 'icon': 'fa-television',
+                                           'rights': UserPermissions.screen_administrator},
+    'ictv.pages.storage_page.StoragePage': {'name': 'Storage', 'icon': 'fa-hdd-o',
+                                            'rights': UserPermissions.super_administrator},
+    'ictv.pages.logs_page.LogsPage': {'name': 'Logs', 'icon': 'fa-history',
+                                      'rights': UserPermissions.super_administrator},
+    'ictv.pages.emails_page.EmailPage': {'name': 'Emails', 'icon': 'fa-envelope',
+                                         'rights': UserPermissions.super_administrator}
+}
+
+
+def sidebar(f):
+    """ Utility method providing a simple way to populate the sidebar in function of the user permissions. """
+
+    def get_classes_from_user(user):
+        """ Returns a list as a tuple of the names of classes in the `pages` package accessible to this user. """
+        highest_permission_level = user.highest_permission_level
+        if user.disabled:
+            return ()
+        return (name for name, params in sidebar_elements.items() if params['rights'] in highest_permission_level)
+
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        app = flask.current_app
+        app.session = flask.session
+
+        if 'user' in app.session and 'sidebar' not in app.session:
+            try:
+                u = User.get(app.session['user']['id'])
+                if 'real_user' in app.session:
+                    real_user = User.get(app.session['real_user']['id'])
+                    # if the real user has at least the same right as the "logged as" user
+                    if u.highest_permission_level not in real_user.highest_permission_level:
+                        resp.seeother('/logas/nobody')
+                user_sidebar = {}
+                for class_name in get_classes_from_user(u):
+                    e = sidebar_elements[class_name]
+                    user_sidebar[e['name']] = {'url': urls[urls.index(class_name) - 1], 'icon': e['icon']}
+                    app.session['sidebar'] = sorted(user_sidebar.items())
+            except SQLObjectNotFound:
+                return f(*args, **kwargs)
+        return f(*args, **kwargs)
+
+    return decorated_function
+
 
 
 def generate_secret(digits=string.digits):
@@ -95,7 +196,7 @@ def timesince(dt, default="just now", when_none=Exception()):
     """
     Returns string representing "time since" e.g.
     3 days ago, 5 hours ago etc.
-    When dt is None, raises an exception if when_none == Exception, returns when_none otherwise. 
+    When dt is None, raises an exception if when_none == Exception, returns when_none otherwise.
     """
 
     if dt is None:
@@ -138,3 +239,7 @@ def pretty_print_size(byte_size):
 
 def is_test():
     return os.environ.get('WEBPY_ENV') == 'test'
+
+def get_methods(elem):
+    http_methods = ["GET","POST","DELETE","PUT","HEAD","CONNECT","OPTIONS","TRACE","PATCH"]
+    return [m for m in http_methods if elem.__dict__.get(m.lower())!=None]

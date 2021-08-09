@@ -19,7 +19,7 @@
 #    You should have received a copy of the GNU Affero General Public License
 #    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
 
-import web
+
 from sqlobject import SQLObjectNotFound
 
 from ictv.models.screen import Screen
@@ -27,12 +27,12 @@ from ictv.pages.utils import ICTVPage
 
 
 class ScreenClient(ICTVPage):
-    def GET(self, screen_id, secret):
+    def get(self, screen_id, secret):
         """ Serves the pure web-based client for this screen. """
         try:
             screen = Screen.get(screen_id)
             if screen.secret != secret:
-                raise web.forbidden()
+                resp.forbidden()
         except SQLObjectNotFound:
-            raise web.notfound()
+            resp.notfound()
         return self.ictv_renderer.render_screen_client(screen)

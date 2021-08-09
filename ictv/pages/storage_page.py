@@ -32,11 +32,11 @@ from ictv.pages.utils import PermissionGate, ICTVAuthPage
 
 class StoragePage(ICTVAuthPage):
     @PermissionGate.super_administrator
-    def GET(self):
+    def get(self):
         return self.render_page()
 
     @PermissionGate.super_administrator
-    def POST(self):
+    def post(self):
         return self.render_page()
 
     @sidebar
@@ -59,7 +59,7 @@ class StoragePage(ICTVAuthPage):
 
 class StorageChannel(ICTVAuthPage):
     @PermissionGate.super_administrator
-    def GET(self, channel_id):
+    def get(self, channel_id):
         return self.render_page(channel_id)
 
     @sidebar

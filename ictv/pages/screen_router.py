@@ -19,18 +19,19 @@
 #    You should have received a copy of the GNU Affero General Public License
 #    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
 
-import web
+
 from sqlobject import SQLObjectNotFound
 
 from ictv.models.screen import ScreenMac
 from ictv.pages.utils import ICTVPage
 
+import ictv.flask.response as resp
 
 class ScreenRouter(ICTVPage):
-    def GET(self, mac):
+    def get(self, mac):
         """ Redirects a screen with its given mac to its secret link. """
         try:
             screen = ScreenMac.selectBy(mac=mac).getOne().screen
         except SQLObjectNotFound:
-            raise web.notfound()
-        raise web.seeother(screen.get_view_link())
+            resp.notfound()
+        resp.seeother(screen.get_view_link())

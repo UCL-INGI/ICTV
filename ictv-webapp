@@ -63,5 +63,6 @@ if __name__ == '__main__':
     if database.database_path is None:
         database.database_path = config['database_uri']
 
+    config['address_port'] = args.address_port
     update_database()
-    main(config_file)
+    main(config)

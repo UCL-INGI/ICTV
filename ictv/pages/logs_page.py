@@ -31,7 +31,7 @@ from ictv.common import get_root_path
 class LogsPage(ICTVAuthPage):
     @PermissionGate.super_administrator
     @sidebar
-    def GET(self):
+    def get(self):
         for name in loggers_stats:
             try:
                 size = os.path.getsize(os.path.join(get_root_path(), "logs", "%s.log" % name))
@@ -43,7 +43,7 @@ class LogsPage(ICTVAuthPage):
 
 class ServeLog(ICTVAuthPage):
     @PermissionGate.super_administrator
-    def GET(self, log_name):
+    def get(self, log_name):
         log_path = get_logger_file_path(log_name)
         if log_path and os.path.exists(log_path):
             with open(log_path, 'r') as f:

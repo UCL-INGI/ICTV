@@ -22,7 +22,7 @@
 import json
 from datetime import datetime,timedelta
 
-import web
+
 from sqlobject import SQLObjectNotFound, SQLObjectIntegrityError
 from sqlobject.dberrors import DuplicateEntryError
 
@@ -35,17 +35,18 @@ from ictv.app import sidebar
 from ictv.common.feedbacks import add_feedback, ImmediateFeedback, store_form
 from ictv.pages.utils import ICTVAuthPage, PermissionGate
 
+import ictv.flask.response as resp
 
 class ScreenConfigPage(ICTVAuthPage):
 
     @PermissionGate.screen_administrator
-    def GET(self, id):
+    def get(self, id):
         try:
             id = int(id)
             sc = Screen.get(id)
             return self.render_page(sc)
         except (SQLObjectNotFound, ValueError):
-            raise web.seeother('/screens')
+            resp.seeother('/screens')
 
     @sidebar
     def render_page(self, screen):
@@ -55,13 +56,13 @@ class ScreenConfigPage(ICTVAuthPage):
 class DetailPage(ICTVAuthPage):
 
     @PermissionGate.screen_administrator
-    def GET(self,id):
+    def get(self,id):
         try:
             id = int(id)
             sc = Screen.get(id)
             return self.render_page(sc)
         except (SQLObjectNotFound, ValueError):
-            raise web.seeother('/screens')
+            resp.seeother('/screens')
 
     @sidebar
     def render_page(self,screen):
@@ -114,18 +115,18 @@ class ScreensPage(ICTVAuthPage):
         return ''.join(mac_bytes)
 
     @PermissionGate.screen_administrator
-    def GET(self):
+    def get(self):
         return self.render_page()
 
     @PermissionGate.screen_administrator
-    def POST(self):
+    def post(self):
         """ Handles screen creation, editing, deletion, channel subscriptions. """
-        form = web.input()
+        form = self.form
         u = User.get(self.session['user']['id'])
         try:
             if form.action == 'delete':
                 if not u.super_admin:
-                    raise web.forbidden()
+                    resp.forbidden()
                 try:
                     screenid = int(form.screenid)
                 except ValueError:
@@ -159,10 +160,10 @@ class ScreensPage(ICTVAuthPage):
                         channel = Channel.get(channelid)
                         screen = Screen.get(screenid)
                         if UserPermissions.administrator not in u.highest_permission_level and not (channel.can_subscribe(u) and u in screen.owners):
-                            raise web.forbidden()
+                            resp.forbidden()
                         if sub:
                             if hasattr(channel, "plugin") and channel.plugin.activated != 'yes':
-                                raise web.forbidden()
+                                resp.forbidden()
                             screen.subscribe_to(user=u, channel=channel)
                         else:
                             screen.unsubscribe_from(user=u, channel=channel)
@@ -199,7 +200,7 @@ class ScreensPage(ICTVAuthPage):
                     try:
                         screen = Screen.get(screenid)
                         if UserPermissions.administrator not in u.highest_permission_level and u not in screen.owners:
-                            raise web.forbidden()
+                            resp.forbidden()
                         user = User.get(userid)
                         if own:
                             screen.safe_add_user(user)
@@ -239,7 +240,7 @@ class ScreensPage(ICTVAuthPage):
 
                 if form.action == 'create':
                     if UserPermissions.administrator not in u.highest_permission_level:
-                        raise web.forbidden()
+                        resp.forbidden()
                     try:
                         screen = Screen(name=form.name.strip(), building=form.building, location=form.location.strip(), comment= form.comment.strip(), orientation= form.orientation)
                     except DuplicateEntryError:
@@ -247,7 +248,7 @@ class ScreensPage(ICTVAuthPage):
 
                 elif form.action == 'edit':
                     if UserPermissions.administrator not in u.highest_permission_level:
-                        raise web.forbidden()
+                        resp.forbidden()
                     try:
                         screenid = int(form.screenid)
                     except ValueError:

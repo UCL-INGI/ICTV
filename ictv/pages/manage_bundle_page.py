@@ -21,7 +21,7 @@
 
 import json
 
-import web
+
 from sqlobject import SQLObjectNotFound
 
 from ictv.models.channel import PluginChannel, Channel
@@ -34,6 +34,9 @@ import logging
 from ictv.common.feedbacks import ImmediateFeedback, add_feedback, store_form
 from ictv.pages.utils import ICTVAuthPage, PermissionGate
 
+import ictv.flask.response as resp
+
+
 logger = logging.getLogger('pages')
 
 
@@ -43,30 +46,42 @@ class ManageBundlePage(ICTVAuthPage):
         channels = Channel.select()
         plugin_channels = [c for c in channels if type(c) == PluginChannel]
         bundle_channels = [c for c in channels if type(c) == ChannelBundle]
+
+        subscribed =   {channel.id:
+                            {
+                                'channel_name': channel.name,
+                                'plugin_channel': hasattr(channel, 'plugin')
+                            }
+                            for channel in bundle.bundled_channels
+                        }
+
         return self.renderer.manage_bundle(
             bundle=bundle,
             user=user,
             subscribed_channels=bundle.bundled_channels,
             plugin_channels=plugin_channels,
             bundle_channels=bundle_channels,
+            subscribed=subscribed,
+            plugin_channels_names={c.id: c.name for c in plugin_channels},
+            bundle_channels_names = {c.id: c.name for c in bundle_channels}
         )
 
     @PermissionGate.administrator
-    def GET(self, bundle_id):
+    def get(self, bundle_id):
         try:
             bundle = ChannelBundle.get(bundle_id)
             u = User.get(self.session['user']['id'])
         except SQLObjectNotFound:
-            raise web.notfound()
+            resp.notfound()
         return self.render_page(bundle, u)
 
     @PermissionGate.administrator
-    def POST(self, bundle_id):
+    def post(self, bundle_id):
         def wrong_channel(channel, bundle, add):
             """ returns True if the channel to add is the bundle itself
                 or if the channel is a PluginChannel with disabled plugin """
             return bundle.id == channel.id or add and type(channel) is PluginChannel and channel.plugin.activated != "yes"
-        form = web.input()
+        form = self.form
         try:
             bundle = ChannelBundle.get(bundle_id)
             u = User.get(self.session['user']['id'])
@@ -82,7 +97,7 @@ class ManageBundlePage(ICTVAuthPage):
             except SQLObjectNotFound:
                 logger.warning('user %s tried to add a channel which does not exist to bundle %d',
                                u.log_name, bundle.id)
-                raise web.forbidden()
+                resp.forbidden()
             # if somebody tries to add a channel with a disabled plugin or to add a bundle to itself
             wrong_channels = [(channel, add) for channel, add in changes if wrong_channel(channel, bundle, add)]
             if wrong_channels:
@@ -120,8 +135,8 @@ class ManageBundlePage(ICTVAuthPage):
             logger.info(message)
             add_feedback("manage_channels", 'ok')
         except SQLObjectNotFound:
-            raise web.notfound()
+            resp.notfound()
         except ImmediateFeedback:
             pass
         store_form(form)
-        raise web.seeother("/channels/%s/manage_bundle" % bundle.id)
+        resp.seeother("/channels/config/%s/manage_bundle" % bundle.id)
