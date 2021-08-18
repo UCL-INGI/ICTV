@@ -376,7 +376,7 @@ class PluginManager(object):
         failed_import = []
         if os.path.isfile(path):
             with open(path, 'r') as f:
-                config = yaml.load(f)
+                config = yaml.unsafe_load(f)
                 if 'dependencies' in config['plugin']:
                     for module_name in config['plugin']['dependencies']:
                         try:

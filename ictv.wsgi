@@ -39,5 +39,5 @@ if database.database_path is None:
     database.database_path = config['database_uri']
 
 update_database()
-app = get_app(config_file, curdir)
-application = app.wsgifunc()
+app = get_app(config_file)
+application = app.wsgi_app

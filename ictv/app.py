@@ -48,7 +48,7 @@ from ictv.models.template import Template
 from ictv.models.user import User
 from ictv.common.feedbacks import rotate_feedbacks, get_feedbacks, pop_previous_form, get_next_feedbacks
 from ictv.common.logging import init_logger, load_loggers_stats
-from ictv.common.utils import make_tooltip, make_alert, generate_secret, pretty_print_size, timesince, is_test, sidebar, urls
+from ictv.common.utils import make_tooltip, make_alert, generate_secret, pretty_print_size, timesince, is_test, sidebar, request_static
 from ictv.database import SQLObjectThreadConnection, close_database
 from ictv.pages.utils import ICTVAuthPage, PermissionGate
 from ictv.pages.logs_page import LogsPage
@@ -71,7 +71,7 @@ class IndexPage(ICTVAuthPage):
 def get_db_thread_preprocessor():
     def db_thread_preprocessor():
         #Avoid processing for static files
-        if '/static/' in flask.request.path:
+        if request_static():
             return
         sqlhub.threadConnection = SQLObjectThreadConnection.get_conn()
     return db_thread_preprocessor
@@ -110,7 +110,7 @@ def get_authentication_processor(app):
 
     def authentication_processor():
         #Avoid processing for static files
-        if '/static/' in flask.request.path:
+        if request_static():
             return
 
         def post_auth():
@@ -118,9 +118,9 @@ def get_authentication_processor(app):
                 User.get(id=app.session['user']['id'])
                 app.session.pop('sidebar', None)
 
-        urls = app.url_map.bind('')
-        view_func = app.view_functions.get(urls.match(flask.request.path,method=flask.request.method)[0]).__dict__
-        if view_func!={} and issubclass(view_func['view_class'], ICTVAuthPage):
+        endpoint, _ = app.create_url_adapter(flask.request).match()
+        view_class = app.view_functions.get(endpoint).view_class
+        if issubclass(view_class, ICTVAuthPage):
             if is_test():
                 if hasattr(app, 'test_user'):
                     u = User.selectBy(email=app.test_user['email']).getOne()
@@ -154,18 +154,10 @@ def get_web_ctx_processor():
                 ["ip","host","homedomain","protocol","query","homepath"]
 
         """
-        if flask.request.headers.getlist("X-Forwarded-For"):
-           flask.g.ip = flask.request.headers.getlist("X-Forwarded-For")[0]
-        else:
-           flask.g.ip = flask.request.remote_addr
-
-        if flask.request.headers.getlist("X-Forwarded-Host"):
-           flask.g.host  = flask.request.headers.getlist("X-Forwarded-Host")[0]
-        else:
-           flask.g.host = flask.request.url.split('/')[2]
-
-        flask.g.homedomain = '%s//%s' % (flask.request.url.split("//")[0], flask.g.host)
-        flask.g.protocol = flask.request.url.split(":")[0]
+        ips = flask.request.headers.getlist("X-Forwarded-For")
+        flask.g.ip = ips[0] if ips else flask.request.remote_addr
+        flask.request.host = flask.request.headers.get("X-Forwarded-Host", flask.request.host)
+        flask.g.homedomain = '%s://%s' % (flask.request.scheme, flask.request.host)
         flask.g.query = ("?" if flask.request.query_string.decode()!="" else "")+flask.request.query_string.decode()
         flask.g.home = flask.request.url_root
         flask.g.homepath = flask.g.home.split(flask.g.homedomain+"/")[-1]
@@ -279,12 +271,13 @@ def get_config(config_path):
 
     return load_default_slides(config)
 
-def get_app(config, sessions_path=""):
+def get_app(config_path):
     """
         Returns the flask main application of ICTV.
         Currently, only one application can be run a time due to how data such as assets, database, config files
         or plugins is stored.
     """
+    config = get_config(config_path)
     if database.database_path is None:
         database.database_path = config['database_uri']
 
@@ -315,8 +308,7 @@ def get_app(config, sessions_path=""):
         app.config['MAIL_USE_TLS'] = smtp_conf.get('starttls', False)
 
     # Create a persistent HTTP session storage for the app
-    app.secret_key = 'fwerrknu384nzAUGGDAG238hmnasd'
-
+    app.secret_key = app.config['session_secret_key']
     # Populate the jinja templates globals
     template_globals = {'session': app.session,
                         'get_feedbacks': get_feedbacks, 'get_next_feedbacks': get_next_feedbacks,
@@ -326,7 +318,7 @@ def get_app(config, sessions_path=""):
                         'show_footer': True, 're': re, 'info': info_texts, 'make_tooltip': make_tooltip,
                         'make_alert': make_alert, 'escape': html.escape,
                         'show_reset_password':  'local' in app.config['authentication'],
-                        'homedomain': lambda: "/".join(flask.request.url.split('/')[:3]), 'generate_secret': generate_secret,
+                        'homedomain': lambda: flask.request.url_root[:-1], 'generate_secret': generate_secret,
                         'version': lambda: app.version, 'pretty_print_size': pretty_print_size, 'timesince': timesince,
                         'User': User, 'get_user': lambda: User.get(app.session['user']['id'])}
 
@@ -379,7 +371,7 @@ def get_app(config, sessions_path=""):
     # Load themes and templates into database
     sqlhub.doInTransaction(load_templates_and_themes)
 
-    return app.get_app_dispatcher()
+    return app
 
 
 
@@ -391,10 +383,10 @@ def close_app(app):
     app.plugin_manager.stop()
 
 
-def main(config):
+def main(config_path, address_port):
     logger = logging.getLogger('app')
     try:
-        app = get_app(config)
+        app = get_app(config_path).get_app_dispatcher()
         if is_test() or app.config['debug']['serve_static']:
             cwd = os.getcwd()
             os.chdir(get_root_path())
@@ -402,10 +394,10 @@ def main(config):
                 os.mkdir(os.path.join(get_root_path(), 'sessions'))
             os.chdir(cwd)
         if not is_test():
-            address_port = config['address_port'].rsplit(':',1)
+            address_port = address_port.rsplit(':',1)
             address = '0.0.0.0' if len(address_port) == 1 else address_port[0]
             port = address_port[0] if len(address_port) == 1 else address_port[1]
-            werkzeug.serving.run_simple(address, int(port), app,use_debugger=config['debug']!=None)
+            werkzeug.serving.run_simple(address, int(port), app,use_debugger=app.config['debug']!=None)
         else:
             return app
     except Exception as e:

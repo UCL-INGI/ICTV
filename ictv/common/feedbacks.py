@@ -21,6 +21,7 @@
 
 import flask
 from ictv.flask.migration_adapter import Storage
+from ictv.common.utils import request_static
 
 def get_feedbacks():
     """ Returns feedbacks available for this request. """
@@ -46,8 +47,8 @@ def add_feedback(type, message, value=None):
 
 def rotate_feedbacks(res):
     # Avoid processing for static files
-    if '/static/' in flask.request.path:
-      return res
+    if request_static():
+        return res
     if 'next_request_feedbacks' in flask.session:
         flask.session['feedbacks'] = flask.session['next_request_feedbacks']
     flask.session['next_request_feedbacks'] = []

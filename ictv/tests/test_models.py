@@ -628,7 +628,7 @@ class PluginObjectTestC(FakePluginTestCase):
         Plugin.selectBy(name='fake_plugin').getOne().activated = 'notfound'
         Plugin.update_plugins(PluginManager.list_plugins())
         self.ictv_app = get_app("/tmp/config.yaml")
-        self.testApp = TestApp(self.ictv_app.wsgifunc())
+        self.testApp = TestApp(self.ictv_app.wsgi_app)
 
     def runTest(self):
         """ Tests that a previously not found plugin object is marked as deactivated after being found """

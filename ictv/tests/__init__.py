@@ -87,7 +87,7 @@ class ICTVTestCase(unittest.TestCase):
             dump(self.config,outfile, default_flow_style=False)
         self.ictv_app = get_app('/tmp/config.yaml')
         print(self.ictv_app)
-        self.testApp = TestApp(self.ictv_app.wsgifunc())
+        self.testApp = TestApp(self.ictv_app.wsgi_app)
 
     def tearDown(self):
         close_app(self.ictv_app)

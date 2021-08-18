@@ -55,3 +55,4 @@ homepage_description: |
 client:
   root_password: ~
   authorized_keys: ~
+session_secret_key: ~

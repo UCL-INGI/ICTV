@@ -2,6 +2,7 @@ import flask
 from flask import Flask, session
 from werkzeug.middleware.dispatcher import DispatcherMiddleware
 from werkzeug.exceptions import NotFound
+from jinja2 import Environment,FileSystemLoader
 
 # Allows the use of the old rendering syntax previously used in web.py
 class render_jinja:
@@ -10,7 +11,6 @@ class render_jinja:
         extensions = kwargs.pop('extensions', [])
         globals = kwargs.pop('globals', {})
 
-        from jinja2 import Environment,FileSystemLoader
         self._lookup = Environment(loader=FileSystemLoader(*a, **kwargs), extensions=extensions)
         self._lookup.globals.update(globals)
 

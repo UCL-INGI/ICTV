@@ -136,7 +136,7 @@ class UsersPage(ICTVAuthPage):
         except ImmediateFeedback:
             pass
         store_form(form)
-        return self.render_page()
+        resp.seeother('/users')
 
     @sidebar
     def render_page(self):

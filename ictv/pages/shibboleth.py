@@ -67,7 +67,7 @@ def prepare_request():
     # If server is behind proxys or balancers use the HTTP_X_FORWARDED fields
     data = Storage(flask.request.form)
     return {
-        'https': 'on' if flask.g.protocol == 'https' else 'off',
+        'https': 'on' if flask.request.scheme == 'https' else 'off',
         'http_host': flask.request.environ["SERVER_NAME"],
         'server_port': flask.request.environ["SERVER_PORT"],
         'script_name': flask.g.homepath,

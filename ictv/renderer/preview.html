@@ -19,8 +19,9 @@
     along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
 #}
 
-{# If controls is not defined, it must be True by default #}
-{% set controls = (False if controls == False else True) %}
+{% set controls = controls|default(true) %}
+{% set small_size = small_size|default(false) %}
+{% set auto_slide = auto_slide|default(false) %}
 
 <!DOCTYPE html>
 <html>

@@ -114,3 +114,5 @@ client:
       type: str
 homepage_description:
   type: str
+session_secret_key:
+  type: str

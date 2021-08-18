@@ -243,3 +243,8 @@ def is_test():
 def get_methods(elem):
     http_methods = ["GET","POST","DELETE","PUT","HEAD","CONNECT","OPTIONS","TRACE","PATCH"]
     return [m for m in http_methods if elem.__dict__.get(m.lower())!=None]
+
+def request_static():
+    endpoint, _ = flask.current_app.create_url_adapter(flask.request).match()
+    return endpoint == 'static'
+    
