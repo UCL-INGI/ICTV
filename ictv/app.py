@@ -403,7 +403,9 @@ def main(config):
             os.chdir(cwd)
         if not is_test():
             address_port = config['address_port'].rsplit(':',1)
-            werkzeug.serving.run_simple(address_port[0],int(address_port[1]),app,use_debugger=config['debug']!=None)
+            address = '0.0.0.0' if len(address_port) == 1 else address_port[0]
+            port = address_port[0] if len(address_port) == 1 else address_port[1]
+            werkzeug.serving.run_simple(address, int(port), app,use_debugger=config['debug']!=None)
         else:
             return app
     except Exception as e:
