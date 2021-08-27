@@ -19,11 +19,14 @@
 #    You should have received a copy of the GNU Affero General Public License
 #    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
 
-import web
+import flask
 from sqlobject import SQLObjectNotFound
 from sqlobject.dberrors import DuplicateEntryError
+from sqlobject.dberrors import DatabaseError
 
 import logging
+
+from flask import request
 
 from ictv.common.feedbacks import add_feedback, ImmediateFeedback, store_form
 from ictv.models.screen import Screen
@@ -43,18 +46,18 @@ class BuildingsPage(ICTVAuthPage):
         return self.renderer.buildings(buildings=Building.select(), current_user=current_user)
 
     @PermissionGate.administrator
-    def GET(self):
+    def get(self):
         return self.render_page()
 
     @PermissionGate.administrator
-    def POST(self):
+    def post(self):
         """ Handles building creation, editing and deletion. """
         current_user = User.get(self.session['user']['id'])
-        form = web.input()
+        form = self.form
         try:
             if form.action == 'delete':
                 if not current_user.super_admin:
-                    raise web.forbidden()
+                    raise flask.redirect('',code=403)
                 try:
                     id = int(form.id)
                 except ValueError:

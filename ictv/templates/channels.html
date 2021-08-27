@@ -113,14 +113,14 @@
                 {% if UserPermissions.administrator in current_user.highest_permission_level %}
                     <button class="btn btn-xs bg-maroon" data-toggle="modal" data-target="#manage-bundles-modal" onclick="data_bundles = {{ channel.bundles|map(attribute='id')|list|tojson() }}"><span class="glyphicon glyphicon-gift"></span>Add to bundles</button>
                     {% if hasattr(channel, 'bundled_channels') %}
-                        <a class="btn btn-xs btn-info" href="/channels/{{channel.id}}/manage_bundle"><i class="fa fa-rss"></i>Manage bundle</a>
+                        <a class="btn btn-xs btn-info" href="/channels/config/{{channel.id}}/manage_bundle"><i class="fa fa-rss"></i>Manage bundle</a>
                     {% endif %}
                 {% endif %}
                 {% if active and ((channel.subscription_right == 'public') or UserPermissions.administrator in current_user.highest_permission_level or (channel.subscription_right in ['restricted', 'private'] and current_user in channel.authorized_subscribers)) %}
                     <a class="btn btn-xs btn-success" href="{{ channel.get_preview_link() |safe }}"><i class="fa fa-eye"></i>Preview</a>
                 {% endif %}
                 {% if (channel.subscription_right in ['restricted', 'private'] and current_user not in channel.authorized_subscribers and current_user.owns_screen()) %}
-                    <a class="btn btn-xs btn-success" href="/channels/{{channel.id}}/request/{{current_user.id}}"><i class="fa fa-envelope-o"></i>Request subscription</a>
+                    <a class="btn btn-xs btn-success" href="/channels/config/{{channel.id}}/request/{{current_user.id}}"><i class="fa fa-envelope-o"></i>Request subscription</a>
                 {% endif %}
             {% endmacro %}
             <div id="plugin-channels" class="tab-pane">
@@ -192,7 +192,7 @@
                             <td>
                                 {% if UserPermissions.administrator in current_user.highest_permission_level or channel.has_admin(current_user) %}
                                     <button class="btn btn-xs btn-warning" data-toggle="modal" data-target="#add-users-channel-modal"><i class="fa fa-users"></i>Users permissions</button>
-                                    <a class="btn btn-xs btn-default" href="/channels/{{channel.id}}/subscriptions"><span class="fa fa-rss"></span>Subscribers</a>
+                                    <a class="btn btn-xs btn-default" href="/channels/config/{{channel.id}}/subscriptions"><span class="fa fa-rss"></span>Subscribers</a>
                                     {% if UserPermissions.administrator in current_user.highest_permission_level %}
                                         <button class="btn btn-xs btn-primary" data-toggle="modal" data-target="#edit-channel-modal"><i class="fa fa-pencil-square-o"></i>Edit</button>
                                     {% endif %}
@@ -202,7 +202,7 @@
                                     {% endif %}
                                 {% endif %}
                                 {% if channel.plugin.activated != 'notfound' and channel.has_visible_params_for(current_user) %}
-                                    <a class="btn btn-xs btn-default" href="/channels/{{channel.id}}"><span class="glyphicon glyphicon-wrench"></span>Configure</a>
+                                    <a class="btn btn-xs btn-default" href="/channels/config/{{channel.id}}"><span class="glyphicon glyphicon-wrench"></span>Configure</a>
                                 {% endif %}
                                 {{ make_channel_common_actions(channel, channel.plugin.activated == 'yes') |safe}}
                                 {% if channel.plugin.webapp and (UserPermissions.administrator in current_user.highest_permission_level or channel.has_contrib(current_user)) %}

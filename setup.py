@@ -37,7 +37,7 @@ retval = setup(
     author='Michel François, Piraux Maxime, Taffin Ludovic, Nicolas Detienne, Pierre Reinbold',
     author_email='',
     description='ICTV is a simple content management system for digital signage on multiple screens.',
-    install_requires=['sqlobject', 'typing', 'icalendar', 'pyyaml', 'urllib3', 'web.py>=0.40.dev0',
+    install_requires=['sqlobject', 'typing', 'icalendar', 'pyyaml', 'urllib3', 'flask', 'flask-mail',
                       'yamlordereddictloader', 'pyquery', 'BeautifulSoup4', 'python-magic', 'aiohttp', 'wand',
                       'feedparser', 'qrcode', 'selenium', 'python3-saml', 'pymediainfo'],
     setup_requires=['pytest-runner', 'pytest-env'] if not is_running_on_macos else [],

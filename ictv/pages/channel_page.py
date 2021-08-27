@@ -26,7 +26,6 @@ import re
 # Import the email modules we'll need
 from email.mime.text import MIMEText
 
-import web
 from datetime import timedelta, datetime
 from sqlobject import SQLObjectNotFound, SQLObjectIntegrityError
 from sqlobject.dberrors import DuplicateEntryError
@@ -42,21 +41,24 @@ from ictv.common.feedbacks import ImmediateFeedback, add_feedback, store_form
 from ictv.plugin_manager.plugin_utils import ChannelGate
 from ictv.renderer.renderer import Templates
 
+import ictv.flask.response as resp
+
+
 logger = logging.getLogger('pages')
 
 
 class DetailPage(ICTVAuthPage):
-    def GET(self, channel_id):
+    def get(self, channel_id):
         channel = Channel.get(int(channel_id))
         current_user = User.get(self.session['user']['id'])
         if channel in Channel.get_visible_channels_of(current_user):
             return self.render_page(channel)
-        raise web.forbidden()
+        raise self.forbidden()
 
     @PermissionGate.administrator
-    def POST(self, channel_id):
+    def post(self, channel_id):
         channel = Channel.get(int(channel_id))
-        form = web.input()
+        form = self.form
         try:
             if form.action == 'add-channel-to-bundles':
                 bundles_diff = json.loads(form.pop('diff', '{}'))
@@ -77,7 +79,7 @@ class DetailPage(ICTVAuthPage):
         form.channel_id = channel_id
         form.name = channel.name
         store_form(form)
-        raise web.seeother('/channels')
+        resp.seeother('/channels')
 
     @sidebar
     def render_page(self, channel):
@@ -100,7 +102,7 @@ class DetailPage(ICTVAuthPage):
 class SubscribeScreensPage(ICTVAuthPage):
 
     @sidebar
-    def GET(self, channel_id):
+    def get(self, channel_id):
         channel = Channel.get(channel_id)
         current_user = User.get(self.session['user']['id'])
         screens_of_current_user = Screen.get_visible_screens_of(current_user)
@@ -124,8 +126,8 @@ class SubscribeScreensPage(ICTVAuthPage):
         )
 
     @PermissionGate.administrator
-    def POST(self,channel_id):
-        form = web.input()
+    def post(self,channel_id):
+        form = self.form
         u = User.get(self.session['user']['id'])
         subscribed = []
         unsubscribed = []
@@ -151,10 +153,10 @@ class SubscribeScreensPage(ICTVAuthPage):
             try:
                 channel = Channel.get(channelid)
                 if not channel.can_subscribe(u):
-                    raise web.forbidden(message="You're not allow to do that")
+                    raise self.forbidden(message="You're not allow to do that")
                 screen = Screen.get(screenid)
                 if not u in screen.owners:
-                    raise web.forbidden(message="You're not allow to do that")
+                    raise self.forbidden(message="You're not allow to do that")
                 #sub true -> New subscription
                 #sub false -> Remove subscription
                 if sub:
@@ -182,18 +184,18 @@ class SubscribeScreensPage(ICTVAuthPage):
             except SQLObjectIntegrityError:
                 # when there id more than one subscription matching the pair channel/screen
                 pass
-        raise web.seeother("/channels/%s/subscriptions" % channel_id)
+        resp.seeother("/channels/config/%s/subscriptions" % channel_id)
 
 
 class ForceUpdateChannelPage(ICTVAuthPage):
     @ChannelGate.contributor
-    def GET(self, channel_id, channel):
+    def get(self, channel_id, channel):
         self.plugin_manager.invalidate_cache(channel.plugin.name, channel.id)
-        raise web.seeother('/channel/%d' % channel.id)
+        resp.seeother('/channel/%d' % channel.id)
 
 
 class RequestPage(ICTVAuthPage):
-    def GET(self, id, user_id):
+    def get(self, id, user_id):
         channel_id = int(id)
         chan = Channel.get(channel_id)
         user_id = int(user_id)
@@ -202,18 +204,18 @@ class RequestPage(ICTVAuthPage):
         st = "You just receive a request of subscription for channel " + chan.name + ". Could you please subscribe " + str(user.fullname) + " (" + user.email + ") to this channel."
         for admin in chan.get_admins():
             web.sendmail(web.config.smtp_sendername, admin.email, 'Request for subscription to a channel', st, headers={'Content-Type': 'text/html;charset=utf-8'})
-        return web.seeother('/channels')
+        resp.seeother('/channels')
 
 
 class ChannelPage(ICTVAuthPage):
     @ChannelGate.contributor
-    def GET(self, channel_id, channel):
+    def get(self, channel_id, channel):
         return self.render_page(channel)
 
     @ChannelGate.contributor
-    def POST(self, channel_id, channel):
+    def post(self, channel_id, channel):
         """ Handles channel creation, editing, deletion, configuration and user permissions. """
-        form = web.input()
+        form = self.form
         current_user = User.get(self.session['user']['id'])
         try:
             if form.action == 'reset-config':
@@ -232,14 +234,14 @@ class ChannelPage(ICTVAuthPage):
                     if read and write:
                         channel.plugin_config.pop(param_id, None)
                     else:
-                        raise web.forbidden()
+                        raise self.forbidden()
                     # Force SQLObject update
                     channel.plugin_config = channel.plugin_config
                     channel.syncUpdate()
                 logger.info('params of channel ' + channel.name + ' reset by ' + current_user.log_name)
             elif form.action == 'reset-cache-config':
                 if not current_user.super_admin:
-                    raise web.forbidden()
+                    raise self.forbidden()
                 form.name = channel.name
                 channel.cache_activated = None
                 channel.cache_validity = None
@@ -248,7 +250,7 @@ class ChannelPage(ICTVAuthPage):
                             current_user.log_name)
             elif form.action == 'reset-filtering-config':
                 if not current_user.super_admin:
-                    raise web.forbidden()
+                    raise self.forbidden()
                 form.name = channel.name
                 channel.keep_noncomplying_capsules = None
                 add_feedback('general', 'channel_filtering_reset')
@@ -262,7 +264,7 @@ class ChannelPage(ICTVAuthPage):
             if channel is not None and channel.enabled:
                 form.enabled = 'on'
         store_form(form)
-        raise web.seeother('/channels/%d' % channel.id)
+        resp.seeother('/channels/config/%d' % channel.id)
 
     @sidebar
     def render_page(self, channel):

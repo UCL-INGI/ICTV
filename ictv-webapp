@@ -64,4 +64,4 @@ if __name__ == '__main__':
         database.database_path = config['database_uri']
 
     update_database()
-    main(config_file)
+    main(config_file, args.address_port)

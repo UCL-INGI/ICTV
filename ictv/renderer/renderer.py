@@ -26,7 +26,7 @@ import sys
 from copy import deepcopy
 from html import unescape
 
-import web
+
 import yaml
 
 from ictv.common import utils, get_root_path
@@ -35,7 +35,7 @@ from ictv.libs.html import HTML
 from ictv.plugin_manager.plugin_capsule import PluginCapsule
 from ictv.plugin_manager.plugin_slide import PluginSlide
 
-from web.contrib.template import render_jinja
+from ictv.flask.migration_adapter import render_jinja
 from jinja2 import Environment, FileSystemLoader, nodes
 
 
@@ -175,7 +175,7 @@ def read_raw_template(template):
 
 def get_const_in_template(template_name):
     """ Function to retrieve the constant variables declared inside a jinja template. """
-    
+
     env = Environment()
     parsed_content = env.parse(read_raw_template(template_name))
 
@@ -195,6 +195,19 @@ class TemplatesMeta(type):
                 templates[os.path.splitext(template)[0]] = {}
 
         for template in templates:
+            def f(type):
+                def g(*args, **kwargs):
+                    id = type + '-' + str(kwargs['number'])
+                    templates[template][id] = {'max_chars': kwargs['max_chars']} if 'max_chars' in kwargs else {}
+                return g
+
+            dummy_renderer = SlideRenderer({'title': f('title'), 'subtitle': f('subtitle'),
+                            'img': f('image'),
+                            'logo': f('logo'), 'text': f('text'), 'background': f('background')}, None)
+
+            # Useful to set some attribute in the template
+            getattr(dummy_renderer.slide_renderer, template)(slide=None)
+
             variables = get_const_in_template(template)
             templates[template]['name'] = variables['name']
             templates[template]['description'] = variables['description']
@@ -257,7 +270,7 @@ class ThemesMeta(type):
         for theme in [p for p in os.listdir(themes_directory) if os.path.isdir(os.path.join(themes_directory, p))]:
             try:
                 with open(os.path.join(themes_directory, theme, 'config' + os.extsep + 'yaml')) as config_file:
-                    config = yaml.load(config_file)
+                    config = yaml.unsafe_load(config_file)
                 self._themes[theme] = config
                 if 'base_color' in self._themes[theme]:
                     theme_base_color = self._themes[theme]['base_color']
@@ -452,9 +465,9 @@ def make_background(**kwargs):
             size = kwargs['content'][id]['size']
             color = kwargs['content'][id]['color'] if 'color' in kwargs['content'][id] else 'black'
             attrs = 'data-background-image="' + src + '" data-background-size="' + size + '" data-background-color="' + color + '"'
-        elif 'iframe' in kwargs['content'][id]:
+        elif 'iframe' in kwargs['content'].get(id, {}):
             attrs = 'data-background-iframe="' + '/static/' + kwargs['content'][id]['iframe'] + '"'
-        elif 'video' in kwargs['content'][id]:
+        elif 'video' in kwargs['content'].get(id, {}):
             attrs = 'data-background-video="%s"' % kwargs['content'][id]['video']
         else:
             return ''

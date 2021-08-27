@@ -22,26 +22,30 @@
 import hashlib
 from logging import getLogger
 
-import web
+
+import flask
 from ictv.common import utils
 
 from ictv.models.user import User
 from ictv.common.feedbacks import ImmediateFeedback, add_feedback, store_form
 from ictv.pages.utils import ICTVPage, PermissionGate, ICTVAuthPage
 
+import ictv.flask.response as resp
+
+
 logger = getLogger('local_login')
 
 
 class LoginPage(ICTVPage):
-    def GET(self):
+    def get(self):
         if 'user' in self.session:
-            raise web.seeother('/')
+            resp.seeother('/')
         return self.render_page()
 
-    def POST(self):
+    def post(self):
         if 'user' in self.session:
-            raise web.seeother('/')
-        form = web.input()
+            resp.seeother('/')
+        form = self.form
         try:
             user = User.selectBy(email=form.email, password=hash_password(form.password)).getOne(None)
             if not user:
@@ -51,33 +55,33 @@ class LoginPage(ICTVPage):
             store_form(form)
             return self.render_page()
 
-        return web.seeother('/')
+        resp.seeother('/')
 
     def render_page(self):
         return self.standalone_renderer.login(mode=self.config['authentication'], saml2_display_name=self.config['saml2']['display_name'])
 
 
 class GetResetLink(ICTVAuthPage):
-    def GET(self):  # TODO: Redirect if not using local authentication
+    def get(self):  # TODO: Redirect if not using local authentication
         user = User.get(self.session['user']['id'])
         user.reset_secret = utils.generate_secret()
         logger.info('User %s requested a new password reset link', user.log_name)
-        raise web.seeother(self.url_for(ResetPage, user.reset_secret))
+        resp.seeother(flask.url_for("ResetPage", user.reset_secret))
 
 
 class ResetPage(ICTVPage):
-    def GET(self, secret):
+    def get(self, secret):
         user = User.selectBy(reset_secret=secret).getOne(None)
         if not user:
-            logger.warning('IP %s tried to access password reset page with invalid secret', web.ctx.ip)
+            logger.warning('IP %s tried to access password reset page with invalid secret', flask.request.remote_addr)
             if 'user' in self.session:
                 logger.warning('User %s is currently connected', User.get(self.session['user']['id']).log_name)
-            raise web.redirect('/')
+            resp.seeother('/')
         return self.standalone_renderer.reset(user=user)
 
-    def POST(self, secret):
+    def post(self, secret):
         user = User.selectBy(reset_secret=secret).getOne(None)
-        form = web.input()
+        form = self.form
         try:
             if form.get('password1') != form.get('password2'):
                 raise ImmediateFeedback('reset', 'passwords_do_not_match')
@@ -86,11 +90,11 @@ class ResetPage(ICTVPage):
                 raise ImmediateFeedback('reset', 'password_insufficient')
             user.password = hash_password(form.password1)
             user.reset_secret = utils.generate_secret()  # Make this token one time use
-            logger.info('User %s has reset its password from IP %s', user.log_name, web.ctx.ip)
+            logger.info('User %s has reset its password from IP %s', user.log_name, flask.g.ip)
         except ImmediateFeedback:
             return self.standalone_renderer.reset(user=user)
         add_feedback('reset', 'ok')
-        raise web.seeother(self.url_for(LoginPage))
+        resp.seeother(flask.url_for("LoginPage"))
 
 
 def hash_password(password):

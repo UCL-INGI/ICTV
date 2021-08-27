@@ -23,7 +23,8 @@ import logging
 import random
 from datetime import datetime
 
-import web
+import flask
+import ictv.flask.migration_adapter
 from sqlobject import SQLObjectNotFound
 
 from ictv.models.screen import Screen
@@ -33,20 +34,20 @@ screens_logger = logging.getLogger('screens')
 
 
 class ScreenRenderer(ICTVPage):
-    def GET(self, screen_id, secret):
+    def get(self, screen_id, secret):
         """ Render the channels of this screen. """
         try:
             screen = Screen.get(screen_id)
         except SQLObjectNotFound:
-            raise web.notfound()
+            return migration_adapter.notfound()
         if screen.secret != secret:
-            raise web.forbidden()
-        if web.ctx.env.get('REMOTE_ADDR') is None:
+            return migration_adapter.forbidden()
+        if flask.request.remote_addr is None:
             pass
         else:
-            screens_logger.info("Request to the screen " + str(screen_id) + " has been done from:" + web.ctx.env.get('REMOTE_ADDR'))
-        if web.ctx.env.get('HTTP_USER_AGENT') == 'cache_daemon.py':
-            screen.last_ip = web.ctx.ip
+            screens_logger.info("Request to the screen " + str(screen_id) + " has been done from:" + flask.request.remote_addr)
+        if flask.request.headers.get('User-Agent') == 'cache_daemon.py':
+            screen.last_ip = flask.g.ip
             screen.last_access = datetime.now()
         return render_screen(screen, self.app)
 

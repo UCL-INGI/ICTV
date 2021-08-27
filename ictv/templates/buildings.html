@@ -108,19 +108,19 @@
                             <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
                             You must enter a name to create a new building
                         </div>
-                    {% endif %}    
+                    {% endif %}
                     {% if feedbacks.has('create', 'too_long_name') %}
                         <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
                             <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
                             You must enter a shorter name to create a new building
                         </div>
-                    {% endif %}    
+                    {% endif %}
                     {% if feedbacks.has('create', 'name_already_exists') %}
                         <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
                             <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
                             A building with this name already exists.
                         </div>
-                    {% endif %}   
+                    {% endif %}
                     <div class="form-group">
                         <label for="name">Name</label>
                         <input type="text" name="name" class="form-control" id="name" placeholder="Name" required>
@@ -158,13 +158,13 @@
                                 <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
                                 You must enter a name to edit this building
                             </div>
-                        {% endif %} 
+                        {% endif %}
                         {% if feedbacks.has('edit', 'too_long_name') %}
                             <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
                                 <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
                                 You must enter a shorter name to edit this building
                             </div>
-                        {% endif %} 
+                        {% endif %}
                         {% if feedbacks.has('create', 'too_long_name') %}
                             <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
                                 <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
@@ -226,7 +226,7 @@
                         {% endif %}
                         {% if feedbacks.has('delete', 'delete_building_but_screens_present') %}
                             {% set screens = feedbacks.feedback_value() %}
-                                
+
                             <div class="alert alert-danger alter-dismissible" style="margin-top: 15px" role="alert">
                                 <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
                                 You cannot remove this building as there are screens located there. Please first move or remove these screens :

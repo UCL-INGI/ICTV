@@ -19,12 +19,13 @@
 #    You should have received a copy of the GNU Affero General Public License
 #    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
 
-import web
-
+import flask
+from ictv.flask.migration_adapter import Storage
+from ictv.common.utils import request_static
 
 def get_feedbacks():
     """ Returns feedbacks available for this request. """
-    return Feedbacks(web.ctx.session.get('feedbacks', []))
+    return Feedbacks(flask.session['feedbacks'] if 'feedbacks' in flask.session else [])
 
 
 def get_next_feedbacks():
@@ -32,18 +33,26 @@ def get_next_feedbacks():
         Returns feedbacks available for the next request.
         This is implemented for compatibility reasons until all pages implement a Post/Redirect/Get pattern.
     """
-    return Feedbacks(web.ctx.session.get('next_request_feedbacks', []))
+    return Feedbacks(flask.session['next_request_feedbacks'] if 'next_request_feedbacks' in flask.session else [])
 
 
 def add_feedback(type, message, value=None):
-    feedbacks = web.ctx.session.get('next_request_feedbacks', [])
+    if "user" in flask.session:
+        feedbacks = flask.session['next_request_feedbacks']
+    else:
+        feedbacks = []
     feedbacks.append({'type': type, 'message': message, 'value': value})
-    web.ctx.session.next_request_feedbacks = feedbacks
+    flask.session['next_request_feedbacks'] = feedbacks
 
 
-def rotate_feedbacks():
-    web.ctx.session.feedbacks = web.ctx.session.get('next_request_feedbacks', [])
-    web.ctx.session.next_request_feedbacks = []
+def rotate_feedbacks(res):
+    # Avoid processing for static files
+    if request_static():
+        return res
+    if 'next_request_feedbacks' in flask.session:
+        flask.session['feedbacks'] = flask.session['next_request_feedbacks']
+    flask.session['next_request_feedbacks'] = []
+    return res
 
 
 class Feedbacks(list):
@@ -82,9 +91,8 @@ class ImmediateFeedback(Exception):
 
 
 def store_form(form):
-    web.ctx.session.form = list(form.items())
+    flask.session['form'] = form
 
 
-def pop_previous_form():
-    return web.Storage(web.ctx.session.pop('form', {}))
-
+def pop_previous_form() -> Storage:
+    return flask.session.pop('form', {})

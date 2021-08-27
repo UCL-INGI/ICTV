@@ -26,6 +26,6 @@ from ictv.pages.utils import ICTVAuthPage
 
 
 class ProgressPage(ICTVAuthPage):
-    def GET(self, b64_path):
+    def get(self, b64_path):
         path = b64decode(b64_path).decode()
         return json.dumps({'progress': self.transcoding_queue.get_progress(path)})

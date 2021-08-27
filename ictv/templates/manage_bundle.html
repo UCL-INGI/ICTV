@@ -22,15 +22,6 @@
 
 {% set feedbacks = get_feedbacks() %}
 {% set form = pop_previous_form() %}
-{% set subscribed =   {channel.id:
-                {
-                    'channel_name': channel.name,
-                    'plugin_channel': hasattr(channel, 'plugin')
-                }
-                for channel in subscribed_channels
-            } %}
-{% set plugin_channels_names = {c.id: c.name for c in plugin_channels} %}
-{% set bundle_channels_names = {c.id: c.name for c in bundle_channels} %}
 
 {% extends "%s" % base %}
 
@@ -95,7 +86,7 @@
                             <tbody>
                             {% for channel in channels %}
                                 <tr data-channel-id="{{channel.id}}" {{'data-channel-activated="{}"'.format(channel.plugin.activated) if hasattr(channel, 'plugin') else 'data-channel-activated="yes"' |safe}}
-                                {{ ('class="not-activated"' if hasattr(channel, 'plugin') and channel.plugin.activated != 'yes' else '' |safe}}> 
+                                {{ ('class="not-activated"' if hasattr(channel, 'plugin') and channel.plugin.activated != 'yes' else '') |safe}}>
                                 <td>
                                     {% if type_name == "Bundle" %}
                                         <div class="accordion">
@@ -107,8 +98,8 @@
                                                 </a>
                                             <div>
                                                 {% for elem in subscribed_channels %}
+                                                  <p>{{elem.name}}</p>
                                                 {% endfor %}
-                                                <p>{{elem.name}}</p>
                                             </div>
                                         </div>
                                     {% else %}

@@ -21,7 +21,7 @@
 
 import json
 
-import web
+
 from sqlobject import SQLObjectNotFound
 
 from ictv.models.channel import PluginChannel, Channel
@@ -33,6 +33,8 @@ from ictv.app import sidebar
 import logging
 from ictv.common.feedbacks import ImmediateFeedback, add_feedback, store_form
 from ictv.pages.utils import ICTVAuthPage, PermissionGate
+
+import ictv.flask.response as resp
 
 logger = logging.getLogger('pages')
 
@@ -72,23 +74,23 @@ class ScreenSubscriptionsPage(ICTVAuthPage):
         )
 
     @PermissionGate.screen_administrator
-    def GET(self, screen_id):
+    def get(self, screen_id):
         try:
             screen = Screen.get(screen_id)
             u = User.get(self.session['user']['id'])
             if not (UserPermissions.administrator in u.highest_permission_level or screen in u.screens):
-                raise web.forbidden()
+                resp.forbidden()
         except SQLObjectNotFound:
-            raise web.notfound()
+            resp.notfound()
         return self.render_page(screen, u)
 
     @PermissionGate.screen_administrator
-    def POST(self, screen_id):
+    def post(self, screen_id):
         def wrong_channel(channel, subscribe, user):
             """ returns True if the the user wants to subscribe to the channel while its plugin is not activated or if
                 the user tries to subscribe to the channel without being in its authorized subscribers"""
             return subscribe and (type(channel) is PluginChannel and channel.plugin.activated != "yes" or (subscribe and not channel.can_subscribe(user)))
-        form = web.input()
+        form = self.form
         try:
             screen = Screen.get(screen_id)
             u = User.get(self.session['user']['id'])
@@ -96,7 +98,7 @@ class ScreenSubscriptionsPage(ICTVAuthPage):
             if not (UserPermissions.administrator in u.highest_permission_level or screen in u.screens):
                 logger.warning('user %s tried change subscriptions of screen %d without having the rights to do this',
                                u.log_name, screen.id)
-                raise web.forbidden()
+                resp.forbidden()
             diff = json.loads(form.diff)
             if diff == {}:
                 logger.info('user %s submitted empty diff for subscriptions of screen %s', u.log_name, screen.name)
@@ -109,7 +111,7 @@ class ScreenSubscriptionsPage(ICTVAuthPage):
             except SQLObjectNotFound:
                 logger.warning('user %s tried to subscribe/unsubscribe screen %d to a channel which does not exist',
                                u.log_name, screen.id)
-                raise web.forbidden()
+                resp.forbidden()
             # if somebody tries to subscribe to a channel with a disabled plugin
             wrong_channels = [(channel, subscribe) for channel, subscribe in changes if wrong_channel(channel, subscribe, u)]
             if wrong_channels:
@@ -121,7 +123,7 @@ class ScreenSubscriptionsPage(ICTVAuthPage):
                 else:
                     logger.warning('user %s tried to subscribe screen %d to channel %d without having the right to do this',
                                    u.log_name, screen.id, channel.id)
-                    raise web.forbidden()
+                    resp.forbidden()
             for channel, subscribe in changes:
                 if subscribe:
                     screen.subscribe_to(u, channel)
@@ -139,8 +141,8 @@ class ScreenSubscriptionsPage(ICTVAuthPage):
             logger.info(message)
             add_feedback("subscription", 'ok')
         except SQLObjectNotFound:
-            raise web.notfound()
+            resp.notfound()
         except ImmediateFeedback:
             pass
         store_form(form)
-        raise web.seeother("/screens/%s/subscriptions" % screen.id)
+        resp.seeother("/screens/%s/subscriptions" % screen.id)

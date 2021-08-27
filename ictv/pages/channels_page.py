@@ -23,7 +23,7 @@ import json
 import logging
 import re
 
-import web
+import flask
 from sqlobject import NOT
 from sqlobject import SQLObjectNotFound
 from sqlobject.dberrors import DuplicateEntryError
@@ -37,17 +37,20 @@ from ictv.common.feedbacks import add_feedback, ImmediateFeedback, store_form
 from ictv.pages.utils import ICTVAuthPage, PermissionGate
 from ictv.plugin_manager.plugin_utils import MisconfiguredParameters
 
+import ictv.flask.response as resp
+
+
 logger = logging.getLogger('pages')
 
 
 class ChannelsPage(ICTVAuthPage):
-    def GET(self):
+    def get(self):
         return self.render_page()
 
     @PermissionGate.channel_administrator
-    def POST(self):
+    def post(self):
         """ Handles channel creation, editing, deletion, configuration and user permissions. """
-        form = web.input()
+        form = self.form
         current_user = User.get(self.session['user']['id'])
         channel = None
         try:
@@ -67,7 +70,7 @@ class ChannelsPage(ICTVAuthPage):
             if form.action.startswith('create'):
                 if UserPermissions.administrator not in current_user.highest_permission_level:
                     logger.warning('user %s tried to create a channel without being admin', current_user.log_name)
-                    raise web.forbidden()
+                    raise self.forbidden()
 
                 try:
                     if form.action == 'create-channel':
@@ -85,7 +88,7 @@ class ChannelsPage(ICTVAuthPage):
                         channel = ChannelBundle(name=name, description=description, subscription_right=form.subscription_right,
                                           enabled=enabled)
                     else:
-                        raise web.badrequest()
+                        resp.badrequest()
                 except SQLObjectNotFound:
                     raise ImmediateFeedback(form.action, 'invalid_plugin')
                 except DuplicateEntryError:
@@ -93,7 +96,7 @@ class ChannelsPage(ICTVAuthPage):
                 logger.info('channel ' + channel.name + ' created by ' + current_user.log_name)
             elif form.action.startswith('edit'):
                 if UserPermissions.administrator not in current_user.highest_permission_level:
-                    raise web.forbidden()
+                    raise self.forbidden()
                 try:
                     form.id = int(form.id)
                     channel = (PluginChannel if form.action == 'edit-channel' else Channel).get(form.id)
@@ -118,7 +121,7 @@ class ChannelsPage(ICTVAuthPage):
                 elif form.action == 'edit-bundle':
                     pass  # There is nothing more to edit for a bundle than a channel
                 else:
-                    raise web.badrequest()
+                    resp.badrequest()
 
                 try:
                     channel.set(**new_state)
@@ -136,7 +139,7 @@ class ChannelsPage(ICTVAuthPage):
                 if not current_user.super_admin:
                     logger.warning('the user %s tried to delete a channel without having the rights to do it',
                                    current_user.log_name)
-                    raise web.forbidden()
+                    raise self.forbidden()
                 try:
                     form.id = int(form.id)
                     channel = Channel.get(form.id)
@@ -156,12 +159,12 @@ class ChannelsPage(ICTVAuthPage):
             elif form.action == 'add-users-channel':
                 try:
                     if 'users' not in form:
-                        raise web.badrequest()
+                        resp.badrequest()
                     form.users = json.loads(form.users)
                     form.id = int(form.id)
                     channel = PluginChannel.get(form.id)
                     if not channel.has_admin(current_user) and UserPermissions.administrator not in current_user.highest_permission_level:
-                        raise web.forbidden()
+                        raise self.forbidden()
                     form.name = channel.name
                     for user_id, diff in form.users.items():
                         user_id = int(user_id)
@@ -219,12 +222,12 @@ class ChannelsPage(ICTVAuthPage):
                             elif pattern.match(v['type']):
                                 inner_type = v['type'][5:-1]
                                 if inner_type == 'string':
-                                    value = web.input(**{k: ['']})[k]
+                                    value = self.input(**{k: ['']})[k]
                                 elif pattern.match(inner_type):
                                     inner_type = inner_type[5:-1]
                                     if inner_type == 'string':
                                         delimiter = form[k + '-delimiter']
-                                        values = web.input(**{k: ['']})[k]
+                                        values = self.input(**{k: ['']})[k]
                                         lists = []
                                         l = []
                                         for v in values:
@@ -262,12 +265,12 @@ class ChannelsPage(ICTVAuthPage):
                         except MisconfiguredParameters as e:
                             for faulty_param in e:
                                 add_feedback(form.action, faulty_param[0], faulty_param)
-                            raise web.seeother('/channels/%d' % channel.id)
+                            resp.seeother('/channels/config/%d' % channel.id)
                         except Exception as e:
                             add_feedback(form.action, 'general_error', str(e))
-                            raise web.seeother('/channels/%d' % channel.id)
+                            resp.seeother('/channels/config/%d' % channel.id)
                     else:
-                        raise web.forbidden()
+                        resp.forbidden()
                     form.name = channel.name
                 except (SQLObjectNotFound, ValueError):
                     raise ImmediateFeedback(form.action, 'invalid_id')

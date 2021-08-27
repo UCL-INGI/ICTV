@@ -225,7 +225,7 @@ class PluginManager(object):
         """ Adds a mapping to ICTV Core web.py routing. """
         if plugin_webapp is None:
             plugin_webapp = self.get_plugin_webapp(channel.plugin.name)
-        app.add_mapping('/channels/%d/' % channel.id, plugin_webapp)
+        app.register_plugin('/channels/%d' % channel.id, plugin_webapp)
 
     def add_mappings(self, app, plugin):
         """ Adds a mapping for each of the channels associated with the given plugin. """
@@ -376,7 +376,7 @@ class PluginManager(object):
         failed_import = []
         if os.path.isfile(path):
             with open(path, 'r') as f:
-                config = yaml.load(f)
+                config = yaml.unsafe_load(f)
                 if 'dependencies' in config['plugin']:
                     for module_name in config['plugin']['dependencies']:
                         try:

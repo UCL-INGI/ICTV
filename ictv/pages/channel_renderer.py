@@ -19,7 +19,6 @@
 #    You should have received a copy of the GNU Affero General Public License
 #    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
 
-import web
 from sqlobject import SQLObjectNotFound
 
 from ictv.models.channel import PluginChannel, Channel
@@ -27,14 +26,14 @@ from ictv.pages.utils import ICTVPage
 
 
 class ChannelRenderer(ICTVPage):
-    def GET(self, channel_id, secret):
+    def get(self, channel_id, secret):
         """ Render the capsules of this channel. """
         try:
             channel = Channel.get(channel_id)
             if channel.secret != secret:
-                raise web.forbidden()
+                resp.forbidden()
         except SQLObjectNotFound:
-            raise web.notfound()
+            resp.notfound()
         channel_capsules = []
         already_added_channels = set()
         for plugin_channel in channel.flatten(keep_disabled_channels=True):

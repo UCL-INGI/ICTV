@@ -34,7 +34,7 @@ import time
 
 import zlib
 
-import web
+
 
 from ictv.models.user import User
 from ictv.common.json_datetime import DateTimeEncoder
