@@ -35,6 +35,7 @@ from sqlobject.main import SQLObjectNotFound
 from ictv.models.role import UserPermissions
 from ictv.models.user import User
 
+from werkzeug.exceptions import NotFound
 import ictv.flask.response as resp
 
 
@@ -245,6 +246,9 @@ def get_methods(elem):
     return [m for m in http_methods if elem.__dict__.get(m.lower())!=None]
 
 def request_static():
-    endpoint, _ = flask.current_app.create_url_adapter(flask.request).match()
+    try:
+        endpoint, _ = flask.current_app.create_url_adapter(flask.request).match()
+    except NotFound:
+        return True
     return endpoint == 'static'
-    
+
