@@ -40,4 +40,4 @@ if database.database_path is None:
 
 update_database()
 app = get_app(config_file)
-application = app.wsgi_app
+application = app.get_app_dispatcher()
