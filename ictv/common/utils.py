@@ -19,7 +19,7 @@
 #    You should have received a copy of the GNU Affero General Public License
 #    along with ICTV.  If not, see <http://www.gnu.org/licenses/>.
 
-import collections
+import collections.abc
 import os
 from datetime import datetime
 import io
@@ -185,7 +185,7 @@ def feedbacks_has_type(type, feedbacks):
 
 def deep_update(d, u):
     for k, v in u.items():
-        if isinstance(v, collections.Mapping):
+        if isinstance(v, collections.abc.Mapping):
             r = deep_update(d.get(k, {}), v)
             d[k] = r
         else:
