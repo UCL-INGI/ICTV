@@ -228,7 +228,6 @@ from cgitb import html
 __version__ = '1.16'
 
 import sys
-import cgi
 import unittest
 import html
 
@@ -321,7 +320,6 @@ class HTML(object):
         escape = kw.pop('escape', True)
         if content:
             if escape:
-                #self._content = list(map(cgi.escape, content))
                 self._content = list(map(html.escape, content))
             else:
                 self._content = content
@@ -329,11 +327,9 @@ class HTML(object):
             # special-case to allow control over newlines
             self._newlines = kw.pop('newlines')
         for k in kw:
-            if k == 'klass':                               
-                #self._attrs['class'] = cgi.escape(kw[k], True) # deprecated
+            if k == 'klass':
                 self._attrs['class'] = html.escape(kw[k], True) 
             else:
-                #self._attrs[k] = cgi.escape(kw[k], True) # deprecated
                 self._attrs[k] = html.escape(kw[k], True)
         return self
 
