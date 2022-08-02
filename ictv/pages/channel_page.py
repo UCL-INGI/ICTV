@@ -43,7 +43,6 @@ from ictv.renderer.renderer import Templates
 
 import ictv.flask.response as resp
 
-
 logger = logging.getLogger('pages')
 
 
@@ -96,8 +95,10 @@ class DetailPage(ICTVAuthPage):
         return self.renderer.channeld(channel=channel, channel_type=type(channel).__name__, current_user=current_user,
                                       bundles=ChannelBundle.select().filter(ChannelBundle.q.id != channel.id),
                                       can_force_update=UserPermissions.administrator in current_user.highest_permission_level
-                                                       or (type(channel) is PluginChannel and channel.has_contrib(current_user)),
-                                      last_update=last_update,vertical= vertical)
+                                                       or (type(channel) is PluginChannel and channel.has_contrib(
+                                          current_user)),
+                                      last_update=last_update, vertical=vertical)
+
 
 class SubscribeScreensPage(ICTVAuthPage):
 
@@ -108,25 +109,25 @@ class SubscribeScreensPage(ICTVAuthPage):
         screens_of_current_user = Screen.get_visible_screens_of(current_user)
         subscriptions = current_user.get_subscriptions_of_owned_screens()
         last_by = {sub.screen.id:
-                {
-                    'user': sub.created_by.readable_name,
-                    'channel_name': sub.channel.name,
-                    'plugin_channel': hasattr(sub.channel, 'plugin')
-                }
-                for sub in subscriptions if sub.channel.id == channel.id
+            {
+                'user': sub.created_by.readable_name,
+                'channel_name': sub.channel.name,
+                'plugin_channel': hasattr(sub.channel, 'plugin')
             }
+            for sub in subscriptions if sub.channel.id == channel.id
+        }
         screen_names = {s.id: s.name for s in screens_of_current_user}
         return self.renderer.channel_subscriptions(
-            channel = channel,
-            possible_screens= screens_of_current_user,
-            user = current_user,
-            subscriptions = subscriptions,
-            last_by = last_by,
-            screen_names = screen_names
+            channel=channel,
+            possible_screens=screens_of_current_user,
+            user=current_user,
+            subscriptions=subscriptions,
+            last_by=last_by,
+            screen_names=screen_names
         )
 
     @PermissionGate.administrator
-    def post(self,channel_id):
+    def post(self, channel_id):
         form = self.form
         u = User.get(self.session['user']['id'])
         subscribed = []
@@ -153,12 +154,12 @@ class SubscribeScreensPage(ICTVAuthPage):
             try:
                 channel = Channel.get(channelid)
                 if not channel.can_subscribe(u):
-                    raise self.forbidden(message="You're not allow to do that")
+                    raise resp.forbidden(message="You're not allow to do that")
                 screen = Screen.get(screenid)
-                if not u in screen.owners:
-                    raise self.forbidden(message="You're not allow to do that")
-                #sub true -> New subscription
-                #sub false -> Remove subscription
+                if not (u in screen.owners or u.super_admin):
+                    raise resp.forbidden(message="You're not allow to do that")
+                # sub true -> New subscription
+                # sub false -> Remove subscription
                 if sub:
                     screen.subscribe_to(u, channel)
                     subscribed.append(str(channel.id))
@@ -201,9 +202,11 @@ class RequestPage(ICTVAuthPage):
         user_id = int(user_id)
         user = User.get(user_id)
 
-        st = "You just receive a request of subscription for channel " + chan.name + ". Could you please subscribe " + str(user.fullname) + " (" + user.email + ") to this channel."
+        st = "You just receive a request of subscription for channel " + chan.name + ". Could you please subscribe " + str(
+            user.fullname) + " (" + user.email + ") to this channel."
         for admin in chan.get_admins():
-            web.sendmail(web.config.smtp_sendername, admin.email, 'Request for subscription to a channel', st, headers={'Content-Type': 'text/html;charset=utf-8'})
+            web.sendmail(web.config.smtp_sendername, admin.email, 'Request for subscription to a channel', st,
+                         headers={'Content-Type': 'text/html;charset=utf-8'})
         resp.seeother('/channels')
 
 
