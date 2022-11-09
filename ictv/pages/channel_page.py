@@ -89,7 +89,12 @@ class DetailPage(ICTVAuthPage):
         if type(channel) is PluginChannel and last_update + timedelta(minutes=channel.cache_validity) < now:
             last_update = now
         try:
-            vertical = channel.get_config_param('vertical') if type(channel) is PluginChannel else False
+            if type(channel) is ChannelBundle:
+                vertical = channel.is_vertical_bundle()
+            elif type(channel) is PluginChannel:
+                vertical = channel.get_config_param('vertical')
+            else:
+                vertical = False
         except KeyError:
             vertical = False
         return self.renderer.channeld(channel=channel, channel_type=type(channel).__name__, current_user=current_user,
