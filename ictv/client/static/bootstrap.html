@@ -25,7 +25,7 @@
         }
     </style>
 </head>
-<body style="margin: 0">
+<body style="margin:0; overflow:hidden;">
     <div id="status-bar">
         <h1 id="cache-daemon-status" class="bg-dark"></h1>
         <h1 id="internet-status" class="bg-dark"></h1>
@@ -143,10 +143,10 @@
                 $slideshow[0].contentWindow.postMessage('reloop', '*');
             } else {
                 $.get({
-                    url: 'last_cached_page',
+                    url: 'last_cached_page.html',
                     dataType: 'html',
                     success: function() {
-                        transition_slideshow('last_cached_page')
+                        transition_slideshow('last_cached_page.html')
                     },
                     error: function() {
                         set_waiting_screen_status('No previously cached slideshow was found.');

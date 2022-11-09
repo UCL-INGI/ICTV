@@ -128,6 +128,8 @@ def caching_thread():
 def cache_page(session, page_url, check_for_slides=False):
     logging.info('cache %s', page_url)
     page_path = make_dirs(page_url, assets_path)
+    if not os.path.splitext(page_path)[1]:
+        page_path += ".html"
     timestamp = get_timestamp_for(page_path)
 
     try:
@@ -322,7 +324,7 @@ if __name__ == "__main__":
     with open(os.path.join(_parent_dir_path, 'static', 'config.json'), 'r') as f:
         config = json.load(f)
     assets_path = os.path.join(_parent_dir_path, config['cached_assets_path'])
-    last_page_path = os.path.join(_parent_dir_path, 'static', 'last_cached_page')
+    last_page_path = os.path.join(_parent_dir_path, 'static', 'last_cached_page.html')
     ictv_root_url = config['ictv_root_url']
 
     if '%s' in ictv_root_url:  # Debug switch
