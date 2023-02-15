@@ -69,10 +69,10 @@ class EmailPage(ICTVAuthPage):
                     l1=[u1 for u1 in elem.get_admins()]
                     l2=[u2 for u2 in elem.get_contribs()]
                     list_users = l1+l2
-                    receivers=[u for u in list_users]
+                    receivers+=[u for u in list_users]
         else:
           for s in Screen.select():
-              receivers=[u for u in s.owners]
+              receivers+=[u for u in s.owners]
         try:
             mail = Mail(self.app)
             msg = Message(recipients=[u.email for u in receivers],
